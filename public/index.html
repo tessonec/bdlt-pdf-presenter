@@ -146,6 +146,17 @@ body.lecturer .thumb canvas{height:84px}
 body.audience .bar, body.audience .hint, body.audience #sheet{display:none!important}
 body.audience #stage{cursor:none}
 #audHint{position:fixed;inset:0;z-index:50;display:grid;place-items:center;background:rgba(8,9,11,.82);text-align:center;padding:24px}
+#audHint .row{justify-content:center}
+#audHint .small{font-size:13px}
+#audBtn{position:fixed;left:calc(env(safe-area-inset-left,0px) + 14px);top:calc(env(safe-area-inset-top,0px) + 14px);z-index:40;width:48px;height:48px;border-radius:50%;
+  background:var(--chrome);border:1px solid var(--line);color:var(--fg);display:grid;place-items:center;transition:opacity .3s;cursor:pointer}
+#audBtn.gone{opacity:0;pointer-events:none}
+#audBtn svg{width:22px;height:22px;fill:currentColor}
+#update{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 16px);transform:translateX(-50%);z-index:25;display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:center;
+  background:var(--chrome);border:1px solid var(--accent);border-radius:14px;padding:10px 12px 10px 16px;font-size:14px;width:max-content;max-width:calc(100vw - 32px);
+  -webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
+#update .btn{height:36px}
+.ver{font-family:var(--num);font-size:12px;color:var(--muted);margin-right:auto;align-self:center}
 #audHint div{display:grid;gap:10px;max-width:520px}
 #audHint h2{margin:0;font-size:22px}
 #audHint p{margin:0;color:var(--muted);font-size:15px;line-height:1.5}
@@ -233,6 +244,7 @@ body.audience #stage{cursor:none}
     <div class="pick" id="pickLaser"></div>
   </section>
   <div class="row">
+    <span class="ver" id="verLbl"></span>
     <button class="btn" id="bSetReset">Reset to defaults</button>
     <button class="btn pri" id="bSetDone">Done</button>
   </div>
@@ -251,8 +263,16 @@ body.audience #stage{cursor:none}
 
 <div id="audHint" hidden><div>
   <h2>Projector window</h2>
-  <p id="audMsg">On iPad, drag this tab out of Safari's tab bar so it becomes its own window, move that window to the external display, then tap here to fill the screen.</p>
+  <p id="audMsg">Move this window to the external display, then choose Fill the screen.</p>
+  <div class="row">
+    <button class="btn pri" id="audFill">Fill the screen</button>
+    <button class="btn" id="audHide">Hide this message</button>
+    <button class="btn" id="audClose">Close projector window</button>
+  </div>
+  <p class="small">Later, touch the slide to show the menu button in the top-left corner.</p>
 </div></div>
+<button id="audBtn" class="gone" aria-label="Projector window menu" title="Projector window menu"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button>
+<div id="update" hidden><span id="updMsg">A newer version of BDLT PDF Presenter is available.</span><button class="btn" id="updLater">Later</button><button class="btn pri" id="updReload">Reload</button></div>
 
 <div id="toast" role="status"></div>
 <div id="dropzone" hidden>Drop a PDF to open it</div>
@@ -469,7 +489,7 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
 
 stage.addEventListener('pointerdown', e => {
   keepAwake();
-  if (AUDIENCE) { showAudHint(); return; }
+  if (AUDIENCE) { flashAudBtn(); return; }
   if (e.pointerType === 'touch') return touchDown(e);
   if (e.pointerType === 'mouse' && e.button !== 0) return;
   e.preventDefault();
@@ -810,6 +830,33 @@ async function sampleDeck() {
   return new Uint8Array(await r.arrayBuffer());
 }
 
+// ---------- update check: GitLab stamps the build into APP_VERSION and version.json ----------
+const APP_VERSION = '__BUILD__';
+const STAMPED = !APP_VERSION.startsWith('__');
+let updDismissed = false;
+async function checkUpdate() {
+  if (!STAMPED || inFrame) return;
+  try {
+    const r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
+    if (!r.ok) return;
+    const v = (await r.json()).version;
+    if (!v || v === APP_VERSION) return;
+    if (AUDIENCE) {   // the presenter window sends everything again after the reload; reload at most once per version
+      let done = null; try { done = sessionStorage.getItem('bdlt-reloaded'); sessionStorage.setItem('bdlt-reloaded', v); } catch (e) {}
+      if (done !== v) location.reload();
+      return;
+    }
+    if (updDismissed) return;
+    const inked = [...ink.values()].some(l => l.length);
+    $('#updMsg').textContent = inked ? 'A newer version is available. Save your ink first: reloading clears it.' : 'A newer version of BDLT PDF Presenter is available.';
+    $('#update').hidden = false;
+  } catch (e) {}
+}
+$('#updReload').onclick = () => location.reload();
+$('#updLater').onclick = () => { updDismissed = true; $('#update').hidden = true; };
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') checkUpdate(); });
+setInterval(checkUpdate, 30 * 60 * 1000);
+
 // ---------- settings panel ----------
 const setPanel = $('#setPanel'), optPres = $('#optPresenter'), presNote = $('#presNote');
 const PRES_INFO = 'Shows the slides full screen in a separate projector window, while this window becomes your lecturer view with the clock and the slide strip. On iPad it needs Stage Manager with an external display set to extend (M1 chip or later).';
@@ -832,6 +879,7 @@ function renderSettings() {
   const block = presenterBlocker();
   optPres.disabled = !!block; optPres.checked = !block && settings.presenter;
   presNote.textContent = block || (settings.presenter && connected() ? 'Projector window connected.' : PRES_INFO);
+  $('#verLbl').textContent = STAMPED ? 'Version ' + APP_VERSION : 'Development copy';
   const sp = $('#optSpeed'), gl = $('#optGlide');
   sp.value = settings.stripSpeed; gl.value = settings.stripGlide;
   $('#outSpeed').textContent = settings.stripSpeed.toFixed(2).replace(/0$/, '') + '×'; $('#outGlide').textContent = Math.round(settings.stripGlide * 100) + '%';
@@ -1015,12 +1063,29 @@ strip.addEventListener('pointerup', stripUp);
 strip.addEventListener('pointercancel', stripUp);
 
 // audience side
-function showAudHint(msg) { if (msg) $('#audMsg').textContent = msg; $('#audHint').hidden = false; }
-$('#audHint').addEventListener('click', () => {
-  $('#audHint').hidden = true;
-  const el = document.documentElement, req = el.requestFullscreen || el.webkitRequestFullscreen;
-  try { if (req && !(document.fullscreenElement || document.webkitFullscreenElement)) { const r = req.call(el); if (r && r.catch) r.catch(() => {}); } } catch (e) {}
-});
+const isFs = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
+function syncFillBtn() { $('#audFill').textContent = isFs() ? 'Exit full screen' : 'Fill the screen'; }
+function showAudHint(msg) { if (msg) $('#audMsg').textContent = msg; syncFillBtn(); $('#audHint').hidden = false; $('#audBtn').classList.add('gone'); }
+// The menu button appears when the slide is touched, then fades so the audience does not see it
+let audBtnT = 0;
+function flashAudBtn() { if (!$('#audHint').hidden) return; const b = $('#audBtn'); b.classList.remove('gone'); clearTimeout(audBtnT); audBtnT = setTimeout(() => b.classList.add('gone'), 4000); }
+$('#audBtn').onclick = () => showAudHint();
+$('#audHide').onclick = () => { $('#audHint').hidden = true; flashAudBtn(); };
+$('#audFill').onclick = () => {
+  const d = document, el = d.documentElement;
+  try {
+    if (isFs()) { (d.exitFullscreen || d.webkitExitFullscreen).call(d); }
+    else { const req = el.requestFullscreen || el.webkitRequestFullscreen; if (!req) { $('#audMsg').textContent = 'Safari does not offer full screen here. Make the window as large as possible on the external display instead.'; return; } const r = req.call(el); if (r && r.catch) r.catch(() => {}); }
+  } catch (e) {}
+  $('#audHint').hidden = true; setTimeout(syncFillBtn, 400);
+};
+$('#audClose').onclick = () => {
+  try { chan && chan.postMessage({ t: 'bye' }); } catch (e) {}
+  try { if (isFs()) (document.exitFullscreen || document.webkitExitFullscreen).call(document); } catch (e) {}
+  window.close();
+  setTimeout(() => { if (!window.closed) showAudHint('Safari did not let the app close this window. Close it from Safari’s tab bar, or swipe it away in the app switcher.'); }, 400);
+};
+document.addEventListener('fullscreenchange', syncFillBtn); document.addEventListener('webkitfullscreenchange', syncFillBtn);
 function applyRemoteView() {
   const v = remoteView; if (!v || v.n !== pageNum || !curVp) return;
   if (v.s <= 1.02) { view = { s: 1, tx: 0, ty: 0 }; }
@@ -1058,6 +1123,7 @@ if (chan && !AUDIENCE) {
   };
 }
 
+checkUpdate();
 if (AUDIENCE && chan) {
   startAudience();
 } else {

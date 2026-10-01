@@ -35,6 +35,12 @@ PDFs are opened and annotated on the iPad only; they are never uploaded.
 
 The app loads PDF.js and pdf-lib from cdnjs, so it needs an internet connection when opened.
 
+- Update check: each deployment is stamped with its commit id (see `.gitlab-ci.yml`); the
+  app compares it with `version.json` when it opens or comes back to the foreground and
+  offers to reload when a newer version is online. The version is shown in Settings.
+- Projector window menu: touch the projector screen to show a menu button (top left) with
+  Fill the screen / Exit full screen and Close projector window.
+
 ## Deployment
 
 Every push to the default branch publishes `public/` with GitLab Pages (see `.gitlab-ci.yml`).

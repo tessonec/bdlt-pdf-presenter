@@ -1,9 +1,12 @@
 # Publishes public/ with GitLab Pages on every push to the default branch.
+# The build is stamped with the commit id so the app can tell when a newer version is online.
 image: busybox
 
 pages:
   stage: deploy
   script:
+    - sed -i "s/__BUILD__/${CI_COMMIT_SHORT_SHA}/g" public/index.html
+    - echo "{\"version\":\"${CI_COMMIT_SHORT_SHA}\"}" > public/version.json
     - echo "The site will be deployed to $CI_PAGES_URL"
   artifacts:
     paths:
