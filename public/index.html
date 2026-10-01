@@ -705,7 +705,7 @@ function markThumbs() {
 }
 function openSheet() {
   if (!pdfDoc) return;
-  sheet.classList.add('open'); markThumbs();
+  sheet.classList.add('open'); markThumbs(); updateLect(false);
   const el = strip.querySelector(`[data-n="${pageNum}"]`);
   if (el) strip.scrollLeft = el.offsetLeft - strip.clientWidth / 2 + el.offsetWidth / 2;
 }
@@ -984,7 +984,8 @@ function updatePresenterUi() {
   bp.title = on ? 'Separate views: tap to go back to the same view on both screens' : 'Same view: tap to use separate views (projector and lecturer)';
   bp.setAttribute('aria-label', on ? 'Separate views (on)' : 'Separate views (off)');
   bp.classList.toggle('dim', !!presenterBlocker());
-  $('#lect').hidden = !on;
+  $('#lect').hidden = false;
+  $('#projSt').hidden = !on; $('#bProj').hidden = !on;
   if (on) { markThumbs(); updateLect(false); }
   fitStage();
 }
@@ -998,16 +999,18 @@ function fitStage() {
 }
 if ('ResizeObserver' in window) { lectRO = new ResizeObserver(() => { if (LECTURER()) fitStage(); }); lectRO.observe(sheet); }
 function fmt(ms) { const t = Math.floor(ms / 1000), h = Math.floor(t / 3600), m = Math.floor(t / 60) % 60, s = t % 60; return (h ? h + ':' + String(m).padStart(2, '0') : String(m).padStart(2, '0')) + ':' + String(s).padStart(2, '0'); }
+// Status row (elapsed time, clock, slide number) shows with the slide strip in both views;
+// the projector status and button only in separate views.
 function updateLect(pageChanged) {
-  if (!LECTURER()) return;
+  if (AUDIENCE) return;
   const c = connected();
   $('#projSt').classList.toggle('on', c);
   $('#projTxt').textContent = c ? 'Projector on' : 'Projector off';
-  if (c && !timerStart) timerStart = performance.now();
+  if (!timerStart && (c || !LECTURER())) timerStart = performance.now();
   $('#elT').textContent = timerStart ? fmt(performance.now() - timerStart) : '00:00';
   $('#clockT').textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
   $('#slideT').textContent = numPages ? `${pageNum} / ${numPages}` : '– / –';
-  if (pageChanged) centreThumb(true);
+  if (pageChanged && LECTURER()) centreThumb(true);
   if (!$('#projPanel').hidden) updateProjPanel();
 }
 setInterval(() => updateLect(false), 1000);
