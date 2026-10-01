@@ -1,64 +1,33 @@
-Example plain HTML site using GitLab Pages.
+# BDLT PDF Presenter
 
-Learn more about GitLab Pages at https://pages.gitlab.io and the official
-documentation https://docs.gitlab.com/ce/user/project/pages/.
+A full-screen PDF presenter for iPad and Apple Pencil, by the Blockchain & DLT Research Group, UZH.
+It runs in Safari; use Share › Add to Home Screen to install it as a full-screen app.
 
----
+## What it does
 
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+- Tap the right or left third of a slide for the next or previous slide.
+- Tap the top centre to show or hide the toolbar.
+- Triple-tap the lower quarter for the slide overview.
+- Pinch to zoom, drag with one finger to pan, double-tap to fit.
+- Pen, highlighter, laser pointer and eraser for Apple Pencil, in UZH colours.
+- Save writes the ink into a new PDF.
 
-- [GitLab CI](#gitlab-ci)
-- [GitLab User or Group Pages](#gitlab-user-or-group-pages)
-- [Did you fork this project?](#did-you-fork-this-project)
-- [Troubleshooting](#troubleshooting)
+PDFs are opened and annotated on the iPad only; they are never uploaded.
 
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+## Files
 
-## GitLab CI
+| File | Purpose |
+|---|---|
+| `public/index.html` | The app (HTML, CSS and JavaScript in one file) |
+| `public/sample.pdf` | The guide deck that opens first; replace it to change the default deck |
+| `public/icon.png` | Home Screen icon (iPad only accepts PNG; at least 180×180 px) |
+| `public/icon.svg` | Browser tab icon and editable icon source |
+| `source/guide-deck.pptx` | Editable source of `sample.pdf`, on the BDLT26 template |
 
-This project's static Pages are built by [GitLab CI][ci], following the steps
-defined in [`.gitlab-ci.yml`](.gitlab-ci.yml):
+The app loads PDF.js and pdf-lib from cdnjs, so it needs an internet connection when opened.
 
-```
-image: busybox
+## Deployment
 
-pages:
-  stage: deploy
-  script:
-  - echo 'Nothing to do...'
-  artifacts:
-    paths:
-    - public
-    expire_in: 1 day
-  rules:
-    - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
-```
-
-The above example expects to put all your HTML files in the `public/` directory.
-
-## GitLab User or Group Pages
-
-To use this project as your user/group website, you will need one additional
-step: just rename your project to `namespace.gitlab.io`, where `namespace` is
-your `username` or `groupname`. This can be done by navigating to your
-project's **Settings**.
-
-Read more about [user/group Pages][userpages] and [project Pages][projpages].
-
-## Did you fork this project?
-
-If you forked this project for your own use, please go to your project's
-**Settings** and remove the forking relationship, which won't be necessary
-unless you want to contribute back to the upstream project.
-
-## Troubleshooting
-
-1. CSS is missing! That means that you have wrongly set up the CSS URL in your
-   HTML files. Have a look at the [index.html] for an example.
-
-[ci]: https://about.gitlab.com/gitlab-ci/
-[index.html]: https://gitlab.com/pages/plain-html/blob/master/public/index.html
-[userpages]: https://docs.gitlab.com/ce/user/project/pages/introduction.html#user-or-group-pages
-[projpages]: https://docs.gitlab.com/ce/user/project/pages/introduction.html#project-pages
+Every push to the default branch publishes `public/` with GitLab Pages (see `.gitlab-ci.yml`).
+The address is shown under Deploy › Pages. After changing `icon.png`, remove the app from the
+iPad's Home Screen and add it again; iPadOS keeps the old icon otherwise.

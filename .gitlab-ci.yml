@@ -1,6 +1,4 @@
-# This file is a template, and might need editing before it works on your project.
-# Full project: https://gitlab.com/pages/plain-html
-
+# Publishes public/ with GitLab Pages on every push to the default branch.
 image: busybox
 
 pages:
