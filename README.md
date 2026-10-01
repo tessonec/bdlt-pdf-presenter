@@ -48,7 +48,9 @@ The app loads PDF.js and pdf-lib from cdnjs, so it needs an internet connection 
 
 - Update check: each deployment is stamped with its commit id (see `.gitlab-ci.yml`); the
   app compares it with `version.json` when it opens or comes back to the foreground and
-  offers to reload when a newer version is online. The version is shown in Settings.
+  offers to reload when a newer version is online. A splash screen at start and the Settings
+  panel show the version: the release number (`APP_RELEASE` in `index.html`, raised by hand)
+  and the first four characters of the deployed commit id.
 - Projector window menu: touch the projector screen to show a menu button (top left) with
   Fill the screen / Exit full screen and Close projector window.
 

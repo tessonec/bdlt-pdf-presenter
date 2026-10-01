@@ -179,8 +179,18 @@ body.audience #stage{cursor:none}
 #audHint div{display:grid;gap:10px;max-width:520px}
 #audHint h2{margin:0;font-size:22px}
 #audHint p{margin:0;color:var(--muted);font-size:15px;line-height:1.5}
+/* splash: icon and version, shown briefly at start */
+#splash{position:fixed;inset:0;z-index:100;display:grid;place-items:center;background:var(--stage);transition:opacity .45s}
+#splash.out{opacity:0;pointer-events:none}
+#splash div{display:grid;justify-items:center;gap:14px;text-align:center}
+#splash img{width:132px;height:132px;border-radius:29px;box-shadow:0 18px 50px rgba(0,0,0,.5)}
+#splash h1{margin:6px 0 0;font-size:26px;font-weight:600}
+#splash p{margin:0;font-family:var(--num);font-size:15px;color:var(--muted);letter-spacing:.02em}
+#splash b{color:var(--accent);font-weight:500}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
+
+<div id="splash" role="status"><div><img src="icon.png" alt=""><h1>BDLT PDF Presenter</h1><p id="splashVer"></p></div></div>
 
 <div id="stage" aria-label="Slide">
   <div id="page"><canvas id="pdfc"></canvas><div id="media"></div><canvas id="inkc"></canvas><canvas id="livec"></canvas></div>
@@ -1165,8 +1175,19 @@ function mediaRemote(msg) {
 }
 
 // ---------- update check: GitLab stamps the build into APP_VERSION and version.json ----------
-const APP_VERSION = '__BUILD__';
+const APP_RELEASE = '1.0';            // raise by hand for notable releases
+const APP_VERSION = '__BUILD__';      // replaced by GitLab with the commit id on every deployment
 const STAMPED = !APP_VERSION.startsWith('__');
+const BUILD4 = STAMPED ? APP_VERSION.slice(0, 4) : 'dev';
+const VERSION_TEXT = STAMPED ? `Version ${APP_RELEASE} · ${BUILD4}` : `Version ${APP_RELEASE} · development copy`;
+// Splash: confirms at a glance which version is running
+(function splash() {
+  const el = $('#splash');
+  if (location.hash === '#audience') { el.remove(); return; }
+  $('#splashVer').innerHTML = STAMPED ? `Version ${APP_RELEASE} · <b>${BUILD4}</b>` : `Version ${APP_RELEASE} · development copy`;
+  const close = () => { el.classList.add('out'); setTimeout(() => el.remove(), 500); };
+  el.addEventListener('pointerdown', close); setTimeout(close, 1800);
+})();
 let updDismissed = false;
 async function checkUpdate() {
   if (!STAMPED || inFrame) return;
@@ -1213,7 +1234,7 @@ function renderSettings() {
   const block = presenterBlocker();
   optPres.disabled = !!block; optPres.checked = !block && settings.presenter;
   presNote.textContent = block || (settings.presenter && connected() ? 'Projector window connected.' : PRES_INFO);
-  $('#verLbl').textContent = STAMPED ? 'Version ' + APP_VERSION : 'Development copy';
+  $('#verLbl').textContent = VERSION_TEXT;
   const sp = $('#optSpeed'), gl = $('#optGlide');
   sp.value = settings.stripSpeed; gl.value = settings.stripGlide;
   $('#outSpeed').textContent = settings.stripSpeed.toFixed(2).replace(/0$/, '') + '×'; $('#outGlide').textContent = Math.round(settings.stripGlide * 100) + '%';
