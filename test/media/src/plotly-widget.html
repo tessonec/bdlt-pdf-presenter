@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>PageRank vs damping (test widget, Plotly from the web)</title>
+<script src="https://cdn.jsdelivr.net/npm/plotly.js-dist-min@2.35.2/plotly.min.js"></script>
+<style>
+  html, body { margin: 0; height: 100%; background: #fff; font-family: "Source Sans 3", "Source Sans Pro", -apple-system, system-ui, sans-serif; }
+  #wrap { position: absolute; inset: 0; display: flex; flex-direction: column; }
+  #plot { flex: 1; }
+  .bar { display: flex; align-items: center; gap: 14px; padding: 8px 14px; font-size: 18px; border-top: 1px solid #e3e6ef; }
+  input[type=range] { flex: 1; accent-color: #0028A5; height: 28px; }
+  output { font-variant-numeric: tabular-nums; min-width: 3.2em; font-weight: 600; }
+  #off { position: absolute; inset: 0; display: none; place-items: center; color: #555; font-size: 20px; text-align: center; padding: 20px; }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div id="plot"></div>
+  <div class="bar"><label for="d">Damping</label><input id="d" type="range" min="0.05" max="0.95" step="0.01" value="0.85"><output id="o">0.85</output></div>
+</div>
+<div id="off">This widget loads Plotly from the web.<br>Connect to the internet to use it.</div>
+<script>
+const bdlt = window.bdlt || { role: 'single', params: {}, state: null, setState(o) { this.state = o; this._f && this._f(o); }, onState(f) { this._f = f; }, onShow() {}, onHide() {} };
+if (!window.Plotly) { document.getElementById('off').style.display = 'grid'; }
+const names = ['A', 'B', 'C', 'D', 'E', 'F'];
+const edges = [[0,1],[1,2],[0,3],[3,4],[4,1],[4,5],[2,5],[1,3],[5,0],[2,0]];
+function pagerank(d) {
+  const N = names.length; let p = new Array(N).fill(1 / N); const out = new Array(N).fill(0); edges.forEach(([a]) => out[a]++);
+  for (let it = 0; it < 80; it++) { const q = new Array(N).fill((1 - d) / N); edges.forEach(([a, b]) => q[b] += d * p[a] / out[a]); p = q; }
+  return p;
+}
+const slider = document.getElementById('d'), out = document.getElementById('o');
+function render(d) {
+  out.textContent = d.toFixed(2); slider.value = d;
+  if (!window.Plotly) return;
+  Plotly.react('plot', [{ type: 'bar', x: names, y: pagerank(d), marker: { color: '#0028A5' } }],
+    { margin: { l: 50, r: 20, t: 30, b: 40 }, yaxis: { title: 'PageRank', range: [0, 0.45] }, title: { text: 'PageRank with damping ' + d.toFixed(2), font: { size: 16 } },
+      paper_bgcolor: '#fff', plot_bgcolor: '#fff', font: { family: 'system-ui', size: 14 } },
+    { displayModeBar: false, responsive: true, staticPlot: bdlt.role === 'projector' });
+}
+bdlt.onState(s => s && render(s.damping));
+slider.oninput = () => bdlt.setState({ damping: +slider.value });
+bdlt.setState(bdlt.state || { damping: 0.85 });
+</script>
+</body>
+</html>

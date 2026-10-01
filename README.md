@@ -23,6 +23,17 @@ It runs in Safari; use Share › Add to Home Screen to install it as a full-scre
 
 PDFs are opened and annotated on the iPad only; they are never uploaded.
 
+## Media in slides (video, animations, interactive widgets)
+
+PDFs can carry live media that the presenter plays on top of the slide: MP4 video, audio,
+animated images, frame animations (the replacement for `animate`'s `\animategraphics`) and
+interactive HTML widgets (sliders, Plotly, D3 networks). The format is defined in
+[`docs/media-spec.md`](docs/media-spec.md) (v1); the LaTeX side lives in `bdlt-beamer-media`.
+Other PDF viewers simply show the placeholder image.
+
+`public/media-test-v1.pdf` is a hand-made test deck covering every media type; rebuild it with
+`node test/media/make-test-pdf.js` (needs `pdf-lib`).
+
 ## Files
 
 | File | Purpose |

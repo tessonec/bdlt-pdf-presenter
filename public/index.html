@@ -41,6 +41,25 @@ body{background:var(--stage);color:var(--fg);font-family:var(--ui);overflow:hidd
 #page{position:absolute;transform-origin:0 0;will-change:transform;background:#fff}
 #page.anim{transition:transform .22s cubic-bezier(.2,.7,.2,1)}
 #page canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+#inkc,#livec{pointer-events:none}
+/* media layer (docs/media-spec.md): between the page image and the ink */
+#media{position:absolute;inset:0;pointer-events:none}
+.media{position:absolute;pointer-events:auto;overflow:hidden;touch-action:manipulation}
+.media[hidden]{display:block!important;visibility:hidden;pointer-events:none}
+.media video,.media img,.media iframe,.media canvas{position:absolute;inset:0;width:100%;height:100%;border:0;display:block}
+.media iframe{background:transparent}
+.media.proj{pointer-events:none}
+.fbar{position:absolute;left:8px;right:8px;bottom:8px;display:flex;align-items:center;gap:6px;padding:4px 8px;border-radius:10px;
+  background:rgba(23,24,28,.78);color:#eef0f3;font:500 13px/1 var(--ui);opacity:.9}
+.fbar button{width:34px;height:30px;border-radius:7px;color:#eef0f3;display:grid;place-items:center}
+.fbar button svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.fbar input{flex:1;accent-color:#FFC845;min-width:40px}
+.fbar{transition:opacity .4s}
+.fbar.idle{opacity:0;pointer-events:none}
+.fbar output{font-family:var(--num);min-width:5ch;text-align:right}
+.mplay{position:absolute;inset:0;display:grid;place-items:center;background:rgba(0,0,0,.25)}
+.mplay span{width:72px;height:72px;border-radius:50%;background:rgba(23,24,28,.8);display:grid;place-items:center}
+.mplay svg{width:30px;height:30px;fill:#fff;margin-left:4px}
 
 button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;touch-action:manipulation;padding:0}
 .bar{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 12px);transform:translateX(-50%);
@@ -164,7 +183,7 @@ body.audience #stage{cursor:none}
 </style>
 
 <div id="stage" aria-label="Slide">
-  <div id="page"><canvas id="pdfc"></canvas><canvas id="inkc"></canvas><canvas id="livec"></canvas></div>
+  <div id="page"><canvas id="pdfc"></canvas><div id="media"></div><canvas id="inkc"></canvas><canvas id="livec"></canvas></div>
 </div>
 
 <header id="bar" class="bar" role="toolbar" aria-label="BDLT PDF Presenter controls">
@@ -389,6 +408,7 @@ async function showPage(n) {
   if (!c || c.ps < ps * 0.99) { c = { canvas: await renderToCanvas(n, ps), ps }; cache.set(n, c); }
   if (my !== renderToken) return;
   curVp = vp; view = { s: 1, tx: 0, ty: 0 }; layout(); applyView(); blit(c.canvas, ps);
+  mediaShow(n);
   if (AUDIENCE) applyRemoteView();
   prefetch(n);
 }
@@ -487,9 +507,12 @@ let wake = null;
 async function keepAwake() { try { if (!wake && navigator.wakeLock) { wake = await navigator.wakeLock.request('screen'); wake.addEventListener('release', () => wake = null); } } catch (e) {} }
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') keepAwake(); });
 
-stage.addEventListener('pointerdown', e => {
+stage.addEventListener('pointerdown', e => onDown(e));
+function onDown(e) {
   keepAwake();
   if (AUDIENCE) { flashAudBtn(); return; }
+  // Fingers and the mouse operate media (video controls, sliders); the Pencil always writes
+  if (e.pointerType !== 'pen' && inMedia(e)) return;
   if (e.pointerType === 'touch') return touchDown(e);
   if (e.pointerType === 'mouse' && e.button !== 0) return;
   e.preventDefault();
@@ -502,8 +525,9 @@ stage.addEventListener('pointerdown', e => {
   if (tool === 'laser') { cur = { tool, id: e.timeStamp }; laser.push({ x, y, t: performance.now(), id: cur.id }); post({ t: 'lz', x, y, id: cur.id }); if (!laserRAF) laserLoop(); return; }
   cur = { tool, color: colors[tool], w: WIDTH[tool], pts: [[x, y, pressure(e)]], drawn: 0 };
   drawLive();
-});
-stage.addEventListener('pointermove', e => {
+}
+stage.addEventListener('pointermove', e => onMove(e));
+function onMove(e) {
   if (e.pointerType === 'touch') return touchMove(e);
   if (e.pointerId !== penId || !cur) return;
   const r = pageEl.getBoundingClientRect();
@@ -516,7 +540,7 @@ stage.addEventListener('pointermove', e => {
   }
   if (cur.tool === 'laser') { if (!laserRAF) laserLoop(); }
   else if (cur.tool !== 'eraser') drawLive();
-});
+}
 function penEnd(e) {
   if (e.pointerType === 'touch') return touchUp(e);
   if (e.pointerId !== penId) return;
@@ -622,7 +646,7 @@ function go(d) {
 }
 ['gesturestart', 'gesturechange', 'gestureend', 'dblclick'].forEach(ev => document.addEventListener(ev, e => e.preventDefault(), { passive: false }));
 // Keep Safari from claiming pinches and swipes on the slide for its own page zoom and scrolling
-['touchstart', 'touchmove'].forEach(ev => stage.addEventListener(ev, e => { if (e.cancelable) e.preventDefault(); }, { passive: false }));
+['touchstart', 'touchmove'].forEach(ev => stage.addEventListener(ev, e => { if (e.cancelable && !inMedia(e)) e.preventDefault(); }, { passive: false }));
 
 // ---------- toolbar ----------
 function toggleBar(force) { bar.classList.toggle('hidden', force === undefined ? !bar.classList.contains('hidden') : !force); }
@@ -727,6 +751,7 @@ async function loadBytes(bytes, name, opts = {}) {
     if (pdfDoc) pdfDoc.destroy();
     pdfDoc = doc; pdfBytes = bytes; fileName = name; numPages = doc.numPages;
     ink = new Map(); hist = new Map(); cache.clear(); vps.clear(); thumbQueue.length = 0;
+    mediaReset();
     if (opts.ink) ink = new Map(opts.ink);
     buildStrip(); await showPage(opts.page || 1);
     sendDoc();
@@ -828,6 +853,315 @@ async function sampleDeck() {
   const r = await fetch('sample.pdf', { cache: 'no-cache' });
   if (!r.ok) throw new Error('sample.pdf not found');
   return new Uint8Array(await r.arrayBuffer());
+}
+
+
+// ====================================================================================
+// Media in PDF slides (docs/media-spec.md, v1): markers are Link annotations whose URI
+// starts with bdlt-media:v1; files come from the PDF's EmbeddedFiles or from https.
+// ====================================================================================
+const mediaLayer = $('#media');
+const mediaPool = new Map();      // key -> { key, spec, el, page, rect, api }
+const markerCache = new Map();    // page -> [spec]
+let attachP = null, mediaPage = 0, mediaDocToken = 0;
+const pendingMedia = new Map();   // projector: messages that arrived before the element existed
+const inMedia = e => !!(e.target && e.target.closest && e.target.closest('.media'));
+const MIME = { mp4: 'video/mp4', m4v: 'video/mp4', mov: 'video/quicktime', webm: 'video/webm', mp3: 'audio/mpeg', m4a: 'audio/mp4', aac: 'audio/aac',
+  wav: 'audio/wav', png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp', svg: 'image/svg+xml', apng: 'image/apng',
+  html: 'text/html', htm: 'text/html', js: 'text/javascript', css: 'text/css', json: 'application/json', csv: 'text/csv', txt: 'text/plain' };
+const mimeOf = n => MIME[(n.split('.').pop() || '').toLowerCase()] || 'application/octet-stream';
+
+function mediaReset() {
+  mediaDocToken++;
+  for (const m of mediaPool.values()) destroyMedia(m);
+  mediaPool.clear(); markerCache.clear(); pendingMedia.clear(); attachP = null; mediaPage = 0;
+  mediaLayer.innerHTML = '';
+}
+function destroyMedia(m) {
+  try { m.api && m.api.destroy && m.api.destroy(); } catch (e) {}
+  if (m.urls) m.urls.forEach(u => URL.revokeObjectURL(u));
+  m.el.remove();
+}
+function attachments() { if (!attachP) attachP = pdfDoc.getAttachments().then(a => a || {}).catch(() => ({})); return attachP; }
+async function fileBytes(src) {
+  if (src.startsWith('attach:')) {
+    const name = src.slice(7), att = await attachments(), a = att[name];
+    if (!a) throw new Error('Embedded file not found: ' + name);
+    return { bytes: a.content, type: mimeOf(name), name };
+  }
+  if (/^https:\/\//i.test(src)) return { url: src, type: mimeOf(src.split('?')[0]), name: src };
+  throw new Error('Unsupported source: ' + src);
+}
+async function fileUrl(m, src) {
+  const f = await fileBytes(src);
+  if (f.url) return f.url;
+  const u = URL.createObjectURL(new Blob([f.bytes], { type: f.type }));
+  (m.urls = m.urls || []).push(u); return u;
+}
+function parseMarker(uri) {
+  if (typeof uri !== 'string' || !uri.startsWith('bdlt-media:')) return null;
+  const parts = uri.slice(11).split(';');
+  if (parts[0] !== 'v1') return null;
+  const o = {};
+  for (const p of parts.slice(1)) {
+    if (!p) continue;
+    const i = p.indexOf('='), k = (i < 0 ? p : p.slice(0, i)).trim().toLowerCase();
+    let v = i < 0 ? '1' : p.slice(i + 1);
+    try { v = decodeURIComponent(v); } catch (e) {}
+    o[k] = v;
+  }
+  if (!o.type || !o.src) return null;
+  return o;
+}
+const flag = (o, k, d) => o[k] === undefined ? d : o[k] !== '0';
+async function markersFor(n) {
+  if (markerCache.has(n)) return markerCache.get(n);
+  const page = await pdfDoc.getPage(n), anns = await page.getAnnotations({ intent: 'display' });
+  const list = [];
+  anns.forEach((a, i) => {
+    if (a.subtype !== 'Link') return;
+    const spec = parseMarker(a.unsafeUrl || a.url);
+    if (!spec) return;
+    spec.rect = a.rect; spec.key = spec.id ? 'id:' + spec.id : `p${n}:${i}`;
+    list.push(spec);
+  });
+  markerCache.set(n, list); return list;
+}
+// Position: PDF rect -> CSS px inside #page (the page transform handles zoom and pan)
+function placeMedia(m) {
+  const vp = curVp; if (!vp) return;
+  const [x1, y1, x2, y2] = vp.convertToViewportRectangle(m.rect), f = base.fit;
+  Object.assign(m.el.style, { left: Math.min(x1, x2) * f + 'px', top: Math.min(y1, y2) * f + 'px', width: Math.abs(x2 - x1) * f + 'px', height: Math.abs(y2 - y1) * f + 'px' });
+  if (m.api && m.api.resized) m.api.resized();
+}
+const sameRect = (a, b) => a && b && a.every((v, i) => Math.abs(v - b[i]) < 1);
+async function mediaShow(n) {
+  if (!pdfDoc) return;
+  const token = mediaDocToken; mediaPage = n;
+  let specs = [];
+  try { specs = await markersFor(n); } catch (e) { specs = []; }
+  if (token !== mediaDocToken || n !== pageNum) return;
+  const want = new Set();
+  for (const spec of specs) {
+    let m = mediaPool.get(spec.key);
+    if (m && !sameRect(m.rect, spec.rect)) { destroyMedia(m); mediaPool.delete(spec.key); m = null; }
+    if (!m) m = createMedia(spec);
+    if (!m) continue;
+    m.page = n; want.add(spec.key); placeMedia(m);
+    if (m.el.hidden) { m.el.hidden = false; m.api && m.api.show && m.api.show(); }
+  }
+  for (const m of mediaPool.values()) if (!want.has(m.key) && !m.el.hidden) { m.el.hidden = true; m.api && m.api.hide && m.api.hide(); }
+}
+function createMedia(spec) {
+  const el = document.createElement('div');
+  el.className = 'media' + (AUDIENCE ? ' proj' : ''); el.hidden = true;
+  if (spec.bg && spec.bg !== 'none') el.style.background = spec.bg;
+  if (spec.title) el.title = spec.title;
+  mediaLayer.appendChild(el);
+  const m = { key: spec.key, spec, rect: spec.rect, el, api: null };
+  mediaPool.set(spec.key, m);
+  const make = { video: makeVideo, audio: makeVideo, image: makeImage, frames: makeFrames, widget: makeWidget }[spec.type];
+  if (!make) { el.remove(); mediaPool.delete(spec.key); return null; }
+  try { m.api = make(m); } catch (e) { console.warn('media', e); }
+  const pend = pendingMedia.get(spec.key); if (pend && m.api && m.api.remote) { pendingMedia.delete(spec.key); pend.forEach(msg => m.api.remote(msg)); }
+  return m;
+}
+function mediaError(m, msg) {
+  m.el.innerHTML = ''; m.el.style.pointerEvents = 'none'; console.warn('BDLT media:', msg);
+  if (!AUDIENCE) toast(msg, 4000);
+}
+const ICON_PLAY = '<svg viewBox="0 0 24 24"><path d="M7 5v14l12-7z"/></svg>';
+// remote = messages from the lecturer, applied in the projector window
+function mpost(m, msg) { if (!AUDIENCE) post(Object.assign({ t: 'media', key: m.key }, msg)); }
+
+// ---------- video and audio ----------
+function makeVideo(m) {
+  const o = m.spec, isAudio = o.type === 'audio';
+  const v = document.createElement(isAudio ? 'audio' : 'video');
+  v.preload = 'auto'; v.playsInline = true; v.setAttribute('playsinline', '');
+  v.style.objectFit = o.fit || 'contain';
+  const start = +o.start || 0, end = o.end !== undefined ? +o.end : null, loop = flag(o, 'loop', false);
+  v.loop = loop && end === null; v.playbackRate = +o.rate || 1;
+  v.muted = AUDIENCE || flag(o, 'muted', false);
+  v.controls = !AUDIENCE && flag(o, 'controls', true);
+  m.el.appendChild(v);
+  let ready = false, wantPlay = false, cover = null;
+  fileUrl(m, o.src).then(u => { v.src = u; v.addEventListener('loadedmetadata', () => { ready = true; if (start) v.currentTime = start; if (wantPlay) tryPlay(); }, { once: true }); })
+    .catch(e => mediaError(m, 'This slide’s ' + o.type + ' could not be loaded. ' + e.message));
+  v.addEventListener('timeupdate', () => {
+    if (end !== null && v.currentTime >= end) { if (loop) v.currentTime = start; else { v.pause(); v.currentTime = end; } }
+  });
+  function showCover() {
+    if (cover || AUDIENCE) return;
+    cover = document.createElement('button'); cover.className = 'mplay'; cover.setAttribute('aria-label', 'Play');
+    cover.innerHTML = '<span>' + ICON_PLAY + '</span>';
+    cover.onclick = () => { cover.remove(); cover = null; v.play().catch(() => {}); };
+    m.el.appendChild(cover);
+  }
+  function tryPlay() { const p = v.play(); if (p && p.catch) p.catch(() => { if (!v.muted) showCover(); }); }
+  // lecturer -> projector
+  const send = a => mpost(m, { a, time: v.currentTime, rate: v.playbackRate });
+  if (!AUDIENCE) {
+    ['play', 'pause', 'seeked', 'ratechange'].forEach(ev => v.addEventListener(ev, () => send(ev)));
+    m.sync = setInterval(() => { if (!v.paused && !m.el.hidden) send('sync'); }, 2000);
+  }
+  return {
+    show() { if (flag(o, 'autoplay', false) && !AUDIENCE) { wantPlay = true; if (ready) tryPlay(); } else if (!AUDIENCE && !v.controls && !flag(o, 'autoplay', false)) showCover(); },
+    hide() { wantPlay = false; v.pause(); },
+    destroy() { clearInterval(m.sync); v.pause(); v.removeAttribute('src'); v.load(); },
+    remote(msg) {
+      if (!ready && msg.a !== 'pause') { v.addEventListener('loadedmetadata', () => this.remote(msg), { once: true }); return; }
+      if (msg.rate) v.playbackRate = msg.rate;
+      if (Math.abs(v.currentTime - msg.time) > (msg.a === 'sync' ? 0.35 : 0.05)) v.currentTime = msg.time;
+      if (msg.a === 'play' || (msg.a === 'sync' && v.paused)) v.play().catch(() => {});
+      if (msg.a === 'pause') v.pause();
+    }
+  };
+}
+
+// ---------- still or animated image ----------
+function makeImage(m) {
+  const img = new Image(); img.alt = m.spec.title || ''; img.style.objectFit = m.spec.fit || 'contain'; img.draggable = false;
+  m.el.appendChild(img); m.el.style.pointerEvents = 'none';
+  fileUrl(m, m.spec.src).then(u => img.src = u).catch(e => mediaError(m, 'This slide’s image could not be loaded. ' + e.message));
+  return {};
+}
+
+// ---------- frame animation (the \animategraphics replacement) ----------
+function sprintfInt(pat, n) { return pat.replace(/%(0?)(\d*)d/, (_, z, w) => { const s = String(n); return z ? s.padStart(+w || 0, '0') : s.padStart(+w || 0, ' '); }); }
+function makeFrames(m) {
+  const o = m.spec, first = parseInt(o.first || '0', 10), last = parseInt(o.last, 10), fps = Math.max(0.05, +o.fps || 1);
+  const loop = flag(o, 'loop', false), pal = flag(o, 'palindrome', false), controls = !AUDIENCE && flag(o, 'controls', true);
+  if (!(last >= first)) { mediaError(m, 'Frame animation: missing or invalid “last”.'); return {}; }
+  const img = new Image(); img.style.objectFit = o.fit || 'contain'; img.draggable = false; m.el.appendChild(img);
+  const urls = []; let i = 0, dir = 1, timer = 0, playing = false, loaded = false;
+  const count = last - first + 1;
+  Promise.all(Array.from({ length: count }, (_, k) => fileUrl(m, sprintfInt(o.src, first + k)))).then(list => {
+    urls.push(...list);
+    return Promise.all(list.map(u => new Promise(r => { const im = new Image(); im.onload = im.onerror = r; im.src = u; })));
+  }).then(() => { loaded = true; render(); if (playing) startTimer(); })
+    .catch(e => mediaError(m, 'Frame animation could not be loaded. ' + e.message));
+  let bar = null, slider = null, outp = null, pbtn = null;
+  if (controls) {
+    bar = document.createElement('div'); bar.className = 'fbar';
+    const ic = d => `<svg viewBox="0 0 24 24">${d}</svg>`;
+    bar.innerHTML = `<button data-a="prev" aria-label="Previous frame">${ic('<path d="M15 6l-6 6 6 6"/>')}</button>
+      <button data-a="play" aria-label="Play">${ic('<path d="M8 5v14l11-7z"/>')}</button>
+      <button data-a="next" aria-label="Next frame">${ic('<path d="M9 6l6 6-6 6"/>')}</button>
+      <input type="range" min="0" max="${count - 1}" step="1" value="0" aria-label="Frame"><output></output>`;
+    m.el.appendChild(bar);
+    slider = bar.querySelector('input'); outp = bar.querySelector('output'); pbtn = bar.querySelector('[data-a=play]');
+    bar.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return;
+      if (b.dataset.a === 'play') setPlaying(!playing); else { setPlaying(false); go(i + (b.dataset.a === 'next' ? 1 : -1)); } });
+    slider.oninput = () => { setPlaying(false); go(+slider.value); };
+    // while playing, the bar fades after 3 s so it does not hide the frame; a touch brings it back
+    let idleT = 0;
+    const wake = () => { bar.classList.remove('idle'); clearTimeout(idleT); idleT = setTimeout(() => { if (playing) bar.classList.add('idle'); }, 3000); };
+    m.el.addEventListener('pointerdown', wake); bar.addEventListener('input', wake); m.wakeBar = wake;
+  }
+  function render() {
+    if (loaded && urls[i]) img.src = urls[i];
+    if (slider) { slider.value = i; outp.textContent = `${i + 1}/${count}`; pbtn.innerHTML = playing ? '<svg viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></svg>' : '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>'; }
+  }
+  function go(k, quiet) { i = Math.max(0, Math.min(count - 1, k)); render(); if (!quiet) mpost(m, { i, playing }); }
+  function tick() {
+    let k = i + dir;
+    if (k > count - 1) { if (pal) { dir = -1; k = i - 1; } else if (loop) k = 0; else { setPlaying(false); return; } }
+    if (k < 0) { if (loop || pal) { dir = 1; k = 1; } else { setPlaying(false); return; } }
+    i = Math.max(0, Math.min(count - 1, k)); render();
+  }
+  function startTimer() { clearInterval(timer); if (playing && loaded) timer = setInterval(tick, 1000 / fps); }
+  function setPlaying(p, quiet) { playing = p; if (m.wakeBar) m.wakeBar(); if (p && !loop && !pal && i >= count - 1) i = 0; startTimer(); if (!p) clearInterval(timer); render(); if (!quiet) mpost(m, { i, playing }); }
+  return {
+    show() { if (flag(o, 'autoplay', false) && !AUDIENCE) setPlaying(true); },
+    hide() { if (!AUDIENCE) setPlaying(false); else { clearInterval(timer); } },
+    destroy() { clearInterval(timer); },
+    remote(msg) { go(msg.i, true); setPlaying(!!msg.playing, true); }
+  };
+}
+
+// ---------- interactive HTML widget, sandboxed ----------
+function seedOf(s) { let h = 2166136261; for (const c of s) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return (h >>> 0) % 2147483646 + 1; }
+const widgetFrames = new Map();   // contentWindow -> media
+function helperScript(m) {
+  const params = {}; for (const [k, v] of Object.entries(m.spec)) if (k.startsWith('x-')) params[k.slice(2)] = v;
+  const role = AUDIENCE ? 'projector' : (LECTURER() ? 'lecturer' : 'single');
+  const cfg = JSON.stringify({ role, params, seed: seedOf(m.key + '|' + fileName) });
+  return `<script>(function(){var C=${cfg.replace(/</g, '\\u003c')};var fs=[],sh=[],hd=[],aw={},n=0,t0=performance.now(),off=0,s=C.seed;
+var P=function(m){parent.postMessage(Object.assign({__bdlt:1},m),'*')};
+var b=window.bdlt={version:'1',role:C.role,params:C.params,seed:C.seed,state:null,
+random:function(){s=(s*16807)%2147483647;return (s-1)/2147483646},
+setState:function(o){b.state=o;if(C.role!=='projector')P({t:'state',s:o});fs.forEach(function(f){try{f(o)}catch(e){console.error(e)}})},
+onState:function(f){fs.push(f)},onShow:function(f){sh.push(f)},onHide:function(f){hd.push(f)},
+now:function(){return performance.now()-t0+off},
+asset:function(name){return new Promise(function(res,rej){var id=++n;aw[id]=[res,rej];P({t:'asset',id:id,name:name})})}};
+addEventListener('message',function(e){var m=e.data;if(!m||!m.__bdlt||e.source!==parent)return;
+if(m.t==='state'){b.state=m.s;fs.forEach(function(f){try{f(m.s)}catch(x){console.error(x)}})}
+else if(m.t==='show')sh.forEach(function(f){f()});else if(m.t==='hide')hd.forEach(function(f){f()});
+else if(m.t==='clock')off=m.ms-(performance.now()-t0);
+else if(m.t==='asset'){var w=aw[m.id];delete aw[m.id];if(!w)return;if(m.err)w[1](new Error(m.err));else w[0](URL.createObjectURL(new Blob([m.buf],{type:m.type})))}});
+if(C.role!=='projector'){setInterval(function(){P({t:'clock',ms:b.now()})},2000);
+['pointerdown','pointermove','pointerup','pointercancel'].forEach(function(ty){addEventListener(ty,function(e){if(e.pointerType!=='pen')return;
+e.preventDefault();e.stopImmediatePropagation();P({t:'pen',type:ty,x:e.clientX,y:e.clientY,p:e.pressure||.5,id:e.pointerId})},true)});
+addEventListener('touchstart',function(e){if(e.touches[0]&&e.touches[0].touchType==='stylus')e.preventDefault()},{capture:true,passive:false});}
+})();<\/script>`;
+}
+function makeWidget(m) {
+  const o = m.spec, f = document.createElement('iframe');
+  f.setAttribute('sandbox', 'allow-scripts'); f.setAttribute('title', o.title || 'Interactive widget');
+  f.setAttribute('allow', 'fullscreen'); f.style.background = 'transparent';
+  const scale = +o.scale || 1;
+  if (scale !== 1) Object.assign(f.style, { width: 100 / scale + '%', height: 100 / scale + '%', transform: `scale(${scale})`, transformOrigin: '0 0' });
+  m.el.appendChild(f);
+  let html = null, shown = false, state = null;
+  (async () => {
+    const fb = await fileBytes(o.src);
+    html = fb.url ? await (await fetch(fb.url)).text() : new TextDecoder().decode(fb.bytes);
+    const helper = helperScript(m);
+    // the helper must run before the widget's own scripts
+    html = /<head[^>]*>/i.test(html) ? html.replace(/<head[^>]*>/i, h => h + helper) : helper + html;
+    f.addEventListener('load', () => {
+      widgetFrames.set(f.contentWindow, m);
+      if (state) f.contentWindow.postMessage({ __bdlt: 1, t: 'state', s: state }, '*');
+      if (shown) f.contentWindow.postMessage({ __bdlt: 1, t: 'show' }, '*');
+    }, { once: true });
+    f.srcdoc = html;
+  })().catch(e => mediaError(m, 'This slide’s widget could not be loaded. ' + e.message));
+  const send = msg => { try { f.contentWindow && f.contentWindow.postMessage(Object.assign({ __bdlt: 1 }, msg), '*'); } catch (e) {} };
+  m.fromWidget = async msg => {
+    if (msg.t === 'state') { state = msg.s; if (o.sync !== 'none') mpost(m, { s: msg.s }); }
+    else if (msg.t === 'clock') mpost(m, { ms: msg.ms });
+    else if (msg.t === 'pen') penFromWidget(f, msg);
+    else if (msg.t === 'asset') {
+      const allowed = (o.assets || '').split(',').map(x => x.trim()).filter(Boolean);
+      if (!allowed.includes(msg.name)) return send({ t: 'asset', id: msg.id, err: 'Not listed in assets: ' + msg.name });
+      try { const fb = await fileBytes('attach:' + msg.name); const buf = fb.bytes.slice().buffer; send({ t: 'asset', id: msg.id, buf, type: fb.type }); }
+      catch (e) { send({ t: 'asset', id: msg.id, err: e.message }); }
+    }
+  };
+  return {
+    show() { shown = true; send({ t: 'show' }); },
+    hide() { shown = false; send({ t: 'hide' }); },
+    destroy() { widgetFrames.delete(f.contentWindow); f.srcdoc = ''; },
+    remote(msg) { if (msg.s !== undefined) { state = msg.s; send({ t: 'state', s: msg.s }); } if (msg.ms !== undefined) send({ t: 'clock', ms: msg.ms }); }
+  };
+}
+window.addEventListener('message', e => {
+  const msg = e.data; if (!msg || !msg.__bdlt) return;
+  const m = widgetFrames.get(e.source); if (!m || !m.fromWidget) return;
+  m.fromWidget(msg);
+});
+// Pencil over a widget: the widget forwards pen events, and they become ink as usual
+function penFromWidget(f, msg) {
+  const r = f.getBoundingClientRect(), sx = r.width / (f.clientWidth || r.width), sy = r.height / (f.clientHeight || r.height);
+  const ev = { pointerType: 'pen', pointerId: 'w' + msg.id, clientX: r.left + msg.x * sx, clientY: r.top + msg.y * sy, pressure: msg.p, button: 0,
+    timeStamp: performance.now(), target: stage, preventDefault() {} };
+  if (msg.type === 'pointerdown') onDown(ev); else if (msg.type === 'pointermove') onMove(ev); else penEnd(ev);
+}
+function mediaRemote(msg) {
+  const m = mediaPool.get(msg.key);
+  if (m && m.api && m.api.remote) m.api.remote(msg);
+  else { const l = pendingMedia.get(msg.key) || []; l.push(msg); pendingMedia.set(msg.key, l.slice(-20)); }
 }
 
 // ---------- update check: GitLab stamps the build into APP_VERSION and version.json ----------
@@ -1111,6 +1445,7 @@ function startAudience() {
     else if (m.t === 'live') { if (m.st) { clearCanvas(livec); drawStroke(ctxOf(livec), m.st); } else clearCanvas(livec); }
     else if (m.t === 'lz') { laser.push({ x: m.x, y: m.y, t: performance.now(), id: m.id }); if (!laserRAF) laserLoop(); }
     else if (m.t === 'laserColour') settings.laser = m.laser;
+    else if (m.t === 'media') mediaRemote(m);
     else if (m.t === 'close') { window.close(); showAudHint('Presenter mode is off. You can close this window.'); }
   };
   chan.postMessage({ t: 'hello' });
