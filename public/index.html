@@ -98,6 +98,47 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;touch-
 
 #dropzone{position:fixed;inset:12px;border:2px dashed var(--accent);border-radius:18px;display:grid;place-items:center;
   font-size:18px;color:var(--fg);background:rgba(8,9,11,.7);z-index:40;pointer-events:none}
+/* settings */
+.panel.wide{width:min(560px,calc(100vw - 32px));max-height:calc(100vh - 48px);overflow-y:auto;gap:18px}
+.set{display:grid;gap:8px}
+.set h3{margin:0;font-size:15px;font-weight:600}
+.set-h{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.set p{font-size:13px}
+.set p.warn{color:var(--accent)}
+.count{font-family:var(--num);font-size:12px;color:var(--muted)}
+.pick{display:flex;flex-wrap:wrap;gap:10px}
+.pk{position:relative;width:40px;height:40px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(255,255,255,.28);border:3px solid transparent}
+.pk[aria-pressed="true"]{border-color:var(--fg)}
+.pk[aria-pressed="false"]{opacity:.45}
+.pk .ord{position:absolute;right:-6px;top:-6px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:var(--fg);color:var(--stage);font:600 11px/18px var(--num);text-align:center}
+.pk.lz{width:auto;border-radius:20px;padding:0 14px 0 34px;color:#fff;font-size:13px;font-weight:500;opacity:1}
+.pk.lz::before{content:"";position:absolute;left:12px;top:50%;width:12px;height:12px;margin-top:-6px;border-radius:50%;background:var(--dot)}
+.pk.lz{background:var(--chrome-2)}
+.pk.lz[aria-pressed="false"]{opacity:.55}
+.switch{position:relative;width:52px;height:30px;flex:none}
+.switch input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer}
+.switch span{position:absolute;inset:0;border-radius:15px;background:var(--chrome-2);border:1px solid var(--line);transition:background .2s;pointer-events:none}
+.switch span::after{content:"";position:absolute;left:3px;top:3px;width:22px;height:22px;border-radius:50%;background:var(--fg);transition:transform .2s}
+.switch input:checked + span{background:var(--accent)}
+.switch input:checked + span::after{transform:translateX(22px);background:var(--accent-ink)}
+.switch input:disabled + span{opacity:.35}
+.switch input:focus-visible + span{outline:2px solid var(--accent);outline-offset:2px}
+/* presenter chip */
+#chip{position:fixed;left:calc(env(safe-area-inset-left,0px) + 12px);bottom:calc(env(safe-area-inset-bottom,0px) + 12px);z-index:9;
+  display:flex;align-items:center;gap:10px;padding:6px 12px 6px 8px;background:var(--chrome);border:1px solid var(--line);border-radius:12px;
+  -webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);font-size:13px;color:var(--fg)}
+#chip .led{width:9px;height:9px;border-radius:50%;background:#7b818c}
+#chip.on .led{background:#A4D233}
+#chip #timer{font-family:var(--num);font-variant-numeric:tabular-nums}
+#chip canvas{height:44px;width:auto;border-radius:3px;background:#2a2c31}
+#chip .nx{color:var(--muted);font-size:12px}
+/* audience window */
+body.audience .bar, body.audience .hint, body.audience #sheet, body.audience #chip{display:none!important}
+body.audience #stage{cursor:none}
+#audHint{position:fixed;inset:0;z-index:50;display:grid;place-items:center;background:rgba(8,9,11,.82);text-align:center;padding:24px}
+#audHint div{display:grid;gap:10px;max-width:520px}
+#audHint h2{margin:0;font-size:22px}
+#audHint p{margin:0;color:var(--muted);font-size:15px;line-height:1.5}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 
@@ -129,6 +170,8 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;touch-
   <div class="grp">
     <button class="tb" id="bSave" title="Save a PDF with your ink"><svg viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg><span class="lbl">Save</span></button>
     <button class="tb" id="bFs" aria-label="Full screen" title="Full screen"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+    <button class="tb" id="bPresent" aria-label="Projector window" title="Open the projector window" hidden><svg viewBox="0 0 24 24"><path d="M3 5a1 1 0 0 1 1 -1h16a1 1 0 0 1 1 1v10a1 1 0 0 1 -1 1h-16a1 1 0 0 1 -1 -1v-10"/><path d="M7 20h10"/><path d="M9 16v4"/><path d="M15 16v4"/></svg></button>
+    <button class="tb" id="bSettings" aria-label="Settings" title="Settings"><svg viewBox="0 0 24 24"><path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065"/><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"/></svg></button>
     <button class="tb" id="bHide" aria-label="Hide toolbar" title="Hide toolbar (tap the top centre of the slide to bring it back)"><svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg></button>
   </div>
 </header>
@@ -145,6 +188,38 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;touch-
     <button class="btn pri" id="bShare">Save to Files…</button>
   </div>
 </div>
+
+<div id="setPanel" class="panel wide" role="dialog" aria-modal="true" aria-labelledby="setTitle" hidden>
+  <h2 id="setTitle">Settings</h2>
+  <section class="set">
+    <div class="set-h"><h3>Presenter mode (two screens)</h3><label class="switch"><input type="checkbox" id="optPresenter" aria-describedby="presNote"><span></span></label></div>
+    <p id="presNote"></p>
+  </section>
+  <section class="set">
+    <div class="set-h"><h3>Pen colours</h3><span class="count" id="penCount"></span></div>
+    <p>Tap to add or remove, up to 10. The toolbar shows them in the order you pick them.</p>
+    <div class="pick" id="pickPen"></div>
+  </section>
+  <section class="set">
+    <h3>Highlighter colours</h3>
+    <div class="pick" id="pickHl"></div>
+  </section>
+  <section class="set">
+    <h3>Laser pointer</h3>
+    <div class="pick" id="pickLaser"></div>
+  </section>
+  <div class="row">
+    <button class="btn" id="bSetReset">Reset to defaults</button>
+    <button class="btn pri" id="bSetDone">Done</button>
+  </div>
+</div>
+
+<button id="chip" title="Projector status. Tap to restart the timer." hidden><i class="led"></i><span id="chipTxt">Projector</span><span id="timer">00:00</span><span class="nx" id="nxLbl"></span><canvas id="nxThumb" width="16" height="9"></canvas></button>
+
+<div id="audHint" hidden><div>
+  <h2>Projector window</h2>
+  <p id="audMsg">On iPad, drag this tab out of Safari's tab bar so it becomes its own window, move that window to the external display, then tap here to fill the screen.</p>
+</div></div>
 
 <div id="toast" role="status"></div>
 <div id="dropzone" hidden>Drop a PDF to open it</div>
@@ -165,13 +240,37 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs
 let pdfDoc = null, pdfBytes = null, fileName = 'slides.pdf', numPages = 0, pageNum = 1, curVp = null;
 let ink = new Map(), hist = new Map();
 let tool = 'pen';
-// UZH CI colours
-const colors = { pen: '#0028A5', highlighter: '#FFC845' };
-const PALETTE = {
-  pen: ['#0028A5', '#FC4C02', '#FFC845', '#A4D233', '#000000', '#FFFFFF'],
-  highlighter: ['#FFC845', '#A4D233', '#4AC9E3', '#FC4C02', '#BF0D3E']
-};
-const COLOR_NAMES = { '#0028A5': 'UZH blue', '#FC4C02': 'UZH orange', '#FFC845': 'UZH gold', '#A4D233': 'UZH apple green', '#000000': 'Black', '#FFFFFF': 'White', '#4AC9E3': 'UZH cyan', '#BF0D3E': 'UZH berry' };
+// ---------- UZH colours and settings ----------
+// The ten UZH colours (values as in the BDLT26 template). Pens may use all ten, highlighters the six accents.
+const UZH = [['#0028A5', 'UZH blue'], ['#4AC9E3', 'UZH cyan'], ['#A4D233', 'UZH apple green'], ['#FFC845', 'UZH gold'],
+  ['#FC4C02', 'UZH orange'], ['#BF0D3E', 'UZH berry'], ['#000000', 'Black'], ['#FFFFFF', 'White'],
+  ['#666666', 'UZH dark grey'], ['#D7D7D7', 'UZH light grey']];
+const COLOR_NAMES = Object.fromEntries(UZH);
+const PEN_ALLOWED = UZH.map(c => c[0]), HL_ALLOWED = PEN_ALLOWED.slice(0, 6), MAX_PEN = 10;
+const LASERS = { berry: { hex: '#BF0D3E', name: 'UZH berry' }, green: { hex: '#4E6B12', name: 'Dark green' } };
+const DEFAULTS = { pen: ['#0028A5', '#FC4C02', '#FFC845', '#A4D233', '#000000', '#FFFFFF'],
+  hl: ['#FFC845', '#A4D233', '#4AC9E3', '#FC4C02', '#BF0D3E'], laser: 'berry', presenter: false };
+const STORE = 'bdlt-pdf-presenter-settings';
+const rgbOf = h => { const n = parseInt(h.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; };
+// Snap any colour to the closest allowed UZH colour
+function nearest(hex, allowed) {
+  if (!/^#[0-9a-f]{6}$/i.test(hex || '')) return null;
+  const [r, g, b] = rgbOf(hex); let best = allowed[0], bd = Infinity;
+  for (const a of allowed) { const [R, G, B] = rgbOf(a), d = 2 * (r - R) ** 2 + 4 * (g - G) ** 2 + 3 * (b - B) ** 2; if (d < bd) { bd = d; best = a; } }
+  return best;
+}
+const uniq = a => [...new Set(a.filter(Boolean))];
+function cleanSettings(o) {
+  o = o || {};
+  let pen = uniq((Array.isArray(o.pen) ? o.pen : DEFAULTS.pen).map(c => nearest(c, PEN_ALLOWED))).slice(0, MAX_PEN);
+  let hl = uniq((Array.isArray(o.hl) ? o.hl : DEFAULTS.hl).map(c => nearest(c, HL_ALLOWED)));
+  if (!pen.length) pen = DEFAULTS.pen.slice(); if (!hl.length) hl = DEFAULTS.hl.slice();
+  return { pen, hl, laser: LASERS[o.laser] ? o.laser : DEFAULTS.laser, presenter: !!o.presenter };
+}
+let settings = cleanSettings((() => { try { return JSON.parse(localStorage.getItem(STORE) || 'null'); } catch (e) { return null; } })());
+function saveSettings() { try { localStorage.setItem(STORE, JSON.stringify(settings)); } catch (e) {} }
+const paletteFor = t => t === 'pen' ? settings.pen : t === 'highlighter' ? settings.hl : null;
+const colors = { pen: settings.pen[0], highlighter: settings.hl[0] };
 const WIDTH = { pen: 2.6, highlighter: 16 };
 let view = { s: 1, tx: 0, ty: 0 };
 const base = { w: 0, h: 0, left: 0, top: 0, fit: 1 };
@@ -199,7 +298,7 @@ function layout() {
   base.left = (W - base.w) / 2; base.top = (H - base.h) / 2;
   Object.assign(pageEl.style, { width: base.w + 'px', height: base.h + 'px', left: base.left + 'px', top: base.top + 'px' });
 }
-function applyView() { pageEl.style.transform = `translate(${view.tx}px,${view.ty}px) scale(${view.s})`; }
+function applyView() { pageEl.style.transform = `translate(${view.tx}px,${view.ty}px) scale(${view.s})`; sendView(); }
 function clampView() {
   const W = stage.clientWidth, H = stage.clientHeight, S = base.w * view.s, T = base.h * view.s;
   view.tx = S <= W ? (W - S) / 2 - base.left : clamp(view.tx, W - base.left - S, -base.left);
@@ -227,13 +326,14 @@ function blit(canvas, ps) {
 async function showPage(n) {
   if (!pdfDoc) return;
   n = clamp(n, 1, numPages);
-  const my = ++renderToken; pageNum = n; updateCounter(); markThumbs();
+  const my = ++renderToken; pageNum = n; updateCounter(); markThumbs(); post({ t: 'page', n }); updateNext();
   const vp = await getVp(n); if (my !== renderToken) return;
   const ps = psFor(vp, 1);
   let c = cache.get(n);
   if (!c || c.ps < ps * 0.99) { c = { canvas: await renderToCanvas(n, ps), ps }; cache.set(n, c); }
   if (my !== renderToken) return;
   curVp = vp; view = { s: 1, tx: 0, ty: 0 }; layout(); applyView(); blit(c.canvas, ps);
+  if (AUDIENCE) applyRemoteView();
   prefetch(n);
 }
 async function prefetch(n) {
@@ -287,17 +387,17 @@ function snap() { const h = hist.get(pageNum) || []; h.push(strokes().slice()); 
 function undo() {
   const h = hist.get(pageNum);
   if (!h || !h.length) { toast('Nothing to undo on this slide'); return; }
-  ink.set(pageNum, h.pop()); redrawInk(); markThumbs();
+  ink.set(pageNum, h.pop()); redrawInk(); markThumbs(); syncInk();
 }
 function clearSlide() {
   if (!strokes().length) { toast('This slide has no ink'); return; }
-  snap(); ink.set(pageNum, []); redrawInk(); markThumbs(); toast('Slide cleared. Undo brings it back.');
+  snap(); ink.set(pageNum, []); redrawInk(); markThumbs(); syncInk(); toast('Slide cleared. Undo brings it back.');
 }
 let erasedSnap = false;
 function eraseAt(x, y) {
   const a = strokes(), r = 10;
   const keep = a.filter(st => !st.pts.some(q => Math.hypot(q[0] - x, q[1] - y) < r + st.w / 2));
-  if (keep.length !== a.length) { if (!erasedSnap) { snap(); erasedSnap = true; } ink.set(pageNum, keep); redrawInk(); markThumbs(); }
+  if (keep.length !== a.length) { if (!erasedSnap) { snap(); erasedSnap = true; } ink.set(pageNum, keep); redrawInk(); markThumbs(); syncInk(); }
 }
 
 // ---------- laser ----------
@@ -306,15 +406,16 @@ function laserLoop() {
   const now = performance.now(), life = 650;
   laser = laser.filter(p => now - p.t < life);
   clearCanvas(livec); const ctx = ctxOf(livec);
-  ctx.save(); ctx.lineCap = 'round'; ctx.shadowColor = 'rgba(255,40,40,.9)'; ctx.shadowBlur = 10 * inkPS;
+  const [lr, lg, lb] = rgbOf(LASERS[settings.laser].hex);
+  ctx.save(); ctx.lineCap = 'round'; ctx.shadowColor = `rgba(${lr},${lg},${lb},.85)`; ctx.shadowBlur = 10 * inkPS;
   for (let i = 1; i < laser.length; i++) {
     const a = laser[i - 1], b = laser[i]; if (a.id !== b.id) continue;
     const k = 1 - (now - b.t) / life;
-    ctx.strokeStyle = `rgba(255,59,48,${k})`; ctx.lineWidth = 2 + 5 * k;
+    ctx.strokeStyle = `rgba(${lr},${lg},${lb},${k})`; ctx.lineWidth = 2 + 5 * k;
     ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
   }
   const last = laser[laser.length - 1];
-  if (last && now - last.t < 120) { ctx.fillStyle = '#ff3b30'; ctx.beginPath(); ctx.arc(last.x, last.y, 5, 0, Math.PI * 2); ctx.fill(); }
+  if (last && now - last.t < 120) { ctx.fillStyle = LASERS[settings.laser].hex; ctx.beginPath(); ctx.arc(last.x, last.y, 5, 0, Math.PI * 2); ctx.fill(); }
   ctx.restore();
   laserRAF = laser.length ? requestAnimationFrame(laserLoop) : 0;
   if (!laserRAF) clearCanvas(livec);
@@ -332,6 +433,7 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
 
 stage.addEventListener('pointerdown', e => {
   keepAwake();
+  if (AUDIENCE) { showAudHint(); return; }
   if (e.pointerType === 'touch') return touchDown(e);
   if (e.pointerType === 'mouse' && e.button !== 0) return;
   e.preventDefault();
@@ -341,7 +443,7 @@ stage.addEventListener('pointerdown', e => {
   touches.clear(); g = null; // palm rejection: the pencil wins
   const r = pageEl.getBoundingClientRect(), [x, y] = toPage(e, r);
   if (tool === 'eraser') { erasedSnap = false; cur = { tool }; eraseAt(x, y); return; }
-  if (tool === 'laser') { cur = { tool, id: e.timeStamp }; laser.push({ x, y, t: performance.now(), id: cur.id }); if (!laserRAF) laserLoop(); return; }
+  if (tool === 'laser') { cur = { tool, id: e.timeStamp }; laser.push({ x, y, t: performance.now(), id: cur.id }); post({ t: 'lz', x, y, id: cur.id }); if (!laserRAF) laserLoop(); return; }
   cur = { tool, color: colors[tool], w: WIDTH[tool], pts: [[x, y, pressure(e)]], drawn: 0 };
   drawLive();
 });
@@ -353,7 +455,7 @@ stage.addEventListener('pointermove', e => {
   for (const ev of list) {
     const [x, y] = toPage(ev, r);
     if (cur.tool === 'eraser') eraseAt(x, y);
-    else if (cur.tool === 'laser') laser.push({ x, y, t: performance.now(), id: cur.id });
+    else if (cur.tool === 'laser') { laser.push({ x, y, t: performance.now(), id: cur.id }); post({ t: 'lz', x, y, id: cur.id }); }
     else { const l = cur.pts[cur.pts.length - 1]; if (Math.hypot(x - l[0], y - l[1]) > 0.35) cur.pts.push([x, y, pressure(ev)]); }
   }
   if (cur.tool === 'laser') { if (!laserRAF) laserLoop(); }
@@ -364,7 +466,7 @@ function penEnd(e) {
   if (e.pointerId !== penId) return;
   penId = null; penLastUp = performance.now();
   if (cur && (cur.tool === 'pen' || cur.tool === 'highlighter')) {
-    delete cur.drawn; snap(); strokes().push(cur); drawStroke(ctxOf(inkc), cur); clearCanvas(livec); markThumbs();
+    delete cur.drawn; snap(); strokes().push(cur); drawStroke(ctxOf(inkc), cur); clearCanvas(livec); markThumbs(); syncInk(); post({ t: 'live', st: null });
   }
   cur = null;
 }
@@ -373,12 +475,13 @@ stage.addEventListener('pointercancel', penEnd);
 
 function drawLive() {
   const ctx = ctxOf(livec);
-  if (cur.tool === 'highlighter') { clearCanvas(livec); drawStroke(ctxOf(livec), cur); return; }
+  if (cur.tool === 'highlighter') { clearCanvas(livec); drawStroke(ctxOf(livec), cur); sendLive(); return; }
   ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = cur.color; ctx.fillStyle = cur.color;
   const p = cur.pts;
   if (p.length === 1) { ctx.beginPath(); ctx.arc(p[0][0], p[0][1], penW(cur, p[0][2]) / 2, 0, Math.PI * 2); ctx.fill(); }
   for (let i = Math.max(1, cur.drawn); i < p.length; i++) drawSeg(ctx, cur, p[i - 1], p[i]);
   cur.drawn = p.length; ctx.restore();
+  sendLive();
 }
 
 function touchDown(e) {
@@ -474,7 +577,8 @@ function setTool(t) {
   buildSwatches();
 }
 function buildSwatches() {
-  const box = $('#swatches'), list = PALETTE[tool];
+  const box = $('#swatches'), list = paletteFor(tool);
+  if (list && !list.includes(colors[tool])) colors[tool] = list[0];
   box.hidden = !list; box.innerHTML = '';
   if (!list) return;
   for (const c of list) {
@@ -556,14 +660,16 @@ sheet.addEventListener('pointermove', e => { if (sheetY !== null && e.clientY - 
 sheet.addEventListener('pointerup', () => sheetY = null);
 
 // ---------- loading ----------
-async function loadBytes(bytes, name) {
+async function loadBytes(bytes, name, opts = {}) {
   try {
-    toast('Opening ' + name + '…', 1500);
+    if (!AUDIENCE) toast('Opening ' + name + '…', 1500);
     const doc = await pdfjsLib.getDocument({ data: bytes.slice() }).promise;
     if (pdfDoc) pdfDoc.destroy();
     pdfDoc = doc; pdfBytes = bytes; fileName = name; numPages = doc.numPages;
     ink = new Map(); hist = new Map(); cache.clear(); vps.clear(); thumbQueue.length = 0;
-    buildStrip(); await showPage(1);
+    if (opts.ink) ink = new Map(opts.ink);
+    buildStrip(); await showPage(opts.page || 1);
+    sendDoc();
   } catch (err) { console.error(err); toast('This file could not be opened as a PDF.'); }
 }
 fileIn.onchange = async () => {
@@ -584,6 +690,7 @@ window.addEventListener('resize', () => { clearTimeout(rT); rT = setTimeout(() =
 
 window.addEventListener('keydown', e => {
   if (e.target.closest && e.target.closest('input')) return;
+  if (AUDIENCE) { if (e.key === 'f') toggleFs(); return; }
   const k = e.key;
   if ((e.metaKey || e.ctrlKey) && k.toLowerCase() === 'z') { e.preventDefault(); undo(); return; }
   if (['ArrowRight', 'ArrowDown', 'PageDown', ' ', 'Enter'].includes(k)) { e.preventDefault(); go(1); }
@@ -593,7 +700,7 @@ window.addEventListener('keydown', e => {
   else if (k === 'f') toggleFs();
   else if (k === 't') toggleBar();
   else if (k === 'g') sheet.classList.contains('open') ? closeSheet() : openSheet();
-  else if (k === 'Escape') { closeSheet(); $('#savePanel').hidden = true; }
+  else if (k === 'Escape') { closeSheet(); $('#savePanel').hidden = true; $('#setPanel').hidden = true; }
 });
 
 // ---------- saving ----------
@@ -663,8 +770,191 @@ async function sampleDeck() {
   return new Uint8Array(await r.arrayBuffer());
 }
 
-setTool('pen');
-sampleDeck().then(b => loadBytes(new Uint8Array(b), 'sample.pdf')).catch(e => { console.error(e); toast('Open a PDF to begin'); });
+// ---------- settings panel ----------
+const setPanel = $('#setPanel'), optPres = $('#optPresenter'), presNote = $('#presNote');
+const PRES_INFO = 'Shows the slides in a separate projector window while you keep the controls here. Needs Stage Manager with an external display set to extend (iPad with M1 chip or later), in Safari. Switching it on opens the projector window as a new tab: drag that tab out into its own window and move it to the external display.';
+function presenterBlocker() {
+  if (!chan) return 'Not available: this browser cannot link two windows.';
+  if (inFrame) return 'Not available in this preview. Open BDLT PDF Presenter from its own web address.';
+  if (Math.min(screen.width, screen.height) < 600) return 'Not available: presenter mode needs an iPad or a computer.';
+  return '';
+}
+function pickBtn(hex, name, pressed, order) {
+  const b = document.createElement('button');
+  b.className = 'pk'; b.style.background = hex; b.title = name;
+  b.setAttribute('aria-label', name); b.setAttribute('aria-pressed', String(pressed));
+  if (hex === '#FFFFFF' || hex === '#D7D7D7') b.style.boxShadow = 'inset 0 0 0 1px rgba(0,0,0,.25)';
+  if (order) { const o = document.createElement('span'); o.className = 'ord'; o.textContent = order; b.appendChild(o); }
+  return b;
+}
+function renderSettings() {
+  const block = presenterBlocker();
+  optPres.disabled = !!block; optPres.checked = !block && settings.presenter;
+  presNote.textContent = block || (settings.presenter && connected() ? 'Projector window connected. Drag it to the external display and tap it to fill the screen.' : PRES_INFO);
+  presNote.classList.toggle('warn', false);
+  const pp = $('#pickPen'); pp.innerHTML = '';
+  for (const [hex, name] of UZH) {
+    const i = settings.pen.indexOf(hex), b = pickBtn(hex, name, i >= 0, i >= 0 ? i + 1 : 0);
+    b.onclick = () => {
+      if (i >= 0) { if (settings.pen.length === 1) return toast('Keep at least one pen colour'); settings.pen.splice(i, 1); }
+      else { if (settings.pen.length >= MAX_PEN) return toast('Up to 10 pen colours'); settings.pen.push(hex); }
+      settingsChanged();
+    };
+    pp.appendChild(b);
+  }
+  $('#penCount').textContent = `${settings.pen.length} of ${MAX_PEN}`;
+  const ph = $('#pickHl'); ph.innerHTML = '';
+  for (const [hex, name] of UZH.slice(0, 6)) {
+    const on = settings.hl.includes(hex), b = pickBtn(hex, name, on, 0);
+    b.onclick = () => {
+      if (on) { if (settings.hl.length === 1) return toast('Keep at least one highlighter colour'); settings.hl = settings.hl.filter(c => c !== hex); }
+      else settings.hl.push(hex);
+      settingsChanged();
+    };
+    ph.appendChild(b);
+  }
+  const pl = $('#pickLaser'); pl.innerHTML = '';
+  for (const [key, l] of Object.entries(LASERS)) {
+    const b = document.createElement('button');
+    b.className = 'pk lz'; b.textContent = l.name; b.style.setProperty('--dot', l.hex);
+    b.setAttribute('aria-pressed', String(settings.laser === key));
+    b.onclick = () => { settings.laser = key; settingsChanged(); };
+    pl.appendChild(b);
+  }
+}
+function settingsChanged() { saveSettings(); buildSwatches(); renderSettings(); updatePresenterUi(); post({ t: 'laserColour', laser: settings.laser }); }
+$('#bSettings').onclick = () => { renderSettings(); setPanel.hidden = false; };
+$('#bSetDone').onclick = () => { setPanel.hidden = true; };
+$('#bSetReset').onclick = () => { const p = settings.presenter; settings = cleanSettings(DEFAULTS); settings.presenter = p; colors.pen = settings.pen[0]; colors.highlighter = settings.hl[0]; settingsChanged(); };
+optPres.onchange = () => {
+  if (optPres.checked) { settings.presenter = true; saveSettings(); updatePresenterUi(); openAudience(true); }
+  else { settings.presenter = false; saveSettings(); post({ t: 'close' }); lastPing = 0; updatePresenterUi(); renderSettings(); }
+};
+
+// ---------- presenter mode: a second window for the projector, kept in sync on this device ----------
+const AUDIENCE = location.hash === '#audience';
+const chan = ('BroadcastChannel' in window) ? new BroadcastChannel('bdlt-pdf-presenter') : null;
+let lastPing = 0, audWin = null, timerStart = 0, viewRAF = 0, liveRAF = 0, remoteView = null;
+const connected = () => performance.now() - lastPing < 5000;
+// Messages go out whenever presenter mode is on; the projector window may be briefly throttled while Safari moves it.
+function post(m) { if (chan && !AUDIENCE && settings.presenter) { try { chan.postMessage(m); } catch (e) {} } }
+const inkEntries = () => [...ink.entries()].map(([n, l]) => [n, l.map(st => ({ tool: st.tool, color: st.color, w: st.w, pts: st.pts }))]);
+function syncInk() { post({ t: 'ink', n: pageNum, strokes: (ink.get(pageNum) || []).map(st => ({ tool: st.tool, color: st.color, w: st.w, pts: st.pts })) }); }
+function sendLive() {
+  if (AUDIENCE || liveRAF) return;
+  liveRAF = requestAnimationFrame(() => { liveRAF = 0; if (cur && cur.pts) post({ t: 'live', st: { tool: cur.tool, color: cur.color, w: cur.w, pts: cur.pts } }); });
+}
+function sendView() {
+  if (AUDIENCE || viewRAF || !curVp) return;
+  viewRAF = requestAnimationFrame(() => {
+    viewRAF = 0;
+    const W = stage.clientWidth, H = stage.clientHeight;
+    post({ t: 'view', n: pageNum, s: view.s, ux: (W / 2 - base.left - view.tx) / (view.s * base.fit), uy: (H / 2 - base.top - view.ty) / (view.s * base.fit) });
+  });
+}
+function sendDoc() {
+  if (AUDIENCE || !pdfBytes) return;
+  post({ t: 'doc', bytes: pdfBytes, name: fileName, page: pageNum, ink: inkEntries(), laser: settings.laser });
+  sendView();
+}
+function openAudience(fromSettings) {
+  const url = location.href.split('#')[0] + '#audience';
+  let w = null;
+  try { w = window.open(url, 'bdlt-audience'); } catch (e) {}
+  if (!w) return presenterFailed('The projector window could not be opened. Allow pop-ups for this site, or use Safari rather than the Home Screen app.');
+  audWin = w;
+  const t0 = performance.now();
+  const check = setInterval(() => {
+    if (connected()) { clearInterval(check); if (fromSettings) renderSettings(); toast('Projector window connected. Drag its tab out into its own window, then move it to the external display.', 4500); }
+    else if (performance.now() - t0 > 6000) { clearInterval(check); presenterFailed('The projector window did not respond. Presenter mode needs Stage Manager with an external display (iPad with M1 chip or later), in Safari.'); }
+  }, 250);
+}
+function presenterFailed(msg) {
+  settings.presenter = false; saveSettings(); updatePresenterUi();
+  try { if (audWin) audWin.close(); } catch (e) {}
+  renderSettings(); presNote.textContent = msg; presNote.classList.add('warn');
+  if (setPanel.hidden) toast(msg, 5000);
+}
+function updatePresenterUi() {
+  const on = !AUDIENCE && settings.presenter;
+  $('#bPresent').hidden = !on; $('#chip').hidden = !on;
+  if (on) tickChip();
+}
+function fmt(ms) { const t = Math.floor(ms / 1000); return String(Math.floor(t / 60)).padStart(2, '0') + ':' + String(t % 60).padStart(2, '0'); }
+function tickChip() {
+  const c = connected(), chip = $('#chip');
+  chip.classList.toggle('on', c);
+  $('#chipTxt').textContent = c ? 'Projector on' : 'Projector off';
+  if (c && !timerStart) timerStart = performance.now();
+  $('#timer').textContent = timerStart ? fmt(performance.now() - timerStart) : '00:00';
+}
+setInterval(() => { if (!AUDIENCE && settings.presenter) tickChip(); }, 1000);
+$('#chip').onclick = () => { timerStart = connected() ? performance.now() : 0; tickChip(); };
+$('#bPresent').onclick = () => { if (connected()) toast('The projector window is connected. Drag it to the external display.'); else openAudience(false); };
+let nxToken = 0;
+async function updateNext() {
+  if (AUDIENCE || !settings.presenter || !pdfDoc) return;
+  const my = ++nxToken, n = pageNum + 1, el = $('#nxThumb');
+  $('#nxLbl').textContent = n <= numPages ? 'Next' : 'End';
+  if (n > numPages) { el.hidden = true; return; }
+  try {
+    const vp = await getVp(n), c = await renderToCanvas(n, (44 * dpr()) / vp.height);
+    if (my !== nxToken) return;
+    el.hidden = false; el.width = c.width; el.height = c.height; el.getContext('2d').drawImage(c, 0, 0);
+  } catch (e) {}
+}
+
+// audience side
+function showAudHint(msg) { if (msg) $('#audMsg').textContent = msg; $('#audHint').hidden = false; }
+$('#audHint').addEventListener('click', () => {
+  $('#audHint').hidden = true;
+  const el = document.documentElement, req = el.requestFullscreen || el.webkitRequestFullscreen;
+  try { if (req && !(document.fullscreenElement || document.webkitFullscreenElement)) { const r = req.call(el); if (r && r.catch) r.catch(() => {}); } } catch (e) {}
+});
+function applyRemoteView() {
+  const v = remoteView; if (!v || v.n !== pageNum || !curVp) return;
+  if (v.s <= 1.02) { view = { s: 1, tx: 0, ty: 0 }; }
+  else {
+    const W = stage.clientWidth, H = stage.clientHeight;
+    view = { s: v.s, tx: W / 2 - base.left - v.s * v.ux * base.fit, ty: H / 2 - base.top - v.s * v.uy * base.fit };
+  }
+  pageEl.style.transform = `translate(${view.tx}px,${view.ty}px) scale(${view.s})`; scheduleHiRes();
+}
+function startAudience() {
+  document.body.classList.add('audience'); document.title = 'BDLT PDF Presenter: projector';
+  showAudHint();
+  chan.onmessage = async ({ data: m }) => {
+    if (!m || !m.t) return;
+    if (m.t === 'doc') { if (m.laser) settings.laser = m.laser; remoteView = null; await loadBytes(new Uint8Array(m.bytes), m.name, { page: m.page, ink: m.ink }); }
+    else if (!pdfDoc) return;
+    else if (m.t === 'page') { if (m.n !== pageNum) { remoteView = null; laser = []; clearCanvas(livec); showPage(m.n); } }
+    else if (m.t === 'view') { remoteView = m; applyRemoteView(); }
+    else if (m.t === 'ink') { ink.set(m.n, m.strokes); if (m.n === pageNum) redrawInk(); }
+    else if (m.t === 'live') { if (m.st) { clearCanvas(livec); drawStroke(ctxOf(livec), m.st); } else clearCanvas(livec); }
+    else if (m.t === 'lz') { laser.push({ x: m.x, y: m.y, t: performance.now(), id: m.id }); if (!laserRAF) laserLoop(); }
+    else if (m.t === 'laserColour') settings.laser = m.laser;
+    else if (m.t === 'close') { window.close(); showAudHint('Presenter mode is off. You can close this window.'); }
+  };
+  chan.postMessage({ t: 'hello' });
+  setInterval(() => chan.postMessage({ t: 'ping' }), 1500);
+  window.addEventListener('pagehide', () => { try { chan.postMessage({ t: 'bye' }); } catch (e) {} });
+}
+if (chan && !AUDIENCE) {
+  chan.onmessage = ({ data: m }) => {
+    if (!m || !settings.presenter) return;
+    if (m.t === 'hello') { lastPing = performance.now(); sendDoc(); tickChip(); }
+    else if (m.t === 'ping') { const was = connected(); lastPing = performance.now(); if (!was) { sendDoc(); tickChip(); } }
+    else if (m.t === 'bye') { lastPing = 0; tickChip(); }
+  };
+}
+
+if (AUDIENCE && chan) {
+  startAudience();
+} else {
+  setTool('pen');
+  updatePresenterUi();
+  sampleDeck().then(b => loadBytes(new Uint8Array(b), 'sample.pdf')).catch(e => { console.error(e); toast('Open a PDF to begin'); });
+}
 })();
 </script>
 
