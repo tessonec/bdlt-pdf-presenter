@@ -56,6 +56,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;touch-
 .tb:hover{background:var(--chrome-2)}
 .tb:focus-visible,.sw:focus-visible,.btn:focus-visible,.thumb:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .tb[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.tb.dim{opacity:.4}
 .tb svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .tb .lbl{font-size:14px;font-weight:500}
 #counter{font-family:var(--num);font-size:13px;font-variant-numeric:tabular-nums;color:var(--muted);min-width:68px;text-align:center}
@@ -123,17 +124,26 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;touch-
 .switch input:checked + span::after{transform:translateX(22px);background:var(--accent-ink)}
 .switch input:disabled + span{opacity:.35}
 .switch input:focus-visible + span{outline:2px solid var(--accent);outline-offset:2px}
-/* presenter chip */
-#chip{position:fixed;left:calc(env(safe-area-inset-left,0px) + 12px);bottom:calc(env(safe-area-inset-bottom,0px) + 12px);z-index:9;
-  display:flex;align-items:center;gap:10px;padding:6px 12px 6px 8px;background:var(--chrome);border:1px solid var(--line);border-radius:12px;
-  -webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);font-size:13px;color:var(--fg)}
-#chip .led{width:9px;height:9px;border-radius:50%;background:#7b818c}
-#chip.on .led{background:#A4D233}
-#chip #timer{font-family:var(--num);font-variant-numeric:tabular-nums}
-#chip canvas{height:44px;width:auto;border-radius:3px;background:#2a2c31}
-#chip .nx{color:var(--muted);font-size:12px}
+/* lecturer panel: status row above a permanent slide strip */
+#lect{display:flex;flex-wrap:wrap;align-items:center;gap:6px 18px;padding:0 16px 10px;font-size:13px;color:var(--muted)}
+#lect .st, #lect button.st{display:inline-flex;align-items:baseline;gap:6px;color:var(--muted);font-size:13px;padding:0}
+#lect b{color:var(--fg);font:600 18px/1 var(--num);font-variant-numeric:tabular-nums}
+#lect .led{width:9px;height:9px;border-radius:50%;background:#7b818c;align-self:center}
+#lect .on .led{background:#A4D233}
+#lect .sp{flex:1}
+#lect .btn{height:34px}
+body.lecturer #sheet{transform:none}
+body.lecturer .grab, body.lecturer .hint{display:none}
+body.lecturer #sheet{padding-top:10px}
+body.lecturer .thumb canvas{height:84px}
+#projPanel .big{display:flex;align-items:center;justify-content:center;height:52px;font-size:16px;text-decoration:none;-webkit-touch-callout:default}
+#projStatus.ok{color:#A4D233}
+.rng{display:grid;grid-template-columns:80px 1fr 48px;align-items:center;gap:10px;font-size:13px;color:var(--muted)}
+.rng input{width:100%;accent-color:var(--accent)}
+.rng output{font-family:var(--num);color:var(--fg);text-align:right}
+#strip{touch-action:none;scroll-snap-type:none}
 /* audience window */
-body.audience .bar, body.audience .hint, body.audience #sheet, body.audience #chip{display:none!important}
+body.audience .bar, body.audience .hint, body.audience #sheet{display:none!important}
 body.audience #stage{cursor:none}
 #audHint{position:fixed;inset:0;z-index:50;display:grid;place-items:center;background:rgba(8,9,11,.82);text-align:center;padding:24px}
 #audHint div{display:grid;gap:10px;max-width:520px}
@@ -170,14 +180,23 @@ body.audience #stage{cursor:none}
   <div class="grp">
     <button class="tb" id="bSave" title="Save a PDF with your ink"><svg viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg><span class="lbl">Save</span></button>
     <button class="tb" id="bFs" aria-label="Full screen" title="Full screen"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
-    <button class="tb" id="bPresent" aria-label="Projector window" title="Open the projector window" hidden><svg viewBox="0 0 24 24"><path d="M3 5a1 1 0 0 1 1 -1h16a1 1 0 0 1 1 1v10a1 1 0 0 1 -1 1h-16a1 1 0 0 1 -1 -1v-10"/><path d="M7 20h10"/><path d="M9 16v4"/><path d="M15 16v4"/></svg></button>
+    <button class="tb" id="bPresent" aria-pressed="false" aria-label="Separate views" title="Same view: tap to use separate views (projector and lecturer)"><svg viewBox="0 0 24 24" id="presIcon"></svg></button>
     <button class="tb" id="bSettings" aria-label="Settings" title="Settings"><svg viewBox="0 0 24 24"><path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065"/><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"/></svg></button>
     <button class="tb" id="bHide" aria-label="Hide toolbar" title="Hide toolbar (tap the top centre of the slide to bring it back)"><svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg></button>
   </div>
 </header>
 <div class="hint" aria-hidden="true"></div>
 
-<section id="sheet" aria-label="Slide overview"><div class="grab" id="grab"></div><div id="strip"></div></section>
+<section id="sheet" aria-label="Slide overview"><div class="grab" id="grab"></div>
+  <div id="lect" hidden>
+    <span class="st" id="projSt"><i class="led"></i><span id="projTxt">Projector off</span></span>
+    <button class="st" id="elapsedBtn" title="Elapsed time. Tap to restart it."><span>Elapsed</span><b id="elT">00:00</b></button>
+    <span class="st"><span>Time</span><b id="clockT">--:--</b></span>
+    <span class="st"><span>Slide</span><b id="slideT">– / –</b></span>
+    <span class="sp"></span>
+    <button class="btn" id="bProj">Projector window</button>
+  </div>
+  <div id="strip"></div></section>
 
 <div id="savePanel" class="panel" role="dialog" aria-modal="true" aria-labelledby="saveTitle" hidden>
   <h2 id="saveTitle">Your annotated PDF is ready</h2>
@@ -205,6 +224,11 @@ body.audience #stage{cursor:none}
     <div class="pick" id="pickHl"></div>
   </section>
   <section class="set">
+    <h3>Slide strip</h3>
+    <label class="rng" for="optSpeed"><span>Speed</span><input type="range" id="optSpeed" min="0.5" max="3" step="0.25"><output id="outSpeed"></output></label>
+    <label class="rng" for="optGlide"><span>Glide</span><input type="range" id="optGlide" min="0" max="1" step="0.05"><output id="outGlide"></output></label>
+  </section>
+  <section class="set">
     <h3>Laser pointer</h3>
     <div class="pick" id="pickLaser"></div>
   </section>
@@ -214,7 +238,16 @@ body.audience #stage{cursor:none}
   </div>
 </div>
 
-<button id="chip" title="Projector status. Tap to restart the timer." hidden><i class="led"></i><span id="chipTxt">Projector</span><span id="timer">00:00</span><span class="nx" id="nxLbl"></span><canvas id="nxThumb" width="16" height="9"></canvas></button>
+<div id="projPanel" class="panel" role="dialog" aria-modal="true" aria-labelledby="projTitle" hidden>
+  <h2 id="projTitle">Open the projector window</h2>
+  <p>Touch and hold the button below and choose <strong>Open in New Window</strong>. Drag the new window to the external display, then tap it to fill the screen.</p>
+  <a id="projLink" class="btn pri big" href="#audience" target="_blank">Projector window</a>
+  <p id="projStatus">Waiting for the projector window…</p>
+  <div class="row">
+    <button class="btn" id="bProjOff">Turn presenter mode off</button>
+    <button class="btn" id="bProjClose">Close</button>
+  </div>
+</div>
 
 <div id="audHint" hidden><div>
   <h2>Projector window</h2>
@@ -249,7 +282,7 @@ const COLOR_NAMES = Object.fromEntries(UZH);
 const PEN_ALLOWED = UZH.map(c => c[0]), HL_ALLOWED = PEN_ALLOWED.slice(0, 6), MAX_PEN = 10;
 const LASERS = { berry: { hex: '#BF0D3E', name: 'UZH berry' }, green: { hex: '#4E6B12', name: 'Dark green' } };
 const DEFAULTS = { pen: ['#0028A5', '#FC4C02', '#FFC845', '#A4D233', '#000000', '#FFFFFF'],
-  hl: ['#FFC845', '#A4D233', '#4AC9E3', '#FC4C02', '#BF0D3E'], laser: 'berry', presenter: false };
+  hl: ['#FFC845', '#A4D233', '#4AC9E3', '#FC4C02', '#BF0D3E'], laser: 'berry', presenter: false, stripSpeed: 1.5, stripGlide: 0.6 };
 const STORE = 'bdlt-pdf-presenter-settings';
 const rgbOf = h => { const n = parseInt(h.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; };
 // Snap any colour to the closest allowed UZH colour
@@ -262,10 +295,13 @@ function nearest(hex, allowed) {
 const uniq = a => [...new Set(a.filter(Boolean))];
 function cleanSettings(o) {
   o = o || {};
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   let pen = uniq((Array.isArray(o.pen) ? o.pen : DEFAULTS.pen).map(c => nearest(c, PEN_ALLOWED))).slice(0, MAX_PEN);
   let hl = uniq((Array.isArray(o.hl) ? o.hl : DEFAULTS.hl).map(c => nearest(c, HL_ALLOWED)));
   if (!pen.length) pen = DEFAULTS.pen.slice(); if (!hl.length) hl = DEFAULTS.hl.slice();
-  return { pen, hl, laser: LASERS[o.laser] ? o.laser : DEFAULTS.laser, presenter: !!o.presenter };
+  const num = (v, a, b, d) => (typeof v === 'number' && isFinite(v)) ? clamp(v, a, b) : d;
+  return { pen, hl, laser: LASERS[o.laser] ? o.laser : DEFAULTS.laser, presenter: !!o.presenter,
+    stripSpeed: num(o.stripSpeed, 0.5, 3, DEFAULTS.stripSpeed), stripGlide: num(o.stripGlide, 0, 1, DEFAULTS.stripGlide) };
 }
 let settings = cleanSettings((() => { try { return JSON.parse(localStorage.getItem(STORE) || 'null'); } catch (e) { return null; } })());
 function saveSettings() { try { localStorage.setItem(STORE, JSON.stringify(settings)); } catch (e) {} }
@@ -326,7 +362,7 @@ function blit(canvas, ps) {
 async function showPage(n) {
   if (!pdfDoc) return;
   n = clamp(n, 1, numPages);
-  const my = ++renderToken; pageNum = n; updateCounter(); markThumbs(); post({ t: 'page', n }); updateNext();
+  const my = ++renderToken; pageNum = n; updateCounter(); markThumbs(); post({ t: 'page', n }); updateLect(true);
   const vp = await getVp(n); if (my !== renderToken) return;
   const ps = psFor(vp, 1);
   let c = cache.get(n);
@@ -437,7 +473,7 @@ stage.addEventListener('pointerdown', e => {
   if (e.pointerType === 'touch') return touchDown(e);
   if (e.pointerType === 'mouse' && e.button !== 0) return;
   e.preventDefault();
-  if (sheet.classList.contains('open')) { closeSheet(); return; }
+  if (sheet.classList.contains('open') && !LECTURER()) { closeSheet(); return; }
   if (!pdfDoc || !curVp) return;
   penId = e.pointerId; try { stage.setPointerCapture(e.pointerId); } catch (_) {}
   touches.clear(); g = null; // palm rejection: the pencil wins
@@ -538,7 +574,7 @@ function endZoom() {
   if (before.tx !== view.tx || before.ty !== view.ty) animateTo(view.s, view.tx, view.ty); else scheduleHiRes();
 }
 function tap(x, y) {
-  if (sheet.classList.contains('open')) { closeSheet(); return; }
+  if (sheet.classList.contains('open') && !LECTURER()) { closeSheet(); return; }
   const now = performance.now(), dbl = now - lastTap.t < 320 && Math.hypot(x - lastTap.x, y - lastTap.y) < 40;
   lastTap = { t: now, x, y };
   if (view.s > 1.02) { if (dbl) animateTo(1, 0, 0); return; }
@@ -621,7 +657,7 @@ function buildStrip() {
     const b = document.createElement('button');
     b.className = 'thumb'; b.dataset.n = n; b.setAttribute('aria-label', 'Go to slide ' + n);
     b.innerHTML = `<canvas width="16" height="9"></canvas><span class="num">${n}</span><i class="dot"></i>`;
-    b.onclick = () => { showPage(n); closeSheet(); };
+    b.onclick = () => { if (stripDragged) return; showPage(n); if (!LECTURER()) closeSheet(); };
     strip.appendChild(b); io.observe(b);
   }
   markThumbs();
@@ -654,9 +690,13 @@ function openSheet() {
   if (el) strip.scrollLeft = el.offsetLeft - strip.clientWidth / 2 + el.offsetWidth / 2;
 }
 function closeSheet() { sheet.classList.remove('open'); }
+function centreThumb(smooth) {
+  const el = strip.querySelector(`[data-n="${pageNum}"]`);
+  if (el) strip.scrollTo({ left: el.offsetLeft - strip.clientWidth / 2 + el.offsetWidth / 2, behavior: smooth ? 'smooth' : 'auto' });
+}
 let sheetY = null;
 sheet.addEventListener('pointerdown', e => { sheetY = e.clientY; });
-sheet.addEventListener('pointermove', e => { if (sheetY !== null && e.clientY - sheetY > 40) { closeSheet(); sheetY = null; } });
+sheet.addEventListener('pointermove', e => { if (sheetY !== null && !LECTURER() && e.clientY - sheetY > 40) { closeSheet(); sheetY = null; } });
 sheet.addEventListener('pointerup', () => sheetY = null);
 
 // ---------- loading ----------
@@ -700,7 +740,7 @@ window.addEventListener('keydown', e => {
   else if (k === 'f') toggleFs();
   else if (k === 't') toggleBar();
   else if (k === 'g') sheet.classList.contains('open') ? closeSheet() : openSheet();
-  else if (k === 'Escape') { closeSheet(); $('#savePanel').hidden = true; $('#setPanel').hidden = true; }
+  else if (k === 'Escape') { if (!LECTURER()) closeSheet(); $('#savePanel').hidden = true; $('#setPanel').hidden = true; $('#projPanel').hidden = true; }
 });
 
 // ---------- saving ----------
@@ -772,11 +812,12 @@ async function sampleDeck() {
 
 // ---------- settings panel ----------
 const setPanel = $('#setPanel'), optPres = $('#optPresenter'), presNote = $('#presNote');
-const PRES_INFO = 'Shows the slides in a separate projector window while you keep the controls here. Needs Stage Manager with an external display set to extend (iPad with M1 chip or later), in Safari. Switching it on opens the projector window as a new tab: drag that tab out into its own window and move it to the external display.';
+const PRES_INFO = 'Shows the slides full screen in a separate projector window, while this window becomes your lecturer view with the clock and the slide strip. On iPad it needs Stage Manager with an external display set to extend (M1 chip or later).';
 function presenterBlocker() {
   if (!chan) return 'Not available: this browser cannot link two windows.';
   if (inFrame) return 'Not available in this preview. Open BDLT PDF Presenter from its own web address.';
   if (Math.min(screen.width, screen.height) < 600) return 'Not available: presenter mode needs an iPad or a computer.';
+  if (STANDALONE) return 'Not available in the Home Screen app, which cannot open a second window. Open the same address in Safari to use presenter mode.';
   return '';
 }
 function pickBtn(hex, name, pressed, order) {
@@ -790,7 +831,10 @@ function pickBtn(hex, name, pressed, order) {
 function renderSettings() {
   const block = presenterBlocker();
   optPres.disabled = !!block; optPres.checked = !block && settings.presenter;
-  presNote.textContent = block || (settings.presenter && connected() ? 'Projector window connected. Drag it to the external display and tap it to fill the screen.' : PRES_INFO);
+  presNote.textContent = block || (settings.presenter && connected() ? 'Projector window connected.' : PRES_INFO);
+  const sp = $('#optSpeed'), gl = $('#optGlide');
+  sp.value = settings.stripSpeed; gl.value = settings.stripGlide;
+  $('#outSpeed').textContent = settings.stripSpeed.toFixed(2).replace(/0$/, '') + '×'; $('#outGlide').textContent = Math.round(settings.stripGlide * 100) + '%';
   presNote.classList.toggle('warn', false);
   const pp = $('#pickPen'); pp.innerHTML = '';
   for (const [hex, name] of UZH) {
@@ -825,14 +869,17 @@ function renderSettings() {
 function settingsChanged() { saveSettings(); buildSwatches(); renderSettings(); updatePresenterUi(); post({ t: 'laserColour', laser: settings.laser }); }
 $('#bSettings').onclick = () => { renderSettings(); setPanel.hidden = false; };
 $('#bSetDone').onclick = () => { setPanel.hidden = true; };
-$('#bSetReset').onclick = () => { const p = settings.presenter; settings = cleanSettings(DEFAULTS); settings.presenter = p; colors.pen = settings.pen[0]; colors.highlighter = settings.hl[0]; settingsChanged(); };
+$('#bSetReset').onclick = () => { const p = settings.presenter; /* keep presenter state */ settings = cleanSettings(DEFAULTS); settings.presenter = p; colors.pen = settings.pen[0]; colors.highlighter = settings.hl[0]; settingsChanged(); };
+$('#optSpeed').oninput = e => { settings.stripSpeed = +e.target.value; saveSettings(); renderSettings(); };
+$('#optGlide').oninput = e => { settings.stripGlide = +e.target.value; saveSettings(); renderSettings(); };
 optPres.onchange = () => {
-  if (optPres.checked) { settings.presenter = true; saveSettings(); updatePresenterUi(); openAudience(true); }
-  else { settings.presenter = false; saveSettings(); post({ t: 'close' }); lastPing = 0; updatePresenterUi(); renderSettings(); }
+  if (optPres.checked) { setPanel.hidden = true; setPresenter(true); }
+  else { setPresenter(false); renderSettings(); }
 };
 
 // ---------- presenter mode: a second window for the projector, kept in sync on this device ----------
 const AUDIENCE = location.hash === '#audience';
+const STANDALONE = navigator.standalone === true || (window.matchMedia && (matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches));
 const chan = ('BroadcastChannel' in window) ? new BroadcastChannel('bdlt-pdf-presenter') : null;
 let lastPing = 0, audWin = null, timerStart = 0, viewRAF = 0, liveRAF = 0, remoteView = null;
 const connected = () => performance.now() - lastPing < 5000;
@@ -857,52 +904,115 @@ function sendDoc() {
   post({ t: 'doc', bytes: pdfBytes, name: fileName, page: pageNum, ink: inkEntries(), laser: settings.laser });
   sendView();
 }
-function openAudience(fromSettings) {
-  const url = location.href.split('#')[0] + '#audience';
+const TOUCH = navigator.maxTouchPoints > 1;
+const audienceUrl = () => location.href.split('#')[0] + '#audience';
+// On iPad, a real second window comes from "Open in New Window" on a link; on a computer, a pop-up window works.
+function showProjector() {
+  if (TOUCH) {
+    $('#projLink').href = audienceUrl();
+    $('#projPanel').hidden = false; updateProjPanel();
+    return;
+  }
   let w = null;
-  try { w = window.open(url, 'bdlt-audience'); } catch (e) {}
-  if (!w) return presenterFailed('The projector window could not be opened. Allow pop-ups for this site, or use Safari rather than the Home Screen app.');
-  audWin = w;
-  const t0 = performance.now();
-  const check = setInterval(() => {
-    if (connected()) { clearInterval(check); if (fromSettings) renderSettings(); toast('Projector window connected. Drag its tab out into its own window, then move it to the external display.', 4500); }
-    else if (performance.now() - t0 > 6000) { clearInterval(check); presenterFailed('The projector window did not respond. Presenter mode needs Stage Manager with an external display (iPad with M1 chip or later), in Safari.'); }
-  }, 250);
+  try { w = window.open(audienceUrl(), 'bdlt-audience', 'popup,width=1280,height=720'); } catch (e) {}
+  if (!w) { toast('The projector window was blocked. Allow pop-ups for this site and try again.', 5000); return; }
+  audWin = w; toast('Move the projector window to the second display, then click it to fill the screen.', 5000);
 }
-function presenterFailed(msg) {
-  settings.presenter = false; saveSettings(); updatePresenterUi();
-  try { if (audWin) audWin.close(); } catch (e) {}
-  renderSettings(); presNote.textContent = msg; presNote.classList.add('warn');
-  if (setPanel.hidden) toast(msg, 5000);
+function updateProjPanel() {
+  const st = $('#projStatus'), c = connected();
+  st.textContent = c ? 'Projector window connected. Drag it to the external display and tap it to fill the screen.' : 'Waiting for the projector window…';
+  st.classList.toggle('ok', c);
 }
+$('#projLink').addEventListener('click', () => { $('#projLink').href = audienceUrl(); });
+$('#bProjClose').onclick = () => { $('#projPanel').hidden = true; };
+$('#bProjOff').onclick = () => setPresenter(false);
+const LECTURER = () => !AUDIENCE && settings.presenter;
+let lectRO = null;
 function updatePresenterUi() {
-  const on = !AUDIENCE && settings.presenter;
-  $('#bPresent').hidden = !on; $('#chip').hidden = !on;
-  if (on) tickChip();
+  const on = LECTURER();
+  document.body.classList.toggle('lecturer', on);
+  const bp = $('#bPresent');
+  bp.setAttribute('aria-pressed', String(on)); $('#presIcon').innerHTML = on ? ICON_SPLIT : ICON_SAME;
+  bp.title = on ? 'Separate views: tap to go back to the same view on both screens' : 'Same view: tap to use separate views (projector and lecturer)';
+  bp.setAttribute('aria-label', on ? 'Separate views (on)' : 'Separate views (off)');
+  bp.classList.toggle('dim', !!presenterBlocker());
+  $('#lect').hidden = !on;
+  if (on) { markThumbs(); updateLect(false); }
+  fitStage();
 }
-function fmt(ms) { const t = Math.floor(ms / 1000); return String(Math.floor(t / 60)).padStart(2, '0') + ':' + String(t % 60).padStart(2, '0'); }
-function tickChip() {
-  const c = connected(), chip = $('#chip');
-  chip.classList.toggle('on', c);
-  $('#chipTxt').textContent = c ? 'Projector on' : 'Projector off';
+// The lecturer panel sits below the slide; the slide area shrinks to make room for it.
+function fitStage() {
+  const want = LECTURER() ? sheet.offsetHeight + 'px' : '';
+  if (stage.style.bottom !== want) {
+    stage.style.bottom = want; cache.clear();
+    if (pdfDoc) showPage(pageNum);
+  }
+}
+if ('ResizeObserver' in window) { lectRO = new ResizeObserver(() => { if (LECTURER()) fitStage(); }); lectRO.observe(sheet); }
+function fmt(ms) { const t = Math.floor(ms / 1000), h = Math.floor(t / 3600), m = Math.floor(t / 60) % 60, s = t % 60; return (h ? h + ':' + String(m).padStart(2, '0') : String(m).padStart(2, '0')) + ':' + String(s).padStart(2, '0'); }
+function updateLect(pageChanged) {
+  if (!LECTURER()) return;
+  const c = connected();
+  $('#projSt').classList.toggle('on', c);
+  $('#projTxt').textContent = c ? 'Projector on' : 'Projector off';
   if (c && !timerStart) timerStart = performance.now();
-  $('#timer').textContent = timerStart ? fmt(performance.now() - timerStart) : '00:00';
+  $('#elT').textContent = timerStart ? fmt(performance.now() - timerStart) : '00:00';
+  $('#clockT').textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
+  $('#slideT').textContent = numPages ? `${pageNum} / ${numPages}` : '– / –';
+  if (pageChanged) centreThumb(true);
+  if (!$('#projPanel').hidden) updateProjPanel();
 }
-setInterval(() => { if (!AUDIENCE && settings.presenter) tickChip(); }, 1000);
-$('#chip').onclick = () => { timerStart = connected() ? performance.now() : 0; tickChip(); };
-$('#bPresent').onclick = () => { if (connected()) toast('The projector window is connected. Drag it to the external display.'); else openAudience(false); };
-let nxToken = 0;
-async function updateNext() {
-  if (AUDIENCE || !settings.presenter || !pdfDoc) return;
-  const my = ++nxToken, n = pageNum + 1, el = $('#nxThumb');
-  $('#nxLbl').textContent = n <= numPages ? 'Next' : 'End';
-  if (n > numPages) { el.hidden = true; return; }
-  try {
-    const vp = await getVp(n), c = await renderToCanvas(n, (44 * dpr()) / vp.height);
-    if (my !== nxToken) return;
-    el.hidden = false; el.width = c.width; el.height = c.height; el.getContext('2d').drawImage(c, 0, 0);
-  } catch (e) {}
+setInterval(() => updateLect(false), 1000);
+$('#elapsedBtn').onclick = () => { timerStart = performance.now(); updateLect(false); toast('Timer restarted', 1500); };
+$('#bProj').onclick = showProjector;
+// Toolbar toggle: same view (one screen, mirrored) or separate views (projector + lecturer)
+const ICON_SAME = '<path d="M3 5a1 1 0 0 1 1 -1h16a1 1 0 0 1 1 1v10a1 1 0 0 1 -1 1h-16a1 1 0 0 1 -1 -1v-10"/><path d="M7 20h10"/><path d="M12 16v4"/>';
+const ICON_SPLIT = '<rect x="2" y="6" width="11" height="8" rx="1"/><rect x="11" y="3" width="11" height="8" rx="1"/><path d="M5 19h6M8 14v5M14 11v4h5"/>';
+function setPresenter(on) {
+  if (on) {
+    const block = presenterBlocker();
+    if (block) { toast(block, 5000); return; }
+    settings.presenter = true; saveSettings(); updatePresenterUi(); showProjector();
+  } else {
+    post({ t: 'close' }); settings.presenter = false; saveSettings(); lastPing = 0; $('#projPanel').hidden = true; updatePresenterUi();
+    toast('Same view: mirror this screen to the projector', 2500);
+  }
 }
+$('#bPresent').onclick = () => setPresenter(!settings.presenter);
+
+// ---------- slide strip: drag with adjustable speed and glide ----------
+let sd = null, glideRAF = 0, stripDragged = false;
+strip.addEventListener('pointerdown', e => {
+  cancelAnimationFrame(glideRAF); stripDragged = false;
+  sd = { id: e.pointerId, x: e.clientX, sl: strip.scrollLeft, lx: e.clientX, lt: performance.now(), v: 0 };
+});
+strip.addEventListener('pointermove', e => {
+  if (!sd || e.pointerId !== sd.id) return;
+  const dx = e.clientX - sd.x;
+  if (!stripDragged && Math.abs(dx) > 6) { stripDragged = true; try { strip.setPointerCapture(sd.id); } catch (_) {} }
+  if (!stripDragged) return;
+  strip.scrollLeft = sd.sl - dx * settings.stripSpeed;
+  const now = performance.now(), dt = Math.max(1, now - sd.lt), v = (e.clientX - sd.lx) / dt;
+  sd.v = 0.7 * v + 0.3 * sd.v; sd.lx = e.clientX; sd.lt = now;
+});
+function stripUp(e) {
+  if (!sd || e.pointerId !== sd.id) return;
+  const was = stripDragged, idle = performance.now() - sd.lt;
+  let vel = (idle > 80 ? 0 : sd.v) * settings.stripSpeed; sd = null;
+  if (!was) return;
+  setTimeout(() => { stripDragged = false; }, 0);   // let the click that follows a drag be ignored
+  // Glide 0: stops at once; glide 1: long, slow coast
+  const decay = 0.80 + 0.185 * settings.stripGlide;
+  let last = performance.now();
+  const step = now => {
+    const dt = now - last; last = now;
+    strip.scrollLeft -= vel * dt; vel *= Math.pow(decay, dt / 16);
+    if (Math.abs(vel) > 0.02) glideRAF = requestAnimationFrame(step);
+  };
+  if (Math.abs(vel) > 0.05) glideRAF = requestAnimationFrame(step);
+}
+strip.addEventListener('pointerup', stripUp);
+strip.addEventListener('pointercancel', stripUp);
 
 // audience side
 function showAudHint(msg) { if (msg) $('#audMsg').textContent = msg; $('#audHint').hidden = false; }
@@ -942,9 +1052,9 @@ function startAudience() {
 if (chan && !AUDIENCE) {
   chan.onmessage = ({ data: m }) => {
     if (!m || !settings.presenter) return;
-    if (m.t === 'hello') { lastPing = performance.now(); sendDoc(); tickChip(); }
-    else if (m.t === 'ping') { const was = connected(); lastPing = performance.now(); if (!was) { sendDoc(); tickChip(); } }
-    else if (m.t === 'bye') { lastPing = 0; tickChip(); }
+    if (m.t === 'hello') { lastPing = performance.now(); sendDoc(); updateLect(false); }
+    else if (m.t === 'ping') { const was = connected(); lastPing = performance.now(); if (!was) { sendDoc(); updateLect(false); } }
+    else if (m.t === 'bye') { lastPing = 0; updateLect(false); }
   };
 }
 
@@ -952,6 +1062,7 @@ if (AUDIENCE && chan) {
   startAudience();
 } else {
   setTool('pen');
+  if (presenterBlocker()) settings.presenter = false;
   updatePresenterUi();
   sampleDeck().then(b => loadBytes(new Uint8Array(b), 'sample.pdf')).catch(e => { console.error(e); toast('Open a PDF to begin'); });
 }

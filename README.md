@@ -11,11 +11,15 @@ It runs in Safari; use Share › Add to Home Screen to install it as a full-scre
 - Pinch to zoom, drag with one finger to pan, double-tap to fit.
 - Pen, highlighter, laser pointer and eraser for Apple Pencil, in UZH colours.
 - Save writes the ink into a new PDF.
+- Same view / separate views (toolbar button): mirror one screen, or show the slides full
+  screen in a projector window while this window becomes the lecturer view (elapsed time,
+  clock, slide number and a permanent slide strip). The projector follows page, ink, laser
+  and zoom. Works in Safari (not the Home Screen app); on iPad it needs Stage Manager with an
+  external display set to extend (M1 chip or later). Open the projector window by touching
+  and holding its button and choosing Open in New Window.
 - Settings (gear icon): pen colours (up to 10 of the 10 UZH colours), highlighter colours
-  (the six UZH accents) and laser colour (UZH berry or dark green), remembered per device.
-- Presenter mode (two screens): a separate projector window kept in sync with the iPad
-  (page, ink, laser, zoom), plus a timer and next-slide preview. Needs Stage Manager with an
-  external display set to extend (iPad with M1 chip or later), in Safari.
+  (the six UZH accents), laser colour (UZH berry or dark green), and slide strip speed and
+  glide; remembered per device.
 
 PDFs are opened and annotated on the iPad only; they are never uploaded.
 
