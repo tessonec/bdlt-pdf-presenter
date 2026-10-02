@@ -835,8 +835,8 @@ sheet.addEventListener('pointerup', () => sheetY = null);
 // ---------- loading ----------
 async function loadBytes(bytes, name, opts = {}) {
   try {
-    if (!AUDIENCE) toast('Opening ' + name + '…', 1500);
-    const doc = await pdfjsLib.getDocument({ data: bytes.slice() }).promise;
+    if (!AUDIENCE && !opts.quiet) toast('Opening ' + name + '…', 1500);
+    const doc = await pdfjsLib.getDocument({ data: bytes.slice(), verbosity: opts.quiet ? 0 : 1 }).promise;
     if (pdfDoc) pdfDoc.destroy();
     pdfDoc = doc; pdfBytes = bytes; fileName = name; numPages = doc.numPages;
     ink = new Map(); hist = new Map(); cache.clear(); vps.clear(); thumbQueue.length = 0;
@@ -844,7 +844,8 @@ async function loadBytes(bytes, name, opts = {}) {
     if (opts.ink) ink = new Map(opts.ink);
     buildStrip(); await showPage(opts.page || 1);
     sendDoc();
-  } catch (err) { console.error(err); toast('This file could not be opened as a PDF.'); }
+    return true;
+  } catch (err) { if (!opts.quiet) { console.error(err); toast('This file could not be opened as a PDF.'); } return false; }
 }
 fileIn.onchange = async () => {
   const f = fileIn.files[0]; if (!f) return;
@@ -941,6 +942,50 @@ $('#bDl').onclick = () => {
   const a = document.createElement('a'); a.href = readyUrl; a.download = readyFile.name; document.body.appendChild(a); a.click(); a.remove();
 };
 $('#bSaveClose').onclick = () => $('#savePanel').hidden = true;
+
+// ---------- open a PDF named in the address, and watch it for changes ----------
+//   index.html?pdf=lecture03.pdf           opens that PDF instead of the guide deck
+//   index.html?pdf=lecture03.pdf&watch=1   also reloads it whenever the file changes (live preview
+//                                          while editing; see tools/bdlt-pdf-preview.sh)
+const QUERY = new URLSearchParams(location.search);
+const PDF_URL = QUERY.get('pdf');
+const WATCH = !!PDF_URL && QUERY.has('watch') && QUERY.get('watch') !== '0';
+const pdfNameOf = u => { try { return decodeURIComponent(u.split(/[?#]/)[0].split('/').pop()) || 'slides.pdf'; } catch (e) { return 'slides.pdf'; } };
+const sigOf = r => (r.headers.get('x-mtime') || r.headers.get('last-modified') || '') + '|' + (r.headers.get('content-length') || '');
+let watchSig = null, watchBusy = false, watchWaiting = false;
+async function fetchPdf() {
+  const r = await fetch(PDF_URL, { cache: 'no-store' });
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  return { bytes: new Uint8Array(await r.arrayBuffer()), sig: sigOf(r) };
+}
+async function openFromUrl() {
+  const name = pdfNameOf(PDF_URL); document.title = name + ' · BDLT PDF Presenter';
+  try {
+    const r = await fetchPdf();
+    if (await loadBytes(r.bytes, name, { quiet: WATCH })) watchSig = r.sig;
+  } catch (e) {
+    if (WATCH) { watchWaiting = true; toast('Waiting for ' + name + '…', 4000); }
+    else toast(name + ' could not be opened (' + e.message + ').', 5000);
+  }
+  if (WATCH) { setInterval(watchTick, 1000); document.addEventListener('visibilitychange', watchTick); }
+}
+async function watchTick() {
+  if (watchBusy || document.hidden) return;
+  watchBusy = true;
+  try {
+    const h = await fetch(PDF_URL, { method: 'HEAD', cache: 'no-store' });
+    if (h.ok && sigOf(h) !== watchSig) {
+      const r = await fetchPdf();
+      // A PDF that is still being written does not parse; then nothing changes and the next tick tries again.
+      // The slide, the ink and the toolbar stay as they are.
+      const keepInk = [...ink.entries()], had = !!pdfDoc;
+      if (await loadBytes(r.bytes, pdfNameOf(PDF_URL), { quiet: true, page: had ? pageNum : 1, ink: had ? keepInk : null })) {
+        watchSig = r.sig; watchWaiting = false;
+        toast('Updated ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' }), 1300);
+      }
+    }
+  } catch (e) {} finally { watchBusy = false; }
+}
 
 // ---------- sample deck: sample.pdf next to index.html (replace that file to change it) ----------
 async function sampleDeck() {
@@ -1630,7 +1675,8 @@ if (AUDIENCE && chan) {
   setTool(settings.pencil ? 'pen' : 'hand');
   if (presenterBlocker()) settings.presenter = false;
   updatePresenterUi();
-  sampleDeck().then(b => loadBytes(new Uint8Array(b), 'sample.pdf')).catch(e => { console.error(e); toast('Open a PDF to begin'); });
+  if (PDF_URL) openFromUrl();
+  else sampleDeck().then(b => loadBytes(new Uint8Array(b), 'sample.pdf')).catch(e => { console.error(e); toast('Open a PDF to begin'); });
 }
 })();
 </script>

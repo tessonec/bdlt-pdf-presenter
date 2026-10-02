@@ -50,6 +50,26 @@ tablet with a finger.
 | T | Show or hide the toolbar |
 | F | Full screen |
 
+## Live preview while editing slides
+
+```bash
+tools/bdlt-pdf-preview.sh lecture03.pdf
+```
+
+opens the presenter in your browser, showing that PDF, and reloads it whenever the file
+changes on disk (for example each time LaTeX recompiles). The slide you are on and your ink
+are kept; a half-written PDF is ignored until the build has finished. The PDF may not exist
+yet when you start. Everything is served from your own computer (127.0.0.1); stop with Ctrl+C.
+
+To call it from anywhere, link it into a folder on your `PATH`:
+
+```bash
+ln -s ~/Projects/bdlt-pdf-presenter/tools/bdlt-pdf-preview.sh /usr/local/bin/bdlt-pdf-preview.sh
+```
+
+The same works on any server: `index.html?pdf=<address of a PDF>` opens that PDF instead of
+the guide deck, and adding `&watch=1` reloads it when it changes.
+
 ## Media in slides (video, animations, interactive widgets)
 
 PDFs can carry live media that the presenter plays on top of the slide: MP4 video, audio,

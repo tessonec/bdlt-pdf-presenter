@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### Added
+- `index.html?pdf=<address>` opens a PDF named in the address; `&watch=1` reloads it whenever
+  the file changes, keeping the current slide and the ink.
+- `tools/bdlt-pdf-preview.sh <file.pdf>`: live preview on your own computer while editing
+  slides.
+
 ## 1.1.2 (2 October 2026)
 
 ### Fixed
