@@ -41,10 +41,16 @@ body{background:var(--stage);color:var(--fg);font-family:var(--ui);overflow:hidd
 #page{position:absolute;transform-origin:0 0;will-change:transform;background:#fff}
 #page.anim{transition:transform .22s cubic-bezier(.2,.7,.2,1)}
 #page canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
-#inkc,#livec{pointer-events:none}
+/* Stacking is explicit and the ink canvases get their own layers: Safari otherwise paints
+   video and iframe layers above a plain canvas, hiding ink inside media boxes */
+#pdfc{z-index:0}
+#inkc{z-index:2}
+#livec{z-index:3}
+#inkc,#livec{pointer-events:none;transform:translateZ(0)}
 /* media layer (docs/media-spec.md): between the page image and the ink */
-#media{position:absolute;inset:0;pointer-events:none}
-.media{position:absolute;pointer-events:auto;overflow:hidden;touch-action:manipulation}
+#media{position:absolute;inset:0;pointer-events:none;z-index:1}
+.media{position:absolute;pointer-events:auto;overflow:hidden;touch-action:none}
+.media video,.media img,.media canvas,.media iframe{touch-action:none}
 .media[hidden]{display:block!important;visibility:hidden;pointer-events:none}
 .media video,.media img,.media iframe,.media canvas{position:absolute;inset:0;width:100%;height:100%;border:0;display:block}
 .media iframe{background:transparent}
@@ -164,6 +170,7 @@ body.lecturer .thumb canvas{height:84px}
 /* audience window */
 body.audience .bar, body.audience .hint, body.audience #sheet{display:none!important}
 body.audience #stage{cursor:none}
+#dbg{position:fixed;left:8px;top:calc(env(safe-area-inset-top,0px) + 70px);z-index:60;margin:0;padding:8px 10px;border-radius:8px;background:rgba(0,0,0,.72);color:#9dffb0;font:11px/1.45 var(--num);pointer-events:none;white-space:pre;max-width:60vw;overflow:hidden}
 #audHint{position:fixed;inset:0;z-index:50;display:grid;place-items:center;background:rgba(8,9,11,.82);text-align:center;padding:24px}
 #audHint .row{justify-content:center}
 #audHint .small{font-size:13px}
@@ -276,6 +283,10 @@ body.audience #stage{cursor:none}
   <section class="set">
     <h3>Laser pointer</h3>
     <div class="pick" id="pickLaser"></div>
+  </section>
+  <section class="set">
+    <div class="set-h"><h3>Input log</h3><label class="switch"><input type="checkbox" id="optDbg" aria-describedby="dbgNote"><span></span></label></div>
+    <p id="dbgNote">For troubleshooting: shows the last touch, mouse and Pencil events in a corner of the screen.</p>
   </section>
   <div class="row">
     <span class="ver" id="verLbl"></span>
@@ -512,6 +523,19 @@ function laserLoop() {
   if (!laserRAF) clearCanvas(livec);
 }
 
+// ---------- input log: shows the last input events on screen (Settings), for troubleshooting on the device ----------
+let dbgOn = false; const dbgLines = [];
+function dbg(msg) {
+  if (!dbgOn) return;
+  const last = dbgLines[dbgLines.length - 1];
+  if (last && last.m === msg) last.n++; else dbgLines.push({ m: msg, n: 1 });
+  while (dbgLines.length > 12) dbgLines.shift();
+  let el = document.getElementById('dbg'); if (!el) { el = document.createElement('pre'); el.id = 'dbg'; document.body.appendChild(el); }
+  el.textContent = dbgLines.map(l => l.m + (l.n > 1 ? ' ×' + l.n : '')).join('\n');
+}
+const where = e => { const t = e.target, md = t && t.closest && t.closest('.media'); return md ? ' on ' + (md.firstElementChild ? md.firstElementChild.tagName.toLowerCase() : 'media') : ''; };
+['pointerdown', 'pointermove', 'pointerup', 'pointercancel'].forEach(ty => document.addEventListener(ty, e => dbg(`${e.pointerType} ${ty.slice(7)}${where(e)}`), true));
+
 // ---------- pointer input ----------
 const touches = new Map();
 let penAt = { x: 0, y: 0 };
@@ -580,7 +604,7 @@ function penEnd(e) {
   if (e.pointerId !== penId) return;
   penId = null; penLastUp = performance.now();
   if (cur && (cur.tool === 'pen' || cur.tool === 'highlighter')) {
-    delete cur.drawn; snap(); strokes().push(cur); drawStroke(ctxOf(inkc), cur); clearCanvas(livec); markThumbs(); syncInk(); post({ t: 'live', st: null });
+    dbg(`stroke kept: ${cur.pts.length} points`); delete cur.drawn; snap(); strokes().push(cur); drawStroke(ctxOf(inkc), cur); clearCanvas(livec); markThumbs(); syncInk(); post({ t: 'live', st: null });
   }
   cur = null;
 }
@@ -680,7 +704,8 @@ function go(d) {
 }
 ['gesturestart', 'gesturechange', 'gestureend', 'dblclick'].forEach(ev => document.addEventListener(ev, e => e.preventDefault(), { passive: false }));
 // Keep Safari from claiming pinches and swipes on the slide for its own page zoom and scrolling
-['touchstart', 'touchmove'].forEach(ev => stage.addEventListener(ev, e => { if (e.cancelable && !inMedia(e)) e.preventDefault(); }, { passive: false }));
+const stylusTouch = e => { for (const t of (e.changedTouches || [])) if (t.touchType === 'stylus') return true; return false; };
+['touchstart', 'touchmove'].forEach(ev => stage.addEventListener(ev, e => { if (e.cancelable && (!inMedia(e) || stylusTouch(e))) e.preventDefault(); }, { passive: false }));
 
 stage.addEventListener('wheel', e => {
   if (AUDIENCE || !curVp || inMedia(e)) return;
@@ -1050,11 +1075,13 @@ function makeVideo(m) {
   v.preload = 'auto'; v.playsInline = true; v.setAttribute('playsinline', '');
   v.style.objectFit = o.fit || 'contain';
   const start = +o.start || 0, end = o.end !== undefined ? +o.end : null, loop = flag(o, 'loop', false);
-  v.loop = loop && end === null; v.playbackRate = +o.rate || 1;
+  v.loop = loop && end === null; v.defaultPlaybackRate = v.playbackRate = +o.rate || 1;   // loading a source resets playbackRate to the default
   v.muted = AUDIENCE || flag(o, 'muted', false);
   v.controls = !AUDIENCE && flag(o, 'controls', true);
   m.el.appendChild(v);
   let ready = false, wantPlay = false, cover = null;
+  let dead = false;
+  v.addEventListener('error', () => { if (!dead && v.getAttribute('src')) { dead = true; mediaError(m, 'This slide’s ' + o.type + ' could not be loaded' + (/^https:/i.test(o.src) ? ' from the web.' : '.')); } });
   fileUrl(m, o.src).then(u => { v.src = u; v.addEventListener('loadedmetadata', () => { ready = true; if (start) v.currentTime = start; if (wantPlay) tryPlay(); }, { once: true }); })
     .catch(e => mediaError(m, 'This slide’s ' + o.type + ' could not be loaded. ' + e.message));
   v.addEventListener('timeupdate', () => {
@@ -1077,14 +1104,15 @@ function makeVideo(m) {
   return {
     show() { if (flag(o, 'autoplay', false) && !AUDIENCE) { wantPlay = true; if (ready) tryPlay(); } else if (!AUDIENCE && !v.controls && !flag(o, 'autoplay', false)) showCover(); },
     hide() { wantPlay = false; v.pause(); },
-    destroy() { clearInterval(m.sync); v.pause(); v.removeAttribute('src'); v.load(); },
+    destroy() { dead = true; clearInterval(m.sync); v.pause(); v.removeAttribute('src'); v.load(); },
     remote(msg) {
       if (!ready && msg.a !== 'pause') { v.addEventListener('loadedmetadata', () => this.remote(msg), { once: true }); return; }
       if (msg.rate) v.playbackRate = msg.rate;
       if (Math.abs(v.currentTime - msg.time) > (msg.a === 'sync' ? 0.35 : 0.05)) v.currentTime = msg.time;
       if (msg.a === 'play' || (msg.a === 'sync' && v.paused)) v.play().catch(() => {});
       if (msg.a === 'pause') v.pause();
-    }
+    },
+    snapshot() { return ready ? { a: v.paused ? 'pause' : 'play', time: v.currentTime, rate: v.playbackRate } : null; }
   };
 }
 
@@ -1092,6 +1120,7 @@ function makeVideo(m) {
 function makeImage(m) {
   const img = new Image(); img.alt = m.spec.title || ''; img.style.objectFit = m.spec.fit || 'contain'; img.draggable = false;
   m.el.appendChild(img); m.el.style.pointerEvents = 'none';
+  img.onerror = () => mediaError(m, 'This slide’s image could not be loaded.');
   fileUrl(m, m.spec.src).then(u => img.src = u).catch(e => mediaError(m, 'This slide’s image could not be loaded. ' + e.message));
   return {};
 }
@@ -1145,7 +1174,8 @@ function makeFrames(m) {
     show() { if (flag(o, 'autoplay', false) && !AUDIENCE) setPlaying(true); },
     hide() { if (!AUDIENCE) setPlaying(false); else { clearInterval(timer); } },
     destroy() { clearInterval(timer); },
-    remote(msg) { go(msg.i, true); setPlaying(!!msg.playing, true); }
+    remote(msg) { go(msg.i, true); setPlaying(!!msg.playing, true); },
+    snapshot() { return { i, playing }; }
   };
 }
 
@@ -1158,7 +1188,7 @@ function helperScript(m) {
   const cfg = JSON.stringify({ role, params, seed: seedOf(m.key + '|' + fileName) });
   return `<script>(function(){var C=${cfg.replace(/</g, '\\u003c')};var fs=[],sh=[],hd=[],aw={},n=0,t0=performance.now(),off=0,s=C.seed;
 var P=function(m){parent.postMessage(Object.assign({__bdlt:1},m),'*')};
-var b=window.bdlt={version:'1',role:C.role,params:C.params,seed:C.seed,state:null,
+var b=window.bdlt={version:'1',role:C.role,params:C.params,seed:C.seed,state:null,pen:'presenter',
 random:function(){s=(s*16807)%2147483647;return (s-1)/2147483646},
 setState:function(o){b.state=o;if(C.role!=='projector')P({t:'state',s:o});fs.forEach(function(f){try{f(o)}catch(e){console.error(e)}})},
 onState:function(f){fs.push(f)},onShow:function(f){sh.push(f)},onHide:function(f){hd.push(f)},
@@ -1170,9 +1200,10 @@ else if(m.t==='show')sh.forEach(function(f){f()});else if(m.t==='hide')hd.forEac
 else if(m.t==='clock')off=m.ms-(performance.now()-t0);
 else if(m.t==='asset'){var w=aw[m.id];delete aw[m.id];if(!w)return;if(m.err)w[1](new Error(m.err));else w[0](URL.createObjectURL(new Blob([m.buf],{type:m.type})))}});
 if(C.role!=='projector'){setInterval(function(){P({t:'clock',ms:b.now()})},2000);
-['pointerdown','pointermove','pointerup','pointercancel'].forEach(function(ty){addEventListener(ty,function(e){if(e.pointerType!=='pen')return;
+['pointerdown','pointermove','pointerup','pointercancel'].forEach(function(ty){addEventListener(ty,function(e){if(e.pointerType!=='pen'||b.pen==='widget')return;
 e.preventDefault();e.stopImmediatePropagation();P({t:'pen',type:ty,x:e.clientX,y:e.clientY,p:e.pressure||.5,id:e.pointerId})},true)});
-addEventListener('touchstart',function(e){if(e.touches[0]&&e.touches[0].touchType==='stylus')e.preventDefault()},{capture:true,passive:false});}
+var sty=function(e){for(var i=0;i<e.changedTouches.length;i++)if(e.changedTouches[i].touchType==='stylus'){if(e.cancelable)e.preventDefault();return}};
+addEventListener('touchstart',sty,{capture:true,passive:false});addEventListener('touchmove',sty,{capture:true,passive:false});}
 })();<\/script>`;
 }
 function makeWidget(m) {
@@ -1182,7 +1213,8 @@ function makeWidget(m) {
   const scale = +o.scale || 1;
   if (scale !== 1) Object.assign(f.style, { width: 100 / scale + '%', height: 100 / scale + '%', transform: `scale(${scale})`, transformOrigin: '0 0' });
   m.el.appendChild(f);
-  let html = null, shown = false, state = null;
+  let html = null, shown = false, state = null, remoteState = null;
+  const design = +o.design || 0;   // layout width in CSS px the widget was designed (and its poster taken) at
   (async () => {
     const fb = await fileBytes(o.src);
     html = fb.url ? await (await fetch(fb.url)).text() : new TextDecoder().decode(fb.bytes);
@@ -1191,9 +1223,12 @@ function makeWidget(m) {
     html = /<head[^>]*>/i.test(html) ? html.replace(/<head[^>]*>/i, h => h + helper) : helper + html;
     f.addEventListener('load', () => {
       widgetFrames.set(f.contentWindow, m);
-      if (state) f.contentWindow.postMessage({ __bdlt: 1, t: 'state', s: state }, '*');
+      if (remoteState) f.contentWindow.postMessage({ __bdlt: 1, t: 'state', s: remoteState }, '*');
       if (shown) f.contentWindow.postMessage({ __bdlt: 1, t: 'show' }, '*');
     }, { once: true });
+    // Register before the document is assigned: the widget's scripts run before `load`, and
+    // their first messages (setState, asset requests) must find the frame
+    widgetFrames.set(f.contentWindow, m);
     f.srcdoc = html;
   })().catch(e => mediaError(m, 'This slide’s widget could not be loaded. ' + e.message));
   const send = msg => { try { f.contentWindow && f.contentWindow.postMessage(Object.assign({ __bdlt: 1 }, msg), '*'); } catch (e) {} };
@@ -1212,7 +1247,16 @@ function makeWidget(m) {
     show() { shown = true; send({ t: 'show' }); },
     hide() { shown = false; send({ t: 'hide' }); },
     destroy() { widgetFrames.delete(f.contentWindow); f.srcdoc = ''; },
-    remote(msg) { if (msg.s !== undefined) { state = msg.s; send({ t: 'state', s: msg.s }); } if (msg.ms !== undefined) send({ t: 'clock', ms: msg.ms }); }
+    remote(msg) { if (msg.s !== undefined) { state = remoteState = msg.s; send({ t: 'state', s: msg.s }); } if (msg.ms !== undefined) send({ t: 'clock', ms: msg.ms }); },
+    snapshot() { return state && o.sync !== 'none' ? { s: state } : null; },
+    resized() {
+      // design=<px>: lay the widget out at that width and scale it to the rectangle, so it looks
+      // like its poster on every screen
+      if (!design) return;
+      const w = m.el.clientWidth, h = m.el.clientHeight; if (!w) return;
+      const k = w / design * scale;
+      Object.assign(f.style, { width: design / scale + 'px', height: (h / k) + 'px', transform: `scale(${k})`, transformOrigin: '0 0' });
+    }
   };
 }
 window.addEventListener('message', e => {
@@ -1222,6 +1266,7 @@ window.addEventListener('message', e => {
 });
 // Pencil over a widget: the widget forwards pen events, and they become ink as usual
 function penFromWidget(f, msg) {
+  dbg('widget→ink ' + msg.type.slice(7));
   const r = f.getBoundingClientRect(), sx = r.width / (f.clientWidth || r.width), sy = r.height / (f.clientHeight || r.height);
   const ev = { pointerType: 'pen', pointerId: 'w' + msg.id, clientX: r.left + msg.x * sx, clientY: r.top + msg.y * sy, pressure: msg.p, button: 0,
     timeStamp: performance.now(), target: stage, preventDefault() {} };
@@ -1234,7 +1279,7 @@ function mediaRemote(msg) {
 }
 
 // ---------- update check: GitLab stamps the build into APP_VERSION and version.json ----------
-const APP_RELEASE = '1.1.0';            // raise by hand for notable releases
+const APP_RELEASE = '1.1.1';            // raise by hand for notable releases
 const APP_VERSION = '__BUILD__';      // replaced by GitLab with the commit id on every deployment
 const STAMPED = !APP_VERSION.startsWith('__');
 const BUILD4 = STAMPED ? APP_VERSION.slice(0, 4) : 'dev';
@@ -1334,6 +1379,7 @@ $('#bSettings').onclick = () => { renderSettings(); setPanel.hidden = false; };
 $('#bSetDone').onclick = () => { setPanel.hidden = true; };
 $('#bSetReset').onclick = () => { const p = settings.presenter, pc = settings.pencil; /* keep presenter and Pencil state */ settings = cleanSettings(DEFAULTS); settings.presenter = p; settings.pencil = pc; colors.pen = settings.pen[0]; colors.highlighter = settings.hl[0]; settingsChanged(); };
 $('#optPencil').onchange = e => { settings.pencil = e.target.checked; saveSettings(); setTool(settings.pencil ? (tool === 'hand' ? 'pen' : tool) : 'hand'); };
+$('#optDbg').onchange = e => { dbgOn = e.target.checked; if (!dbgOn) { const el = document.getElementById('dbg'); if (el) el.remove(); dbgLines.length = 0; } };
 $('#optSpeed').oninput = e => { settings.stripSpeed = +e.target.value; saveSettings(); renderSettings(); };
 $('#optGlide').oninput = e => { settings.stripGlide = +e.target.value; saveSettings(); renderSettings(); };
 optPres.onchange = () => {
@@ -1365,7 +1411,9 @@ function sendView() {
 }
 function sendDoc() {
   if (AUDIENCE || !pdfBytes) return;
-  post({ t: 'doc', bytes: pdfBytes, name: fileName, page: pageNum, ink: inkEntries(), laser: settings.laser });
+  const media = [];
+  for (const m of mediaPool.values()) { try { const sn = m.api && m.api.snapshot && m.api.snapshot(); if (sn) media.push(Object.assign({ t: 'media', key: m.key }, sn)); } catch (e) {} }
+  post({ t: 'doc', bytes: pdfBytes, name: fileName, page: pageNum, ink: inkEntries(), laser: settings.laser, media });
   sendView();
 }
 const TOUCH = navigator.maxTouchPoints > 1;
@@ -1519,7 +1567,7 @@ function startAudience() {
   showAudHint();
   chan.onmessage = async ({ data: m }) => {
     if (!m || !m.t) return;
-    if (m.t === 'doc') { if (m.laser) settings.laser = m.laser; remoteView = null; await loadBytes(new Uint8Array(m.bytes), m.name, { page: m.page, ink: m.ink }); }
+    if (m.t === 'doc') { if (m.laser) settings.laser = m.laser; remoteView = null; await loadBytes(new Uint8Array(m.bytes), m.name, { page: m.page, ink: m.ink }); (m.media || []).forEach(mediaRemote); }
     else if (!pdfDoc) return;
     else if (m.t === 'page') { if (m.n !== pageNum) { remoteView = null; laser = []; clearCanvas(livec); showPage(m.n); } }
     else if (m.t === 'view') { remoteView = m; applyRemoteView(); }

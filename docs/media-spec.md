@@ -1,6 +1,6 @@
 # BDLT media in PDF slides: specification v1
 
-Status: draft v1, 1 October 2026
+Status: v1, 1 October 2026; clarified 2 October 2026 (additions marked *1.1*)
 Owner of this document: `bdlt-pdf-presenter` (this repository)
 Producer side: `bdlt-beamer-media` (LaTeX package, widgets, decks)
 
@@ -62,7 +62,7 @@ bdlt-media:v1;type=video;src=attach:consensus.mp4;id=consensus;controls;muted;au
 |---|---|---|---|
 | `type` | `video`, `audio`, `image`, `frames`, `widget` | required | Kind of media (section 3) |
 | `src` | source (section 2.3) | required | Where the media is |
-| `id` | `[A-Za-z0-9_-]+` | none | Identity across pages. Consecutive pages with a marker of the same `id` and the same rectangle (Beamer overlays, `\pause`) keep the **same live element**: a video keeps playing, a widget keeps its state. Without `id`, every page starts fresh. |
+| `id` | `[A-Za-z0-9_-]+` | none | Identity across pages. Pages with a marker of the same `id` and the same rectangle (Beamer overlays, `\pause`) keep the **same live element**: a video keeps playing, a widget keeps its state. Without `id`, every page starts fresh. *1.1:* an `id` is **document-wide** and MUST refer to one media file (one `src`) in the whole PDF; the presenter keeps one element per `id`, wherever its pages are. |
 | `fit` | `contain`, `cover`, `fill` | `contain` | How the media fills the rectangle (CSS `object-fit`) |
 | `bg` | `#RRGGBB` or `none` | `none` | Background behind the media inside the rectangle |
 | `title` | text | none | Accessible label; shown in the presenter's slide strip |
@@ -113,7 +113,7 @@ A sequence of images played as an animation, with the same model as `\animategra
 
 | Key | Default | Meaning |
 |---|---|---|
-| `src` | required | A printf-style pattern with one integer field, e.g. `attach:L03_pr_pagerankloop-%02d.png` |
+| `src` | required | A printf-style pattern with one integer field, e.g. `attach:L03_pr_pagerankloop-%02d.png`. *1.1:* **inside a marker the `%` must be percent-encoded** (section 2.1), so the marker reads `src=attach:L03_pr_pagerankloop-%2502d.png`; written unencoded, `%02` decodes to a control character and no frame is found. |
 | `first` | `0` | First frame number |
 | `last` | required | Last frame number (inclusive) |
 | `fps` | `1` | Frames per second (decimal allowed) |
@@ -136,7 +136,8 @@ or an evolving D3 network.
 | `assets` | none | Comma-separated list of further embedded files the widget may request (`attach:` names without the prefix), e.g. `assets=data.csv,plotly.min.js` |
 | `sync` | `state` | `state`: the projector copy follows the lecturer copy through the helper (section 4). `none`: the projector shows its own copy, not synchronised. |
 | `scale` | `1` | Zoom factor applied to the widget's content (CSS), so a widget designed at one size can fill a larger rectangle |
-| `x-<name>` | none | Free parameters passed to the widget as `bdlt.params.<name>` (string values) |
+| `design` | none | *1.1:* layout width in CSS px the widget was designed at (and its poster taken at). The presenter lays the widget out at exactly this width and scales it to the rectangle, so it looks like its poster on every screen. Without it, the widget is laid out at the rectangle's size on the current screen, which differs between iPad and projector. |
+| `x-<name>` | none | Free parameters passed to the widget as `bdlt.params.<name>` (string values). *1.1:* keys are lower-cased, so write names in lower case: `x-myParam` arrives as `bdlt.params.myparam`. |
 
 Rules for widgets:
 
@@ -172,6 +173,10 @@ bdlt.onShow(fn)       // the slide became visible (start or resume simulations)
 bdlt.onHide(fn)       // the slide was left (pause simulations, stop timers)
 bdlt.now()            // ms since the widget was first shown; the projector's clock follows
                       //   the lecturer's, so time-driven animations stay aligned
+bdlt.pen              // 1.1: who gets the Apple Pencil inside this widget. Default "presenter":
+                      //   the Pencil writes the presenter's ink on top of the widget. A widget that
+                      //   is itself edited with the Pencil sets  bdlt.pen = 'widget'  and then
+                      //   receives the Pencil's pointer events; the presenter draws no ink in it.
 ```
 
 Recommended pattern:
@@ -203,18 +208,25 @@ back gracefully, for example with `const bdlt = window.bdlt || {...}` stubs.
    dragging, and also pinches that start there); slide-navigation tap zones do not apply
    there. To zoom the page, pinch outside the media. The Pencil always draws ink, also over
    media: inside a widget the helper forwards Pencil events to the presenter, so the widget
-   never sees them. A mouse operates media like a finger.
+   never sees them, unless the widget sets `bdlt.pen = 'widget'` (*1.1*, section 4). A mouse
+   operates media like a finger.
 4. **Zoom and pan.** Media scale and move with the page.
 5. **Slide changes.** On leaving a page, video and audio pause and widgets receive `onHide`,
    unless the next page has a marker with the same `id` and rectangle (overlay continuity).
    Returning to a page resumes from where it was.
-6. **Separate views.** The projector window shows the same media at the same place. The
+6. **Separate views.** The projector window shows the same media at the same place. A projector
+   that connects later receives the current state of every live element (*1.1*). The
    lecturer's play, pause, seek, frame position and widget state are mirrored to the projector.
    Audio plays on the lecturer's device only, unless the projector is the one with speakers,
    which is configurable.
 7. **Saving.** Saving an annotated PDF keeps markers and embedded files unchanged.
 8. **Other viewers.** Nothing is required: they show the placeholder, and following the link
    does nothing useful.
+9. **Failures** (*1.1*). Media that cannot be loaded (missing embedded file, web source
+   unreachable, format the device cannot play) are removed so the placeholder shows, and the
+   lecturer gets a short message.
+10. **Widget start-up** (*1.1*). Messages a widget sends while it starts (`setState`,
+   `bdlt.asset()`) are handled; `bdlt.asset()` always resolves or rejects.
 
 ---
 

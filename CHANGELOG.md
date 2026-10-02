@@ -1,5 +1,28 @@
 # Changelog
 
+## 1.1.1 (2 October 2026)
+
+### Fixed
+- Apple Pencil ink inside media boxes on the iPad: the ink layers are stacked explicitly above
+  video and widget layers, and a Pencil stroke that starts on media is no longer taken for a
+  pan. (Changed for Safari on the iPad; to be confirmed on the device.)
+- A widget's first messages (`setState`, `bdlt.asset()`) sent while it starts are no longer lost.
+- The `rate` option of videos now takes effect.
+- Media that cannot be loaded (web source unreachable, unsupported format) give way to the
+  poster with a short message instead of an empty player.
+
+### Added
+- Widgets can take the Pencil themselves with `bdlt.pen = 'widget'` (for example the network
+  pad); the default stays the presenter's ink on top.
+- `design=<px>` for widgets: laid out at a fixed width and scaled, so a widget looks like its
+  poster on every screen.
+- A projector window that connects late receives the current state of widgets, frame
+  animations and videos.
+- Settings › Input log: shows the last touch, mouse and Pencil events on screen for
+  troubleshooting.
+- Media spec clarified (marked 1.1) and `docs/NOTES-from-presenter.md` with answers for
+  `bdlt-beamer-media`.
+
 ## 1.1.0 (2 October 2026)
 
 ### Added
