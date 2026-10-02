@@ -207,10 +207,11 @@ body.audience #stage{cursor:none}
     <button class="tb" id="bGrid" aria-label="Slide overview" title="Slide overview"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="8" height="6" rx="1"/><rect x="13" y="5" width="8" height="6" rx="1"/><rect x="3" y="13" width="8" height="6" rx="1"/><rect x="13" y="13" width="8" height="6" rx="1"/></svg></button>
   </div>
   <div class="grp" id="tools">
-    <button class="tb" data-tool="pen" aria-pressed="true" aria-label="Pen" title="Pen"><svg viewBox="0 0 24 24"><path d="M4 20l1.2-4.4L15.6 5.2a2 2 0 0 1 2.8 0l.4.4a2 2 0 0 1 0 2.8L8.4 18.8z"/><path d="M13.5 7.3l3.2 3.2"/></svg></button>
-    <button class="tb" data-tool="highlighter" aria-pressed="false" aria-label="Highlighter" title="Highlighter"><svg viewBox="0 0 24 24"><path d="M9 14l-4 4v2h5l2-2"/><path d="M9 14l7-9 4 3-7 9z"/><path d="M4 21h16"/></svg></button>
-    <button class="tb" data-tool="laser" aria-pressed="false" aria-label="Laser pointer" title="Laser pointer (leaves no marks)"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/></svg></button>
-    <button class="tb" data-tool="eraser" aria-pressed="false" aria-label="Eraser" title="Eraser"><svg viewBox="0 0 24 24"><path d="M9 20h11"/><path d="M4.6 14.6l9-9a2 2 0 0 1 2.8 0l2 2a2 2 0 0 1 0 2.8L11 18H8z"/></svg></button>
+    <button class="tb" data-tool="hand" aria-pressed="false" aria-label="Navigate" title="Navigate: click or tap to turn pages (V or Esc)"><svg viewBox="0 0 24 24"><path d="M7.904 17.563a1.2 1.2 0 0 0 2.228 .308l2.09 -3.093l4.907 4.907a1.067 1.067 0 0 0 1.509 0l1.047 -1.047a1.067 1.067 0 0 0 0 -1.509l-4.907 -4.907l3.113 -2.09a1.2 1.2 0 0 0 -.309 -2.228l-13.582 -3.904l3.904 13.563"/></svg></button>
+    <button class="tb" data-tool="pen" aria-pressed="false" aria-label="Pen" title="Pen (P)"><svg viewBox="0 0 24 24"><path d="M4 20l1.2-4.4L15.6 5.2a2 2 0 0 1 2.8 0l.4.4a2 2 0 0 1 0 2.8L8.4 18.8z"/><path d="M13.5 7.3l3.2 3.2"/></svg></button>
+    <button class="tb" data-tool="highlighter" aria-pressed="false" aria-label="Highlighter" title="Highlighter (H)"><svg viewBox="0 0 24 24"><path d="M9 14l-4 4v2h5l2-2"/><path d="M9 14l7-9 4 3-7 9z"/><path d="M4 21h16"/></svg></button>
+    <button class="tb" data-tool="laser" aria-pressed="false" aria-label="Laser pointer" title="Laser pointer, leaves no marks (L)"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/></svg></button>
+    <button class="tb" data-tool="eraser" aria-pressed="false" aria-label="Eraser" title="Eraser (E)"><svg viewBox="0 0 24 24"><path d="M9 20h11"/><path d="M4.6 14.6l9-9a2 2 0 0 1 2.8 0l2 2a2 2 0 0 1 0 2.8L11 18H8z"/></svg></button>
   </div>
   <div class="grp" id="swatches"></div>
   <div class="grp">
@@ -253,6 +254,10 @@ body.audience #stage{cursor:none}
   <section class="set">
     <div class="set-h"><h3>Presenter mode (two screens)</h3><label class="switch"><input type="checkbox" id="optPresenter" aria-describedby="presNote"><span></span></label></div>
     <p id="presNote"></p>
+  </section>
+  <section class="set">
+    <div class="set-h"><h3>Pencil mode</h3><label class="switch"><input type="checkbox" id="optPencil" aria-describedby="pencilNote"><span></span></label></div>
+    <p id="pencilNote">On: only the Apple Pencil draws, and fingers navigate. It switches on by itself the first time a Pencil touches the screen. Off: the mouse or a finger draws with the selected tool; choose Navigate to turn pages.</p>
   </section>
   <section class="set">
     <div class="set-h"><h3>Pen colours</h3><span class="count" id="penCount"></span></div>
@@ -321,7 +326,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs
 // ---------- state ----------
 let pdfDoc = null, pdfBytes = null, fileName = 'slides.pdf', numPages = 0, pageNum = 1, curVp = null;
 let ink = new Map(), hist = new Map();
-let tool = 'pen';
+let tool = 'hand';   // hand = navigate; with Pencil mode on, the Pencil draws and fingers navigate whatever the tool
 // ---------- UZH colours and settings ----------
 // The ten UZH colours (values as in the BDLT26 template). Pens may use all ten, highlighters the six accents.
 const UZH = [['#0028A5', 'UZH blue'], ['#4AC9E3', 'UZH cyan'], ['#A4D233', 'UZH apple green'], ['#FFC845', 'UZH gold'],
@@ -331,7 +336,7 @@ const COLOR_NAMES = Object.fromEntries(UZH);
 const PEN_ALLOWED = UZH.map(c => c[0]), HL_ALLOWED = PEN_ALLOWED.slice(0, 6), MAX_PEN = 10;
 const LASERS = { berry: { hex: '#BF0D3E', name: 'UZH berry' }, green: { hex: '#4E6B12', name: 'Dark green' } };
 const DEFAULTS = { pen: ['#0028A5', '#FC4C02', '#FFC845', '#A4D233', '#000000', '#FFFFFF'],
-  hl: ['#FFC845', '#A4D233', '#4AC9E3', '#FC4C02', '#BF0D3E'], laser: 'berry', presenter: false, stripSpeed: 1.5, stripGlide: 0.6 };
+  hl: ['#FFC845', '#A4D233', '#4AC9E3', '#FC4C02', '#BF0D3E'], laser: 'berry', presenter: false, pencil: false, stripSpeed: 1.5, stripGlide: 0.6 };
 const STORE = 'bdlt-pdf-presenter-settings';
 const rgbOf = h => { const n = parseInt(h.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; };
 // Snap any colour to the closest allowed UZH colour
@@ -349,7 +354,7 @@ function cleanSettings(o) {
   let hl = uniq((Array.isArray(o.hl) ? o.hl : DEFAULTS.hl).map(c => nearest(c, HL_ALLOWED)));
   if (!pen.length) pen = DEFAULTS.pen.slice(); if (!hl.length) hl = DEFAULTS.hl.slice();
   const num = (v, a, b, d) => (typeof v === 'number' && isFinite(v)) ? clamp(v, a, b) : d;
-  return { pen, hl, laser: LASERS[o.laser] ? o.laser : DEFAULTS.laser, presenter: !!o.presenter,
+  return { pen, hl, laser: LASERS[o.laser] ? o.laser : DEFAULTS.laser, presenter: !!o.presenter, pencil: !!o.pencil,
     stripSpeed: num(o.stripSpeed, 0.5, 3, DEFAULTS.stripSpeed), stripGlide: num(o.stripGlide, 0, 1, DEFAULTS.stripGlide) };
 }
 let settings = cleanSettings((() => { try { return JSON.parse(localStorage.getItem(STORE) || 'null'); } catch (e) { return null; } })());
@@ -509,6 +514,7 @@ function laserLoop() {
 
 // ---------- pointer input ----------
 const touches = new Map();
+let penAt = { x: 0, y: 0 };
 let g = null, penId = null, penLastUp = 0, cur = null, lastTap = { t: 0, x: 0, y: 0 };
 const pressure = e => e.pointerType === 'pen' ? (e.pressure || 0.5) : 0.5;
 function toPage(e, r) { return [(e.clientX - r.left) / r.width * curVp.width, (e.clientY - r.top) / r.height * curVp.height]; }
@@ -523,12 +529,22 @@ function onDown(e) {
   if (AUDIENCE) { flashAudBtn(); return; }
   // Fingers and the mouse operate media (video controls, sliders); the Pencil always writes
   if (e.pointerType !== 'pen' && inMedia(e)) return;
-  if (e.pointerType === 'touch') return touchDown(e);
   if (e.pointerType === 'mouse' && e.button !== 0) return;
+  // The first Pencil contact switches Pencil mode on: from then on only the Pencil draws
+  if (e.pointerType === 'pen' && !settings.pencil) { settings.pencil = true; saveSettings(); if (tool === 'hand') setTool('pen'); toast('Pencil mode: the Pencil draws, fingers navigate', 2500); }
+  // Who draws? The Pencil with any drawing tool; a finger or the mouse only when Pencil mode is off
+  const draws = tool !== 'hand' && (e.pointerType === 'pen' || !settings.pencil);
+  if (!draws) return touchDown(e);        // navigate: tap zones, swipe, pan, pinch
+  if (e.pointerType === 'touch' && penId !== null && e.pointerId !== penId) {
+    // a second finger while drawing with a finger: drop the stroke and pinch instead
+    const first = penId, at = penAt; abortStroke();
+    touches.clear(); touches.set(first, { x: at.x, y: at.y }); g = { type: 'none' };
+    return touchDown(e, true);
+  }
   e.preventDefault();
   if (sheet.classList.contains('open') && !LECTURER()) { closeSheet(); return; }
   if (!pdfDoc || !curVp) return;
-  penId = e.pointerId; try { stage.setPointerCapture(e.pointerId); } catch (_) {}
+  penId = e.pointerId; penAt = { x: e.clientX, y: e.clientY }; try { stage.setPointerCapture(e.pointerId); } catch (_) {}
   touches.clear(); g = null; // palm rejection: the pencil wins
   const r = pageEl.getBoundingClientRect(), [x, y] = toPage(e, r);
   if (tool === 'eraser') { erasedSnap = false; cur = { tool }; eraseAt(x, y); return; }
@@ -538,8 +554,15 @@ function onDown(e) {
 }
 stage.addEventListener('pointermove', e => onMove(e));
 function onMove(e) {
-  if (e.pointerType === 'touch') return touchMove(e);
+  if (touches.has(e.pointerId)) return touchMove(e);
+  // laser with the mouse: follows the pointer without pressing
+  if (e.pointerType === 'mouse' && penId === null && tool === 'laser' && !settings.pencil && !AUDIENCE && curVp && e.buttons === 0 && !inMedia(e)) {
+    const [x, y] = toPage(e, pageEl.getBoundingClientRect());
+    laser.push({ x, y, t: performance.now(), id: 'hover' }); post({ t: 'lz', x, y, id: 'hover' }); if (!laserRAF) laserLoop();
+    return;
+  }
   if (e.pointerId !== penId || !cur) return;
+  penAt = { x: e.clientX, y: e.clientY };
   const r = pageEl.getBoundingClientRect();
   const list = (e.getCoalescedEvents && e.getCoalescedEvents().length) ? e.getCoalescedEvents() : [e];
   for (const ev of list) {
@@ -551,8 +574,9 @@ function onMove(e) {
   if (cur.tool === 'laser') { if (!laserRAF) laserLoop(); }
   else if (cur.tool !== 'eraser') drawLive();
 }
+function abortStroke() { cur = null; penId = null; clearCanvas(livec); post({ t: 'live', st: null }); }
 function penEnd(e) {
-  if (e.pointerType === 'touch') return touchUp(e);
+  if (touches.has(e.pointerId)) return touchUp(e);
   if (e.pointerId !== penId) return;
   penId = null; penLastUp = performance.now();
   if (cur && (cur.tool === 'pen' || cur.tool === 'highlighter')) {
@@ -574,9 +598,9 @@ function drawLive() {
   sendLive();
 }
 
-function touchDown(e) {
-  if (e.isPrimary) { touches.clear(); g = null; }   // a new gesture: drop any finger whose lift we never heard
-  if (penId !== null || performance.now() - penLastUp < 250) return;
+function touchDown(e, joining) {
+  if (e.isPrimary && !joining) { touches.clear(); g = null; }   // a new gesture: drop any finger whose lift we never heard
+  if (penId !== null || (settings.pencil && performance.now() - penLastUp < 250)) return;
   try { stage.setPointerCapture(e.pointerId); } catch (_) {}
   touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
   if (touches.size === 1) g = { type: 'pending', x0: e.clientX, y0: e.clientY, t0: performance.now(), tx0: view.tx, ty0: view.ty };
@@ -658,11 +682,41 @@ function go(d) {
 // Keep Safari from claiming pinches and swipes on the slide for its own page zoom and scrolling
 ['touchstart', 'touchmove'].forEach(ev => stage.addEventListener(ev, e => { if (e.cancelable && !inMedia(e)) e.preventDefault(); }, { passive: false }));
 
+stage.addEventListener('wheel', e => {
+  if (AUDIENCE || !curVp || inMedia(e)) return;
+  e.preventDefault();
+  const r = stage.getBoundingClientRect(), mx = e.clientX - r.left, my = e.clientY - r.top;
+  if (e.ctrlKey || e.metaKey) {
+    const qx = (mx - base.left - view.tx) / view.s, qy = (my - base.top - view.ty) / view.s;
+    // a mouse wheel sends big steps, a trackpad pinch many small ones
+    view.s = clamp(view.s * Math.exp(-e.deltaY * (Math.abs(e.deltaY) >= 50 ? 0.0025 : 0.01)), 1, 8);
+    view.tx = mx - base.left - view.s * qx; view.ty = my - base.top - view.s * qy;
+  } else if (view.s > 1.02) { view.tx -= e.deltaX; view.ty -= e.deltaY; }
+  else return;
+  if (view.s <= 1.02) view = { s: 1, tx: 0, ty: 0 }; else clampView();
+  applyView(); scheduleHiRes();
+}, { passive: false });
+
+// Safari on a Mac reports trackpad pinches as gesture events (iPad pinches are handled as touches above)
+let gs0 = 1;
+stage.addEventListener('gesturestart', e => { gs0 = view.s; });
+stage.addEventListener('gesturechange', e => {
+  if (navigator.maxTouchPoints > 1 || AUDIENCE || !curVp) return;
+  const r = stage.getBoundingClientRect(), mx = e.clientX - r.left, my = e.clientY - r.top;
+  const qx = (mx - base.left - view.tx) / view.s, qy = (my - base.top - view.ty) / view.s;
+  view.s = clamp(gs0 * e.scale, 1, 8);
+  view.tx = mx - base.left - view.s * qx; view.ty = my - base.top - view.s * qy;
+  if (view.s <= 1.02) view = { s: 1, tx: 0, ty: 0 }; else clampView();
+  applyView(); scheduleHiRes();
+});
+
 // ---------- toolbar ----------
 function toggleBar(force) { bar.classList.toggle('hidden', force === undefined ? !bar.classList.contains('hidden') : !force); }
 function updateCounter() { counter.textContent = numPages ? `${pageNum} / ${numPages}` : '– / –'; }
 function setTool(t) {
   tool = t;
+  stage.style.cursor = t === 'hand' ? '' : 'crosshair';
+  if (t !== 'laser') { laser = laser.filter(p => p.id !== 'hover'); }
   document.querySelectorAll('[data-tool]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.tool === t)));
   buildSwatches();
 }
@@ -792,10 +846,15 @@ window.addEventListener('keydown', e => {
   else if (['ArrowLeft', 'ArrowUp', 'PageUp', 'Backspace'].includes(k)) { e.preventDefault(); go(-1); }
   else if (k === 'Home') showPage(1);
   else if (k === 'End') showPage(numPages);
+  else if (k === 'v') setTool('hand');
+  else if (k === 'p') setTool('pen');
+  else if (k === 'h') setTool('highlighter');
+  else if (k === 'l') setTool('laser');
+  else if (k === 'e') setTool('eraser');
   else if (k === 'f') toggleFs();
   else if (k === 't') toggleBar();
   else if (k === 'g') sheet.classList.contains('open') ? closeSheet() : openSheet();
-  else if (k === 'Escape') { if (!LECTURER()) closeSheet(); $('#savePanel').hidden = true; $('#setPanel').hidden = true; $('#projPanel').hidden = true; }
+  else if (k === 'Escape') { if (tool !== 'hand' && !settings.pencil && $('#setPanel').hidden && $('#savePanel').hidden && $('#projPanel').hidden) setTool('hand'); if (!LECTURER()) closeSheet(); $('#savePanel').hidden = true; $('#setPanel').hidden = true; $('#projPanel').hidden = true; }
 });
 
 // ---------- saving ----------
@@ -1235,6 +1294,7 @@ function renderSettings() {
   optPres.disabled = !!block; optPres.checked = !block && settings.presenter;
   presNote.textContent = block || (settings.presenter && connected() ? 'Projector window connected.' : PRES_INFO);
   $('#verLbl').textContent = VERSION_TEXT;
+  $('#optPencil').checked = settings.pencil;
   const sp = $('#optSpeed'), gl = $('#optGlide');
   sp.value = settings.stripSpeed; gl.value = settings.stripGlide;
   $('#outSpeed').textContent = settings.stripSpeed.toFixed(2).replace(/0$/, '') + '×'; $('#outGlide').textContent = Math.round(settings.stripGlide * 100) + '%';
@@ -1272,7 +1332,8 @@ function renderSettings() {
 function settingsChanged() { saveSettings(); buildSwatches(); renderSettings(); updatePresenterUi(); post({ t: 'laserColour', laser: settings.laser }); }
 $('#bSettings').onclick = () => { renderSettings(); setPanel.hidden = false; };
 $('#bSetDone').onclick = () => { setPanel.hidden = true; };
-$('#bSetReset').onclick = () => { const p = settings.presenter; /* keep presenter state */ settings = cleanSettings(DEFAULTS); settings.presenter = p; colors.pen = settings.pen[0]; colors.highlighter = settings.hl[0]; settingsChanged(); };
+$('#bSetReset').onclick = () => { const p = settings.presenter, pc = settings.pencil; /* keep presenter and Pencil state */ settings = cleanSettings(DEFAULTS); settings.presenter = p; settings.pencil = pc; colors.pen = settings.pen[0]; colors.highlighter = settings.hl[0]; settingsChanged(); };
+$('#optPencil').onchange = e => { settings.pencil = e.target.checked; saveSettings(); setTool(settings.pencil ? (tool === 'hand' ? 'pen' : tool) : 'hand'); };
 $('#optSpeed').oninput = e => { settings.stripSpeed = +e.target.value; saveSettings(); renderSettings(); };
 $('#optGlide').oninput = e => { settings.stripGlide = +e.target.value; saveSettings(); renderSettings(); };
 optPres.onchange = () => {
@@ -1486,7 +1547,7 @@ checkUpdate();
 if (AUDIENCE && chan) {
   startAudience();
 } else {
-  setTool('pen');
+  setTool(settings.pencil ? 'pen' : 'hand');
   if (presenterBlocker()) settings.presenter = false;
   updatePresenterUi();
   sampleDeck().then(b => loadBytes(new Uint8Array(b), 'sample.pdf')).catch(e => { console.error(e); toast('Open a PDF to begin'); });

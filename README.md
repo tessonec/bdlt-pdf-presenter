@@ -9,7 +9,7 @@ It runs in Safari; use Share › Add to Home Screen to install it as a full-scre
 - Tap the top centre to show or hide the toolbar.
 - Triple-tap the lower quarter for the slide overview.
 - Pinch to zoom, drag with one finger to pan, double-tap to fit.
-- Pen, highlighter, laser pointer and eraser for Apple Pencil, in UZH colours.
+- Pen, highlighter, laser pointer and eraser in UZH colours, for Apple Pencil, mouse or finger.
 - Save writes the ink into a new PDF.
 - Same view / separate views (toolbar button): mirror one screen, or show the slides full
   screen in a projector window while this window becomes the lecturer view (elapsed time,
@@ -22,6 +22,33 @@ It runs in Safari; use Share › Add to Home Screen to install it as a full-scre
   glide; remembered per device.
 
 PDFs are opened and annotated on the iPad only; they are never uploaded.
+
+## Input: Pencil, mouse or finger
+
+The app works on an iPad with Apple Pencil, on a computer with a mouse and on a phone or
+tablet with a finger.
+
+- **Navigate tool** (arrow, the default without a Pencil): a click or tap on the right or left
+  third turns the page, on the top centre shows or hides the toolbar; three in the lower
+  quarter open the slide overview; dragging pans when zoomed.
+- **Mouse or finger** (Pencil mode off): pick pen, highlighter, laser or eraser to draw with
+  the mouse or finger; pick Navigate or press Esc to go back. Two fingers always pinch-zoom,
+  even while a drawing tool is selected. The laser follows the mouse without pressing.
+- **Pencil mode**: switches on by itself the first time an Apple Pencil touches the screen
+  (and is remembered); then only the Pencil draws and fingers always navigate. It can be
+  switched off in Settings.
+- **Mouse wheel**: pans when zoomed; Ctrl/⌘ + wheel or a trackpad pinch zooms at the pointer.
+
+| Key | Action |
+|---|---|
+| → ↓ Space Enter PageDown / ← ↑ Backspace PageUp | Next / previous slide |
+| Home / End | First / last slide |
+| V or Esc | Navigate tool |
+| P / H / L / E | Pen / highlighter / laser / eraser |
+| ⌘Z or Ctrl+Z | Undo on this slide |
+| G | Slide overview |
+| T | Show or hide the toolbar |
+| F | Full screen |
 
 ## Media in slides (video, animations, interactive widgets)
 
