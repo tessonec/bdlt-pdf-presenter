@@ -62,8 +62,8 @@ body{background:var(--stage);color:var(--fg);font-family:var(--ui);overflow:hidd
 .fbar input{flex:1;accent-color:#FFC845;min-width:40px}
 .fbar{transition:opacity .4s}
 .fbar.idle{opacity:0;pointer-events:none}
-.fbar output{font-family:var(--num);min-width:5ch;text-align:right}
-.mplay{position:absolute;inset:0;display:grid;place-items:center;background:rgba(0,0,0,.25)}
+.fbar output{font-family:var(--num);min-width:5ch;text-align:right;white-space:nowrap}
+.mplay{position:absolute;inset:0;display:grid;place-items:center;background:none}   /* no scrim: the picture stays clear */
 .mplay span{width:72px;height:72px;border-radius:50%;background:rgba(23,24,28,.8);display:grid;place-items:center}
 .mplay svg{width:30px;height:30px;fill:#fff;margin-left:4px}
 
@@ -1077,7 +1077,10 @@ function makeVideo(m) {
   const start = +o.start || 0, end = o.end !== undefined ? +o.end : null, loop = flag(o, 'loop', false);
   v.loop = loop && end === null; v.defaultPlaybackRate = v.playbackRate = +o.rate || 1;   // loading a source resets playbackRate to the default
   v.muted = AUDIENCE || flag(o, 'muted', false);
-  v.controls = !AUDIENCE && flag(o, 'controls', true);
+  // Video gets our own slim bar: Safari on the iPad draws its native controls as a grey layer over
+  // the whole picture. Audio keeps the native player, since its box is the player.
+  const wantBar = !AUDIENCE && !isAudio && flag(o, 'controls', true);
+  v.controls = isAudio && !AUDIENCE && flag(o, 'controls', true);
   m.el.appendChild(v);
   let ready = false, wantPlay = false, cover = null;
   let dead = false;
@@ -1095,6 +1098,35 @@ function makeVideo(m) {
     m.el.appendChild(cover);
   }
   function tryPlay() { const p = v.play(); if (p && p.catch) p.catch(() => { if (!v.muted) showCover(); }); }
+  v.addEventListener('play', () => { if (cover) { cover.remove(); cover = null; } });
+  if (!AUDIENCE && !isAudio) {
+    // a tap or click on the picture plays and pauses
+    const toggle = () => { if (v.paused) tryPlay(); else v.pause(); };
+    m.el.addEventListener('click', e => { if (e.target === v) toggle(); });
+    if (wantBar) {
+      const bar = document.createElement('div'); bar.className = 'fbar';
+      const PLAY = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>', PAUSE = '<svg viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></svg>';
+      bar.innerHTML = `<button aria-label="Play">${PLAY}</button><input type="range" min="0" max="1000" value="0" aria-label="Position"><output>0:00</output>`;
+      m.el.appendChild(bar);
+      const pb = bar.querySelector('button'), sl = bar.querySelector('input'), out = bar.querySelector('output');
+      const clock = t => Math.floor(t / 60) + ':' + String(Math.floor(t % 60)).padStart(2, '0');
+      let scrubbing = false;
+      const paint = () => {
+        pb.innerHTML = v.paused ? PLAY : PAUSE; pb.setAttribute('aria-label', v.paused ? 'Play' : 'Pause');
+        const d = isFinite(v.duration) ? v.duration : 0;
+        if (d && !scrubbing) sl.value = Math.round(1000 * v.currentTime / d);
+        out.textContent = d ? clock(v.currentTime) + ' / ' + clock(d) : clock(v.currentTime);
+      };
+      pb.onclick = toggle;
+      sl.oninput = () => { scrubbing = true; if (isFinite(v.duration) && v.duration) v.currentTime = sl.value / 1000 * v.duration; };
+      sl.onchange = () => { scrubbing = false; };
+      ['play', 'pause', 'timeupdate', 'loadedmetadata', 'durationchange', 'seeked'].forEach(ev => v.addEventListener(ev, paint));
+      // while playing, the bar fades after 3 s; a touch brings it back
+      let idleT = 0;
+      const wake = () => { bar.classList.remove('idle'); clearTimeout(idleT); idleT = setTimeout(() => { if (!v.paused) bar.classList.add('idle'); }, 3000); };
+      m.el.addEventListener('pointerdown', wake); bar.addEventListener('input', wake); v.addEventListener('play', wake); v.addEventListener('pause', wake);
+    }
+  }
   // lecturer -> projector
   const send = a => mpost(m, { a, time: v.currentTime, rate: v.playbackRate });
   if (!AUDIENCE) {
@@ -1102,7 +1134,7 @@ function makeVideo(m) {
     m.sync = setInterval(() => { if (!v.paused && !m.el.hidden) send('sync'); }, 2000);
   }
   return {
-    show() { if (flag(o, 'autoplay', false) && !AUDIENCE) { wantPlay = true; if (ready) tryPlay(); } else if (!AUDIENCE && !v.controls && !flag(o, 'autoplay', false)) showCover(); },
+    show() { if (flag(o, 'autoplay', false) && !AUDIENCE) { wantPlay = true; if (ready) tryPlay(); } else if (!AUDIENCE && !isAudio && v.paused && v.currentTime <= start + 0.05) showCover(); },
     hide() { wantPlay = false; v.pause(); },
     destroy() { dead = true; clearInterval(m.sync); v.pause(); v.removeAttribute('src'); v.load(); },
     remote(msg) {
@@ -1279,7 +1311,7 @@ function mediaRemote(msg) {
 }
 
 // ---------- update check: GitLab stamps the build into APP_VERSION and version.json ----------
-const APP_RELEASE = '1.1.1';            // raise by hand for notable releases
+const APP_RELEASE = '1.1.2';            // raise by hand for notable releases
 const APP_VERSION = '__BUILD__';      // replaced by GitLab with the commit id on every deployment
 const STAMPED = !APP_VERSION.startsWith('__');
 const BUILD4 = STAMPED ? APP_VERSION.slice(0, 4) : 'dev';

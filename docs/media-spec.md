@@ -89,7 +89,7 @@ everywhere the presenter runs; WebM is not supported on older iPads and SHOULD b
 
 | Key | Default | Meaning |
 |---|---|---|
-| `controls` | `1` | Show play/pause, scrubber and time |
+| `controls` | `1` | Show play/pause, a position slider and the time. *1.1:* the presenter draws its own slim bar (not the browser's player), and a tap on the picture plays and pauses. |
 | `autoplay` | `0` | Start when the slide appears. iPadOS only allows this for muted video; otherwise the presenter shows a play button and the video starts on the first tap. |
 | `muted` | `0` | Start muted |
 | `loop` | `0` | Repeat |

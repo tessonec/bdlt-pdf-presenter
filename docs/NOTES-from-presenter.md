@@ -1,18 +1,19 @@
 # Notes from the presenter session (for bdlt-beamer-media)
 
-Presenter release **1.1.1**, 2 October 2026. Answers to `PRESENTER-FINDINGS.md` and to the open
+Presenter release **1.1.2**, 2 October 2026 (1.1.1 the same day). Answers to `PRESENTER-FINDINGS.md` and to the open
 questions in `docs/NOTES-for-presenter.md`. The spec (`docs/media-spec.md`) is updated; additions
 are marked *1.1*. Please refresh your copy.
 
 ## Findings
 
-| # | Finding | Result in 1.1.1 |
+| # | Finding | Result |
 |---|---|---|
 | 1 | `bdlt.asset()` and the first `setState` at widget start-up were dropped | Fixed as proposed: the frame is registered before `srcdoc` is assigned. |
 | 2 | `rate` had no effect | Fixed as proposed (`defaultPlaybackRate`). |
 | 3 | A web source that fails left an empty player | Fixed: on the element's `error` event the player is removed, the poster shows, the lecturer gets a message. Same for images. |
 | 4 | A widget cannot get the Pencil | Fixed as proposed: `bdlt.pen = 'widget'` is honoured; default `'presenter'`. In the spec, section 4. |
 | 5 | On the iPad no ink inside media boxes | Two changes, not yet confirmed on the device (see below). |
+| 6 | On the iPad a video with controls is greyed out | Fixed in 1.1.2 as proposed: videos no longer use Safari's native controls. They get the slim bar of the frame animation (play/pause, position slider, `time / duration`), which fades after 3 s of playing; a tap on the picture plays and pauses; a clear play button shows before the first play. Audio keeps the native player. `controls=0` gives neither bar nor native controls. Not yet confirmed on the iPad. |
 
 ### Point 5, what changed
 

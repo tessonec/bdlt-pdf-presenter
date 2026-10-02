@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.1.2 (2 October 2026)
+
+### Fixed
+- Videos were greyed out on the iPad: Safari draws its own player controls as a grey layer over
+  the whole picture. Videos now have the presenter's own slim bar (play/pause, position slider,
+  time), which fades while playing; a tap on the picture plays and pauses, and a clear play
+  button shows before the first play. Audio keeps the native player. (To be confirmed on the
+  device.)
+
 ## 1.1.1 (2 October 2026)
 
 ### Fixed
