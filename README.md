@@ -9,6 +9,9 @@ It runs in Safari; use Share › Add to Home Screen to install it as a full-scre
 - Tap the top centre to show or hide the toolbar.
 - Triple-tap the lower quarter for the slide overview.
 - Pinch to zoom, drag with one finger to pan, double-tap to fit.
+- First and last slide: the « and » buttons in the toolbar and at the two ends of the slide
+  overview.
+- Reload (toolbar, next to Open) reads the PDF again and keeps the slide and the ink.
 - Pen, highlighter, laser pointer and eraser in UZH colours, for Apple Pencil, mouse or finger.
 - Save writes the ink into a new PDF.
 - Same view / separate views (toolbar button): mirror one screen, or show the slides full
@@ -45,7 +48,11 @@ tablet with a finger.
 | Home / End | First / last slide |
 | V or Esc | Navigate tool |
 | P / H / L / E | Pen / highlighter / laser / eraser |
+| ⌘O or Ctrl+O | Open a PDF |
+| ⌘R or Ctrl+R | Reload the PDF, keeping the slide and the ink (⇧⌘R reloads the whole app) |
+| ⌘S or Ctrl+S | Save a PDF with the ink |
 | ⌘Z or Ctrl+Z | Undo on this slide |
+| ⇧⌘Z, Ctrl+Shift+Z or Ctrl+Y | Redo |
 | G | Slide overview |
 | T | Show or hide the toolbar |
 | F | Full screen |
@@ -69,6 +76,20 @@ ln -s ~/Projects/bdlt-pdf-presenter/tools/bdlt-pdf-preview.sh /usr/local/bin/bdl
 
 The same works on any server: `index.html?pdf=<address of a PDF>` opens that PDF instead of
 the guide deck, and adding `&watch=1` reloads it when it changes.
+
+### When does the PDF reload by itself?
+
+A green dot on the Reload button means the open PDF is being watched and reloads by itself.
+
+| How the PDF was opened | Reloads by itself | Reload button, ⌘R |
+|---|---|---|
+| `tools/bdlt-pdf-preview.sh file.pdf` (any browser) | yes | yes |
+| Open or drag and drop, in Chrome or Edge | yes | yes |
+| Open or drag and drop, in Safari or Firefox | no | yes, where the browser allows reading the file again; otherwise open it once more with ⌘O |
+| `?pdf=<address>` without `&watch=1` | no | yes |
+
+Browsers do not let a web page watch files on disk; Chrome and Edge offer a way for a file
+the user picked, Safari and Firefox do not. For Safari, use the preview script.
 
 ## Media in slides (video, animations, interactive widgets)
 

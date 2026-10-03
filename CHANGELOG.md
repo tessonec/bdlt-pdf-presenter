@@ -1,12 +1,26 @@
 # Changelog
 
-## Unreleased
+## 1.2.0 (3 October 2026)
 
 ### Added
+- First and last slide: « and » buttons in the toolbar and thin ones at the two ends of the
+  slide overview.
+- Reload button in the toolbar (next to Open): reads the PDF again, keeping the slide and the
+  ink. A green dot on it shows that the PDF is watched and reloads by itself.
+- Desktop shortcuts: ⌘O open, ⌘R reload the PDF (not the app), ⌘S save, ⌘Z undo, ⇧⌘Z or
+  Ctrl+Y redo (Ctrl instead of ⌘ on Windows and Linux).
+- Redo.
+- A PDF that was opened with Open or dropped on the window in Chrome or Edge reloads by
+  itself when the file changes on disk, without the preview script.
 - `index.html?pdf=<address>` opens a PDF named in the address; `&watch=1` reloads it whenever
   the file changes, keeping the current slide and the ink.
 - `tools/bdlt-pdf-preview.sh <file.pdf>`: live preview on your own computer while editing
   slides.
+- Guide deck: the toolbar slide shows the new buttons and shortcuts.
+
+### Fixed
+- Opening a local file while a PDF from the address is being watched no longer lets the
+  watched PDF replace it.
 
 ## 1.1.2 (2 October 2026)
 

@@ -82,6 +82,8 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;touch-
 .tb:focus-visible,.sw:focus-visible,.btn:focus-visible,.thumb:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .tb[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
 .tb.dim{opacity:.4}
+.tb.live{position:relative}
+.tb.live::after{content:"";position:absolute;top:6px;right:6px;width:8px;height:8px;border-radius:50%;background:#A4D233;box-shadow:0 0 0 2px var(--chrome)}
 .tb svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .tb .lbl{font-size:14px;font-weight:500}
 #counter{font-family:var(--num);font-size:13px;font-variant-numeric:tabular-nums;color:var(--muted);min-width:68px;text-align:center}
@@ -100,6 +102,12 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;touch-
 .grab{width:44px;height:5px;border-radius:3px;background:var(--line);margin:0 auto 10px}
 #strip{display:flex;gap:14px;overflow-x:auto;padding:4px 16px;scroll-snap-type:x proximity;scrollbar-width:none;-webkit-overflow-scrolling:touch}
 #strip::-webkit-scrollbar{display:none}
+#strip{position:relative;flex:1;min-width:0}
+.striprow{display:flex;align-items:stretch}
+.edge{flex:none;width:30px;display:grid;place-items:center;color:var(--muted);border-radius:8px;margin:0 2px}
+.edge:hover{background:var(--chrome-2);color:var(--fg)}
+.edge:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.edge svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .thumb{flex:none;position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;scroll-snap-align:center;border-radius:6px}
 .thumb canvas{height:112px;width:auto;max-width:none;background:#2a2c31;border-radius:4px;outline:2px solid transparent;outline-offset:3px}
 .thumb.cur canvas{outline-color:var(--accent)}
@@ -205,12 +213,15 @@ body.audience #stage{cursor:none}
 
 <header id="bar" class="bar" role="toolbar" aria-label="BDLT PDF Presenter controls">
   <div class="grp">
-    <button class="tb" id="bOpen" title="Open a PDF"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span class="lbl">Open</span></button>
+    <button class="tb" id="bOpen" title="Open a PDF (⌘O)"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span class="lbl">Open</span></button>
+    <button class="tb" id="bReload" aria-label="Reload the PDF" title="Reload the PDF (⌘R)"><svg viewBox="0 0 24 24"><path d="M19.933 13.041a8 8 0 1 1 -9.925 -8.788c3.899 -1 7.935 1.007 9.425 4.747"/><path d="M20 4v5h-5"/></svg></button>
   </div>
   <div class="grp">
+    <button class="tb" id="bFirst" aria-label="First slide" title="First slide (Home)"><svg viewBox="0 0 24 24"><path d="M11 6l-6 6 6 6M19 6l-6 6 6 6"/></svg></button>
     <button class="tb" id="bPrev" aria-label="Previous slide" title="Previous slide"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
     <span id="counter" aria-live="polite">– / –</span>
     <button class="tb" id="bNext" aria-label="Next slide" title="Next slide"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
+    <button class="tb" id="bLast" aria-label="Last slide" title="Last slide (End)"><svg viewBox="0 0 24 24"><path d="M13 6l6 6-6 6M5 6l6 6-6 6"/></svg></button>
     <button class="tb" id="bGrid" aria-label="Slide overview" title="Slide overview"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="8" height="6" rx="1"/><rect x="13" y="5" width="8" height="6" rx="1"/><rect x="3" y="13" width="8" height="6" rx="1"/><rect x="13" y="13" width="8" height="6" rx="1"/></svg></button>
   </div>
   <div class="grp" id="tools">
@@ -222,11 +233,11 @@ body.audience #stage{cursor:none}
   </div>
   <div class="grp" id="swatches"></div>
   <div class="grp">
-    <button class="tb" id="bUndo" aria-label="Undo" title="Undo on this slide"><svg viewBox="0 0 24 24"><path d="M9 6L4 11l5 5"/><path d="M4 11h10a5 5 0 0 1 0 10h-3"/></svg></button>
+    <button class="tb" id="bUndo" aria-label="Undo" title="Undo on this slide (⌘Z, redo ⇧⌘Z)"><svg viewBox="0 0 24 24"><path d="M9 6L4 11l5 5"/><path d="M4 11h10a5 5 0 0 1 0 10h-3"/></svg></button>
     <button class="tb" id="bClear" aria-label="Clear ink on this slide" title="Clear ink on this slide"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg></button>
   </div>
   <div class="grp">
-    <button class="tb" id="bSave" title="Save a PDF with your ink"><svg viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg><span class="lbl">Save</span></button>
+    <button class="tb" id="bSave" title="Save a PDF with your ink (⌘S)"><svg viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg><span class="lbl">Save</span></button>
     <button class="tb" id="bFs" aria-label="Full screen" title="Full screen"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
     <button class="tb" id="bPresent" aria-pressed="false" aria-label="Separate views" title="Same view: tap to use separate views (projector and lecturer)"><svg viewBox="0 0 24 24" id="presIcon"></svg></button>
     <button class="tb" id="bSettings" aria-label="Settings" title="Settings"><svg viewBox="0 0 24 24"><path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065"/><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"/></svg></button>
@@ -244,7 +255,7 @@ body.audience #stage{cursor:none}
     <span class="sp"></span>
     <button class="btn" id="bProj">Projector window</button>
   </div>
-  <div id="strip"></div></section>
+  <div class="striprow"><button class="edge" id="sFirst" aria-label="First slide" title="First slide"><svg viewBox="0 0 24 24"><path d="M11 6l-6 6 6 6M19 6l-6 6 6 6"/></svg></button><div id="strip"></div><button class="edge" id="sLast" aria-label="Last slide" title="Last slide"><svg viewBox="0 0 24 24"><path d="M13 6l6 6-6 6M5 6l6 6-6 6"/></svg></button></div></section>
 
 <div id="savePanel" class="panel" role="dialog" aria-modal="true" aria-labelledby="saveTitle" hidden>
   <h2 id="saveTitle">Your annotated PDF is ready</h2>
@@ -485,11 +496,19 @@ function drawStroke(ctx, st) {
   ctx.restore();
 }
 function redrawInk() { clearCanvas(inkc); const ctx = ctxOf(inkc); for (const st of (ink.get(pageNum) || [])) drawStroke(ctx, st); }
-function snap() { const h = hist.get(pageNum) || []; h.push(strokes().slice()); if (h.length > 150) h.shift(); hist.set(pageNum, h); }
+function snap() { redoStack.delete(pageNum); const h = hist.get(pageNum) || []; h.push(strokes().slice()); if (h.length > 150) h.shift(); hist.set(pageNum, h); }
+const redoStack = new Map();   // per slide; cleared by any new change
 function undo() {
   const h = hist.get(pageNum);
   if (!h || !h.length) { toast('Nothing to undo on this slide'); return; }
+  const r = redoStack.get(pageNum) || []; r.push(strokes().slice()); redoStack.set(pageNum, r);
   ink.set(pageNum, h.pop()); redrawInk(); markThumbs(); syncInk();
+}
+function redo() {
+  const r = redoStack.get(pageNum);
+  if (!r || !r.length) { toast('Nothing to redo on this slide'); return; }
+  const h = hist.get(pageNum) || []; h.push(strokes().slice()); hist.set(pageNum, h);
+  ink.set(pageNum, r.pop()); redrawInk(); markThumbs(); syncInk();
 }
 function clearSlide() {
   if (!strokes().length) { toast('This slide has no ink'); return; }
@@ -758,8 +777,13 @@ function buildSwatches() {
   }
 }
 document.querySelectorAll('[data-tool]').forEach(b => b.onclick = () => setTool(b.dataset.tool));
-$('#bOpen').onclick = () => fileIn.click();
+$('#bOpen').onclick = () => openPicker();
+$('#bReload').onclick = () => reloadDeck();
 $('#bPrev').onclick = () => go(-1);
+const goFirst = () => { if (pdfDoc) { showPage(1); strip.scrollTo({ left: 0, behavior: 'smooth' }); } };
+const goLast = () => { if (pdfDoc) { showPage(numPages); strip.scrollTo({ left: strip.scrollWidth, behavior: 'smooth' }); } };
+$('#bFirst').onclick = goFirst; $('#bLast').onclick = goLast;
+$('#sFirst').onclick = goFirst; $('#sLast').onclick = goLast;
 $('#bNext').onclick = () => go(1);
 $('#bGrid').onclick = () => sheet.classList.contains('open') ? closeSheet() : openSheet();
 $('#bUndo').onclick = undo;
@@ -839,7 +863,7 @@ async function loadBytes(bytes, name, opts = {}) {
     const doc = await pdfjsLib.getDocument({ data: bytes.slice(), verbosity: opts.quiet ? 0 : 1 }).promise;
     if (pdfDoc) pdfDoc.destroy();
     pdfDoc = doc; pdfBytes = bytes; fileName = name; numPages = doc.numPages;
-    ink = new Map(); hist = new Map(); cache.clear(); vps.clear(); thumbQueue.length = 0;
+    ink = new Map(); hist = new Map(); redoStack.clear(); cache.clear(); vps.clear(); thumbQueue.length = 0;
     mediaReset();
     if (opts.ink) ink = new Map(opts.ink);
     buildStrip(); await showPage(opts.page || 1);
@@ -847,17 +871,69 @@ async function loadBytes(bytes, name, opts = {}) {
     return true;
   } catch (err) { if (!opts.quiet) { console.error(err); toast('This file could not be opened as a PDF.'); } return false; }
 }
+// Where the open deck came from: 'sample', 'url' (?pdf=...) or 'file' (opened or dropped).
+// lastHandle exists in browsers with the File System Access API (Chrome, Edge); with it the file
+// can be read again after it changed on disk, which a plain file input does not allow there.
+let deckSrc = 'sample', lastFile = null, lastHandle = null, lastStamp = '';
+const stampOf = f => f.lastModified + '|' + f.size;
+const clock = () => new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' });
+async function openLocal(f, handle) {
+  const bytes = new Uint8Array(await f.arrayBuffer());
+  if (!(await loadBytes(bytes, f.name))) return false;
+  deckSrc = 'file'; lastFile = f; lastHandle = handle || null; lastStamp = stampOf(f); fileFails = 0;
+  updateReloadUi(); return true;
+}
+async function openPicker() {
+  if (window.showOpenFilePicker && !inFrame) {
+    try {
+      const [h] = await window.showOpenFilePicker({ id: 'bdlt-pdf', types: [{ description: 'PDF', accept: { 'application/pdf': ['.pdf'] } }] });
+      await openLocal(await h.getFile(), h); return;
+    } catch (e) { if (e && e.name === 'AbortError') return; }
+  }
+  fileIn.click();
+}
 fileIn.onchange = async () => {
   const f = fileIn.files[0]; if (!f) return;
-  await loadBytes(new Uint8Array(await f.arrayBuffer()), f.name); fileIn.value = '';
+  await openLocal(f, null); fileIn.value = '';
 };
+// A file that was opened or dropped is looked at once a second and shown again when it changed.
+let fileBusy = false, fileFails = 0;
+async function fileTick() {
+  if (deckSrc !== 'file' || !lastFile || fileBusy || document.hidden) return;
+  fileBusy = true;
+  let stamp = lastStamp;
+  try {
+    const f = lastHandle ? await lastHandle.getFile() : lastFile;
+    stamp = stampOf(f);
+    if (stamp !== lastStamp) {
+      const bytes = new Uint8Array(await f.arrayBuffer());
+      // A PDF that is still being written does not parse: nothing changes, the next tick tries again.
+      if (await loadBytes(bytes, f.name, { quiet: true, page: pageNum, ink: [...ink.entries()] })) {
+        lastStamp = stamp; lastFile = f; fileFails = 0; toast('Updated ' + clock(), 1300);
+      }
+    }
+  } catch (e) {
+    // This browser refuses to read the changed file a second time: say so once, then stop trying.
+    if (++fileFails >= 3) { lastStamp = stamp; fileFails = 0; toast('The PDF changed on disk. Open it again (⌘O) to see the new version.', 5000); }
+  } finally { fileBusy = false; }
+}
+setInterval(fileTick, 1000); document.addEventListener('visibilitychange', fileTick);   // does nothing unless a file was opened
+function updateReloadUi() {
+  const live = (deckSrc === 'url' && WATCH) || (deckSrc === 'file' && !!lastHandle), b = $('#bReload');
+  b.classList.toggle('live', live);
+  b.title = live ? 'Reload the PDF (⌘R). It also reloads by itself when the file changes.' : 'Reload the PDF (⌘R)';
+}
 const dz = $('#dropzone');
 window.addEventListener('dragover', e => { e.preventDefault(); dz.hidden = false; });
 window.addEventListener('dragleave', e => { if (!e.relatedTarget) dz.hidden = true; });
 window.addEventListener('drop', async e => {
   e.preventDefault(); dz.hidden = true;
-  const f = [...(e.dataTransfer?.files || [])].find(f => /pdf$/i.test(f.type) || /\.pdf$/i.test(f.name));
-  if (f) await loadBytes(new Uint8Array(await f.arrayBuffer()), f.name);
+  const files = [...(e.dataTransfer?.files || [])], i = files.findIndex(f => /pdf$/i.test(f.type) || /\.pdf$/i.test(f.name));
+  if (i < 0) return;
+  let hp = null;   // the handle has to be asked for before the first await
+  try { const it = [...(e.dataTransfer.items || [])].filter(x => x.kind === 'file')[i]; if (it && it.getAsFileSystemHandle) hp = it.getAsFileSystemHandle(); } catch (err) {}
+  let h = null; try { h = hp ? await hp : null; } catch (err) {}
+  await openLocal(files[i], h && h.kind === 'file' ? h : null);
 });
 
 let rT = 0;
@@ -867,7 +943,16 @@ window.addEventListener('keydown', e => {
   if (e.target.closest && e.target.closest('input')) return;
   if (AUDIENCE) { if (e.key === 'f') toggleFs(); return; }
   const k = e.key;
-  if ((e.metaKey || e.ctrlKey) && k.toLowerCase() === 'z') { e.preventDefault(); undo(); return; }
+  if (e.metaKey || e.ctrlKey) {
+    // the usual desktop shortcuts; anything else with Cmd/Ctrl is left to the browser
+    const c = e.code || '', key = k.toLowerCase();
+    if (key === 'z' || c === 'KeyZ') { e.preventDefault(); e.shiftKey ? redo() : undo(); }
+    else if (key === 'y' || c === 'KeyY') { e.preventDefault(); redo(); }
+    else if ((key === 'o' || c === 'KeyO') && !e.shiftKey) { e.preventDefault(); openPicker(); }
+    else if ((key === 's' || c === 'KeyS') && !e.shiftKey) { e.preventDefault(); savePdf(); }
+    else if ((key === 'r' || c === 'KeyR') && !e.shiftKey) { e.preventDefault(); reloadDeck(); }   // Shift+Cmd+R still reloads the whole app
+    return;
+  }
   if (['ArrowRight', 'ArrowDown', 'PageDown', ' ', 'Enter'].includes(k)) { e.preventDefault(); go(1); }
   else if (['ArrowLeft', 'ArrowUp', 'PageUp', 'Backspace'].includes(k)) { e.preventDefault(); go(-1); }
   else if (k === 'Home') showPage(1);
@@ -953,8 +1038,9 @@ const WATCH = !!PDF_URL && QUERY.has('watch') && QUERY.get('watch') !== '0';
 const pdfNameOf = u => { try { return decodeURIComponent(u.split(/[?#]/)[0].split('/').pop()) || 'slides.pdf'; } catch (e) { return 'slides.pdf'; } };
 const sigOf = r => (r.headers.get('x-mtime') || r.headers.get('last-modified') || '') + '|' + (r.headers.get('content-length') || '');
 let watchSig = null, watchBusy = false, watchWaiting = false;
+const fresh = u => WATCH ? u + (u.includes('?') ? '&' : '?') + '_=' + Date.now() : u;   // some browsers keep a copy in spite of no-store
 async function fetchPdf() {
-  const r = await fetch(PDF_URL, { cache: 'no-store' });
+  const r = await fetch(fresh(PDF_URL), { cache: 'no-store' });
   if (!r.ok) throw new Error('HTTP ' + r.status);
   return { bytes: new Uint8Array(await r.arrayBuffer()), sig: sigOf(r) };
 }
@@ -962,18 +1048,21 @@ async function openFromUrl() {
   const name = pdfNameOf(PDF_URL); document.title = name + ' · BDLT PDF Presenter';
   try {
     const r = await fetchPdf();
+    deckSrc = 'url';
     if (await loadBytes(r.bytes, name, { quiet: WATCH })) watchSig = r.sig;
   } catch (e) {
+    deckSrc = 'url';
     if (WATCH) { watchWaiting = true; toast('Waiting for ' + name + '…', 4000); }
     else toast(name + ' could not be opened (' + e.message + ').', 5000);
   }
   if (WATCH) { setInterval(watchTick, 1000); document.addEventListener('visibilitychange', watchTick); }
+  updateReloadUi();
 }
 async function watchTick() {
-  if (watchBusy || document.hidden) return;
+  if (deckSrc !== 'url' || watchBusy || document.hidden) return;
   watchBusy = true;
   try {
-    const h = await fetch(PDF_URL, { method: 'HEAD', cache: 'no-store' });
+    const h = await fetch(fresh(PDF_URL), { method: 'HEAD', cache: 'no-store' });
     if (h.ok && sigOf(h) !== watchSig) {
       const r = await fetchPdf();
       // A PDF that is still being written does not parse; then nothing changes and the next tick tries again.
@@ -981,10 +1070,32 @@ async function watchTick() {
       const keepInk = [...ink.entries()], had = !!pdfDoc;
       if (await loadBytes(r.bytes, pdfNameOf(PDF_URL), { quiet: true, page: had ? pageNum : 1, ink: had ? keepInk : null })) {
         watchSig = r.sig; watchWaiting = false;
-        toast('Updated ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' }), 1300);
+        toast('Updated ' + clock(), 1300);
       }
     }
   } catch (e) {} finally { watchBusy = false; }
+}
+
+// Reload the open PDF from where it came (toolbar button, Cmd/Ctrl+R), keeping the slide and the ink
+async function reloadDeck() {
+  if (!pdfDoc && deckSrc !== 'url') return;
+  const keep = { quiet: true, page: pageNum, ink: [...ink.entries()] };
+  try {
+    if (deckSrc === 'url') {
+      const r = await fetchPdf();
+      if (await loadBytes(r.bytes, pdfNameOf(PDF_URL), keep)) { watchSig = r.sig; toast('Reloaded ' + clock(), 1500); }
+      else toast('The PDF is not complete yet. Try again in a moment.', 3500);
+    } else if (deckSrc === 'file') {
+      const f = lastHandle ? await lastHandle.getFile() : lastFile;
+      const bytes = new Uint8Array(await f.arrayBuffer());
+      if (await loadBytes(bytes, f.name, keep)) { lastFile = f; lastStamp = stampOf(f); toast('Reloaded ' + clock(), 1500); }
+      else toast('The PDF is not complete yet. Try again in a moment.', 3500);
+    } else {
+      await loadBytes(await sampleDeck(), 'sample.pdf', keep); toast('Reloaded ' + clock(), 1500);
+    }
+  } catch (e) {
+    toast(deckSrc === 'file' ? 'This browser will not read a changed file a second time. Open it again with ⌘O or Ctrl+O.' : 'The PDF could not be reloaded.', 5000);
+  }
 }
 
 // ---------- sample deck: sample.pdf next to index.html (replace that file to change it) ----------
@@ -1356,7 +1467,7 @@ function mediaRemote(msg) {
 }
 
 // ---------- update check: GitLab stamps the build into APP_VERSION and version.json ----------
-const APP_RELEASE = '1.1.2';            // raise by hand for notable releases
+const APP_RELEASE = '1.2.0';            // raise by hand for notable releases
 const APP_VERSION = '__BUILD__';      // replaced by GitLab with the commit id on every deployment
 const STAMPED = !APP_VERSION.startsWith('__');
 const BUILD4 = STAMPED ? APP_VERSION.slice(0, 4) : 'dev';
