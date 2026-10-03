@@ -125,5 +125,21 @@ The app loads PDF.js and pdf-lib from cdnjs, so it needs an internet connection 
 ## Deployment
 
 Every push to the default branch publishes `public/` with GitLab Pages (see `.gitlab-ci.yml`).
-The address is shown under Deploy › Pages. After changing `icon.png`, remove the app from the
+The address is shown under Deploy › Pages.
+
+The same push can also publish to GitHub Pages, which needs no login to open
+(`.github/workflows/pages.yml`). One-time setup, with `<account>` your GitHub user or
+organisation:
+
+1. Create an empty public repository `bdlt-pdf-presenter` on GitHub.
+2. Let `git push` send to both servers:
+   ```bash
+   git remote set-url --add --push origin git@gitlab.uzh.ch:bdlt/bdlt-pdf-presenter.git
+   git remote set-url --add --push origin git@github.com:<account>/bdlt-pdf-presenter.git
+   git push origin master --tags
+   ```
+3. On GitHub: Settings › Pages › Source: **GitHub Actions**, then Actions › Pages › Run workflow
+   once (later pushes deploy by themselves).
+
+The site is then at `https://<account>.github.io/bdlt-pdf-presenter/`. After changing `icon.png`, remove the app from the
 iPad's Home Screen and add it again; iPadOS keeps the old icon otherwise.

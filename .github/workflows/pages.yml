@@ -1,0 +1,37 @@
+# Publishes public/ with GitHub Pages on every push to master (the GitHub mirror of the
+# GitLab project). Same stamping as .gitlab-ci.yml, so both sites show the same build id.
+name: Pages
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Stamp the build with the commit id
+        run: |
+          SHA="${GITHUB_SHA::8}"
+          sed -i "s/__BUILD__/${SHA}/g" public/index.html
+          echo "{\"version\":\"${SHA}\"}" > public/version.json
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+      - id: deployment
+        uses: actions/deploy-pages@v4
