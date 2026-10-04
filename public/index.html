@@ -82,6 +82,9 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;touch-
 .tb:focus-visible,.sw:focus-visible,.btn:focus-visible,.thumb:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .tb[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
 .tb.dim{opacity:.4}
+/* viewer edition: no projector, laser, reload button, lecturer clock or fine-tuning settings */
+.lite #bPresent,.lite #presSet,.lite #bReload,.lite [data-tool="laser"],.lite #projSt,.lite #elapsedBtn,.lite #clockSt,.lite #bProj,
+.lite #stripSet,.lite #laserSet,.lite #dbgSet{display:none!important}
 .tb.live{position:relative}
 .tb.live::after{content:"";position:absolute;top:6px;right:6px;width:8px;height:8px;border-radius:50%;background:#A4D233;box-shadow:0 0 0 2px var(--chrome)}
 .tb svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
@@ -250,7 +253,7 @@ body.audience #stage{cursor:none}
   <div id="lect" hidden>
     <span class="st" id="projSt"><i class="led"></i><span id="projTxt">Projector off</span></span>
     <button class="st" id="elapsedBtn" title="Elapsed time. Tap to restart it."><span>Elapsed</span><b id="elT">00:00</b></button>
-    <span class="st"><span>Time</span><b id="clockT">--:--</b></span>
+    <span class="st" id="clockSt"><span>Time</span><b id="clockT">--:--</b></span>
     <span class="st"><span>Slide</span><b id="slideT">– / –</b></span>
     <span class="sp"></span>
     <button class="btn" id="bProj">Projector window</button>
@@ -269,7 +272,7 @@ body.audience #stage{cursor:none}
 
 <div id="setPanel" class="panel wide" role="dialog" aria-modal="true" aria-labelledby="setTitle" hidden>
   <h2 id="setTitle">Settings</h2>
-  <section class="set">
+  <section class="set" id="presSet">
     <div class="set-h"><h3>Presenter mode (two screens)</h3><label class="switch"><input type="checkbox" id="optPresenter" aria-describedby="presNote"><span></span></label></div>
     <p id="presNote"></p>
   </section>
@@ -286,16 +289,16 @@ body.audience #stage{cursor:none}
     <h3>Highlighter colours</h3>
     <div class="pick" id="pickHl"></div>
   </section>
-  <section class="set">
+  <section class="set" id="stripSet">
     <h3>Slide strip</h3>
     <label class="rng" for="optSpeed"><span>Speed</span><input type="range" id="optSpeed" min="0.5" max="3" step="0.25"><output id="outSpeed"></output></label>
     <label class="rng" for="optGlide"><span>Glide</span><input type="range" id="optGlide" min="0" max="1" step="0.05"><output id="outGlide"></output></label>
   </section>
-  <section class="set">
+  <section class="set" id="laserSet">
     <h3>Laser pointer</h3>
     <div class="pick" id="pickLaser"></div>
   </section>
-  <section class="set">
+  <section class="set" id="dbgSet">
     <div class="set-h"><h3>Input log</h3><label class="switch"><input type="checkbox" id="optDbg" aria-describedby="dbgNote"><span></span></label></div>
     <p id="dbgNote">For troubleshooting: shows the last touch, mouse and Pencil events in a corner of the screen.</p>
   </section>
@@ -328,7 +331,7 @@ body.audience #stage{cursor:none}
   <p class="small">Later, touch the slide to show the menu button in the top-left corner.</p>
 </div></div>
 <button id="audBtn" class="gone" aria-label="Projector window menu" title="Projector window menu"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button>
-<div id="update" hidden><span id="updMsg">A newer version of BDLT PDF Presenter is available.</span><button class="btn" id="updLater">Later</button><button class="btn pri" id="updReload">Reload</button></div>
+<div id="update" hidden><span id="updMsg">A newer version is available.</span><button class="btn" id="updLater">Later</button><button class="btn pri" id="updReload">Reload</button></div>
 
 <div id="toast" role="status"></div>
 <div id="dropzone" hidden>Drop a PDF to open it</div>
@@ -339,6 +342,19 @@ body.audience #stage{cursor:none}
 <script>
 (() => {
 const $ = s => document.querySelector(s);
+// Viewer edition (for students): the same app without separate views (projector and lecturer).
+// It is served as viewer.html, a copy of this file made at deployment; index.html?viewer=1 shows
+// the same thing and is meant for trying it out locally. It keeps opening, navigating, zooming,
+// pen, highlighter, eraser and saving; it leaves out what only a lecturer needs.
+const LITE = /(^|\/)viewer\.html$/i.test(location.pathname) || new URLSearchParams(location.search).has('viewer');
+const APP_NAME = LITE ? 'BDLT PDF Viewer' : 'BDLT PDF Presenter';
+if (LITE) {
+  document.documentElement.classList.add('lite'); document.title = APP_NAME;
+  document.querySelector('#splash h1').textContent = APP_NAME;
+  document.querySelector('#bar').setAttribute('aria-label', APP_NAME + ' controls');
+  const m = document.querySelector('meta[name="apple-mobile-web-app-title"]'); if (m) m.content = 'BDLT Viewer';
+  const a = document.querySelector('meta[name="application-name"]'); if (a) a.content = APP_NAME;
+}
 const stage = $('#stage'), pageEl = $('#page'), pdfc = $('#pdfc'), inkc = $('#inkc'), livec = $('#livec');
 const bar = $('#bar'), sheet = $('#sheet'), strip = $('#strip'), counter = $('#counter'), fileIn = $('#file');
 const inFrame = (() => { try { return window.self !== window.top; } catch (e) { return true; } })();
@@ -359,7 +375,7 @@ const PEN_ALLOWED = UZH.map(c => c[0]), HL_ALLOWED = PEN_ALLOWED.slice(0, 6), MA
 const LASERS = { berry: { hex: '#BF0D3E', name: 'UZH berry' }, green: { hex: '#4E6B12', name: 'Dark green' } };
 const DEFAULTS = { pen: ['#0028A5', '#FC4C02', '#FFC845', '#A4D233', '#000000', '#FFFFFF'],
   hl: ['#FFC845', '#A4D233', '#4AC9E3', '#FC4C02', '#BF0D3E'], laser: 'berry', presenter: false, pencil: false, stripSpeed: 1.5, stripGlide: 0.6 };
-const STORE = 'bdlt-pdf-presenter-settings';
+const STORE = LITE ? 'bdlt-pdf-viewer-settings' : 'bdlt-pdf-presenter-settings';   // the two editions keep their settings apart
 const rgbOf = h => { const n = parseInt(h.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; };
 // Snap any colour to the closest allowed UZH colour
 function nearest(hex, allowed) {
@@ -960,7 +976,7 @@ window.addEventListener('keydown', e => {
   else if (k === 'v') setTool('hand');
   else if (k === 'p') setTool('pen');
   else if (k === 'h') setTool('highlighter');
-  else if (k === 'l') setTool('laser');
+  else if (k === 'l') { if (!LITE) setTool('laser'); }
   else if (k === 'e') setTool('eraser');
   else if (k === 'f') toggleFs();
   else if (k === 't') toggleBar();
@@ -1010,7 +1026,7 @@ async function savePdf() {
     if (readyUrl) URL.revokeObjectURL(readyUrl);
     readyUrl = URL.createObjectURL(readyFile);
     $('#saveMsg').textContent = inFrame
-      ? `${name} is ready. This preview blocks saving files, so the buttons may do nothing here. Open BDLT PDF Presenter from its own web address to save.`
+      ? `${name} is ready. This preview blocks saving files, so the buttons may do nothing here. Open ${APP_NAME} from its own web address to save.`
       : `${name} is ready, with ${count} ${count === 1 ? 'stroke' : 'strokes'} drawn into the pages. Choose Save to Files on iPad, or Download on a computer.`;
     $('#savePanel').hidden = false;
   } catch (err) { console.error(err); toast('Saving failed. The PDF may be encrypted or damaged.'); }
@@ -1045,7 +1061,7 @@ async function fetchPdf() {
   return { bytes: new Uint8Array(await r.arrayBuffer()), sig: sigOf(r) };
 }
 async function openFromUrl() {
-  const name = pdfNameOf(PDF_URL); document.title = name + ' · BDLT PDF Presenter';
+  const name = pdfNameOf(PDF_URL); document.title = name + ' · ' + APP_NAME;
   try {
     const r = await fetchPdf();
     deckSrc = 'url';
@@ -1099,10 +1115,13 @@ async function reloadDeck() {
 }
 
 // ---------- sample deck: sample.pdf next to index.html (replace that file to change it) ----------
+//            the viewer edition opens sample-viewer.pdf, and sample.pdf if that is missing
 async function sampleDeck() {
-  const r = await fetch('sample.pdf', { cache: 'no-cache' });
-  if (!r.ok) throw new Error('sample.pdf not found');
-  return new Uint8Array(await r.arrayBuffer());
+  for (const f of LITE ? ['sample-viewer.pdf', 'sample.pdf'] : ['sample.pdf']) {
+    const r = await fetch(f, { cache: 'no-cache' });
+    if (r.ok) return new Uint8Array(await r.arrayBuffer());
+  }
+  throw new Error('sample.pdf not found');
 }
 
 
@@ -1475,7 +1494,7 @@ const VERSION_TEXT = STAMPED ? `Version ${APP_RELEASE} · ${BUILD4}` : `Version 
 // Splash: confirms at a glance which version is running
 (function splash() {
   const el = $('#splash');
-  if (location.hash === '#audience') { el.remove(); return; }
+  if (!LITE && location.hash === '#audience') { el.remove(); return; }
   $('#splashVer').innerHTML = STAMPED ? `Version ${APP_RELEASE} · <b>${BUILD4}</b>` : `Version ${APP_RELEASE} · development copy`;
   const close = () => { el.classList.add('out'); setTimeout(() => el.remove(), 500); };
   el.addEventListener('pointerdown', close); setTimeout(close, 1800);
@@ -1495,7 +1514,7 @@ async function checkUpdate() {
     }
     if (updDismissed) return;
     const inked = [...ink.values()].some(l => l.length);
-    $('#updMsg').textContent = inked ? 'A newer version is available. Save your ink first: reloading clears it.' : 'A newer version of BDLT PDF Presenter is available.';
+    $('#updMsg').textContent = inked ? 'A newer version is available. Save your ink first: reloading clears it.' : 'A newer version of ' + APP_NAME + ' is available.';
     $('#update').hidden = false;
   } catch (e) {}
 }
@@ -1576,9 +1595,9 @@ optPres.onchange = () => {
 };
 
 // ---------- presenter mode: a second window for the projector, kept in sync on this device ----------
-const AUDIENCE = location.hash === '#audience';
+const AUDIENCE = !LITE && location.hash === '#audience';
 const STANDALONE = navigator.standalone === true || (window.matchMedia && (matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches));
-const chan = ('BroadcastChannel' in window) ? new BroadcastChannel('bdlt-pdf-presenter') : null;
+const chan = (!LITE && 'BroadcastChannel' in window) ? new BroadcastChannel('bdlt-pdf-presenter') : null;
 let lastPing = 0, audWin = null, timerStart = 0, viewRAF = 0, liveRAF = 0, remoteView = null;
 const connected = () => performance.now() - lastPing < 5000;
 // Messages go out whenever presenter mode is on; the projector window may be briefly throttled while Safari moves it.
@@ -1784,7 +1803,7 @@ if (AUDIENCE && chan) {
   startAudience();
 } else {
   setTool(settings.pencil ? 'pen' : 'hand');
-  if (presenterBlocker()) settings.presenter = false;
+  if (LITE || presenterBlocker()) settings.presenter = false;
   updatePresenterUi();
   if (PDF_URL) openFromUrl();
   else sampleDeck().then(b => loadBytes(new Uint8Array(b), 'sample.pdf')).catch(e => { console.error(e); toast('Open a PDF to begin'); });

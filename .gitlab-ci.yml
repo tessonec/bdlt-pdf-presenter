@@ -7,6 +7,8 @@ pages:
   script:
     - sed -i "s/__BUILD__/${CI_COMMIT_SHORT_SHA}/g" public/index.html
     - echo "{\"version\":\"${CI_COMMIT_SHORT_SHA}\"}" > public/version.json
+    # viewer.html, the edition for students: the same app under another name (see README)
+    - sed -e 's/BDLT PDF Presenter/BDLT PDF Viewer/g' -e 's/content="BDLT Presenter"/content="BDLT Viewer"/' public/index.html > public/viewer.html
     - echo "The site will be deployed to $CI_PAGES_URL"
   artifacts:
     paths:

@@ -26,6 +26,27 @@ It runs in Safari; use Share › Add to Home Screen to install it as a full-scre
 
 PDFs are opened and annotated on the iPad only; they are never uploaded.
 
+## Viewer edition for students
+
+`viewer.html`, next to the presenter, is the same app as **BDLT PDF Viewer**: for reading the
+slides, playing their videos, animations and widgets, and taking notes on them.
+
+- Kept: Open, turning pages, first and last slide, slide overview, zoom, pen, highlighter,
+  eraser, undo, clear, save, full screen, pen and highlighter colours, Pencil mode.
+- Left out: separate views (projector and lecturer), the laser pointer, the Reload button,
+  elapsed time and clock in the overview, and the settings for the slide strip and the input
+  log.
+
+Its address is the presenter's address plus `viewer.html`, for example
+`https://tessonec.github.io/bdlt-pdf-presenter/viewer.html`. A link can open a PDF straight
+away: `viewer.html?pdf=<address of the PDF>` (the PDF's server must allow other sites to read
+it, or the PDF sits on the same site). It opens `sample-viewer.pdf` as its guide deck and keeps
+its settings apart from the presenter's.
+
+`viewer.html` is not in the repository: the deployment makes it as a copy of `index.html`
+with the name changed (see `.gitlab-ci.yml` and `.github/workflows/pages.yml`), so there is
+one app to maintain. To try it without deploying, open `index.html?viewer=1`.
+
 ## Input: Pencil, mouse or finger
 
 The app works on an iPad with Apple Pencil, on a computer with a mouse and on a phone or
@@ -111,6 +132,8 @@ Other PDF viewers simply show the placeholder image.
 | `public/icon.png` | Home Screen icon (iPad only accepts PNG; at least 180×180 px) |
 | `public/icon.svg` | Browser tab icon and editable icon source |
 | `source/guide-deck.pptx` | Editable source of `sample.pdf`, on the BDLT26 template |
+| `public/sample-viewer.pdf` | The guide deck of the viewer edition |
+| `source/guide-deck-viewer.pptx` | Editable source of `sample-viewer.pdf` |
 
 The app loads PDF.js and pdf-lib from cdnjs, so it needs an internet connection when opened.
 

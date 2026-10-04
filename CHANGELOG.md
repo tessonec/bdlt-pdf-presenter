@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+### Added
+- Viewer edition for students, `viewer.html` (BDLT PDF Viewer): the same app without separate
+  views, laser pointer, Reload button, lecturer clock and the fine-tuning settings; opening,
+  navigating, media, pen, highlighter, eraser and saving stay. It has its own guide deck
+  (`sample-viewer.pdf`) and keeps its own settings. The deployment makes it from
+  `index.html`; `index.html?viewer=1` shows it locally.
+
 ## 1.2.0 (3 October 2026)
 
 ### Added

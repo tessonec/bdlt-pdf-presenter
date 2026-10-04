@@ -29,6 +29,9 @@ jobs:
           SHA="${GITHUB_SHA::8}"
           sed -i "s/__BUILD__/${SHA}/g" public/index.html
           echo "{\"version\":\"${SHA}\"}" > public/version.json
+      - name: Make viewer.html, the edition for students
+        run: |
+          sed -e 's/BDLT PDF Presenter/BDLT PDF Viewer/g' -e 's/content="BDLT Presenter"/content="BDLT Viewer"/' public/index.html > public/viewer.html
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
