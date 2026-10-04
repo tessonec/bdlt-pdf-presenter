@@ -82,8 +82,8 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;touch-
 .tb:focus-visible,.sw:focus-visible,.btn:focus-visible,.thumb:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .tb[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
 .tb.dim{opacity:.4}
-/* viewer edition: no projector, laser, reload button, lecturer clock or fine-tuning settings */
-.lite #bPresent,.lite #presSet,.lite #bReload,.lite [data-tool="laser"],.lite #projSt,.lite #elapsedBtn,.lite #clockSt,.lite #bProj,
+/* viewer edition: no projector, laser, reload button, status row (elapsed time, clock, slide number) or fine-tuning settings */
+.lite #bPresent,.lite #presSet,.lite #bReload,.lite [data-tool="laser"],.lite #lect,
 .lite #stripSet,.lite #laserSet,.lite #dbgSet{display:none!important}
 .tb.live{position:relative}
 .tb.live::after{content:"";position:absolute;top:6px;right:6px;width:8px;height:8px;border-radius:50%;background:#A4D233;box-shadow:0 0 0 2px var(--chrome)}
@@ -1486,7 +1486,7 @@ function mediaRemote(msg) {
 }
 
 // ---------- update check: GitLab stamps the build into APP_VERSION and version.json ----------
-const APP_RELEASE = '1.2.0';            // raise by hand for notable releases
+const APP_RELEASE = '1.3.0';            // raise by hand for notable releases
 const APP_VERSION = '__BUILD__';      // replaced by GitLab with the commit id on every deployment
 const STAMPED = !APP_VERSION.startsWith('__');
 const BUILD4 = STAMPED ? APP_VERSION.slice(0, 4) : 'dev';

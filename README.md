@@ -34,8 +34,8 @@ slides, playing their videos, animations and widgets, and taking notes on them.
 - Kept: Open, turning pages, first and last slide, slide overview, zoom, pen, highlighter,
   eraser, undo, clear, save, full screen, pen and highlighter colours, Pencil mode.
 - Left out: separate views (projector and lecturer), the laser pointer, the Reload button,
-  elapsed time and clock in the overview, and the settings for the slide strip and the input
-  log.
+  the status row of the overview (elapsed time, clock, slide number), and the settings for the
+  slide strip and the input log.
 
 Its address is the presenter's address plus `viewer.html`, for example
 `https://tessonec.github.io/bdlt-pdf-presenter/viewer.html`. A link can open a PDF straight
