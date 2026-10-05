@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.4.0 (5 October 2026)
+
+### Changed
+- The toolbar no longer changes width, so every button keeps its place whichever tool is
+  selected. The colours have moved out of the toolbar: pen, highlighter and laser show their
+  current colour as a dot on the button, and a tap on the tool that is already selected opens
+  its colours in a small menu below it.
+- The slide counter has a fixed width, so the buttons next to it stay put from slide 9 to 10.
+- The laser colour can be picked from the laser button as well as in Settings.
+- Guide decks: the tools slide says how to choose a colour.
+
 ## 1.3.0 (4 October 2026)
 
 ### Added

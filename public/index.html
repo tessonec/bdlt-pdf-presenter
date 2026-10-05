@@ -89,9 +89,18 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;touch-
 .tb.live::after{content:"";position:absolute;top:6px;right:6px;width:8px;height:8px;border-radius:50%;background:#A4D233;box-shadow:0 0 0 2px var(--chrome)}
 .tb svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .tb .lbl{font-size:14px;font-weight:500}
-#counter{font-family:var(--num);font-size:13px;font-variant-numeric:tabular-nums;color:var(--muted);min-width:68px;text-align:center}
-.sw{width:28px;height:28px;border-radius:50%;margin:0 3px;border:2px solid transparent;box-shadow:inset 0 0 0 1px rgba(255,255,255,.28)}
+/* The toolbar never changes width: every button keeps its place whichever tool is selected.
+   The counter has room for 999 / 999; colours live in a popover under the tool button. */
+#counter{font-family:var(--num);font-size:13px;font-variant-numeric:tabular-nums;color:var(--muted);min-width:9ch;white-space:nowrap;text-align:center}
+.tb[data-ink]{position:relative}
+.tb[data-ink]::after{content:"";position:absolute;right:4px;bottom:4px;width:9px;height:9px;border-radius:50%;background:var(--ink,transparent);
+  box-shadow:0 0 0 1.5px rgba(255,255,255,.92),0 0 0 2.5px rgba(0,0,0,.4)}
+.sw{width:34px;height:34px;border-radius:50%;border:2px solid transparent;box-shadow:inset 0 0 0 1px rgba(255,255,255,.28)}
 .sw[aria-pressed="true"]{border-color:var(--fg);box-shadow:inset 0 0 0 2px var(--stage)}
+.pop{position:fixed;z-index:11;display:grid;gap:6px;padding:10px;background:var(--chrome);border:1px solid var(--line);border-radius:14px;
+  -webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);box-shadow:0 10px 30px rgba(0,0,0,.35)}
+.pop::before{content:"";position:absolute;top:-6px;left:var(--cx,50%);width:10px;height:10px;margin-left:-5px;transform:rotate(45deg);
+  background:var(--chrome);border-left:1px solid var(--line);border-top:1px solid var(--line)}
 
 .hint{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 8px);width:120px;height:5px;margin-left:-60px;
   border-radius:3px;background:rgba(255,255,255,.24);pointer-events:none;transition:opacity .2s;z-index:5}
@@ -229,12 +238,11 @@ body.audience #stage{cursor:none}
   </div>
   <div class="grp" id="tools">
     <button class="tb" data-tool="hand" aria-pressed="false" aria-label="Navigate" title="Navigate: click or tap to turn pages (V or Esc)"><svg viewBox="0 0 24 24"><path d="M7.904 17.563a1.2 1.2 0 0 0 2.228 .308l2.09 -3.093l4.907 4.907a1.067 1.067 0 0 0 1.509 0l1.047 -1.047a1.067 1.067 0 0 0 0 -1.509l-4.907 -4.907l3.113 -2.09a1.2 1.2 0 0 0 -.309 -2.228l-13.582 -3.904l3.904 13.563"/></svg></button>
-    <button class="tb" data-tool="pen" aria-pressed="false" aria-label="Pen" title="Pen (P)"><svg viewBox="0 0 24 24"><path d="M4 20l1.2-4.4L15.6 5.2a2 2 0 0 1 2.8 0l.4.4a2 2 0 0 1 0 2.8L8.4 18.8z"/><path d="M13.5 7.3l3.2 3.2"/></svg></button>
-    <button class="tb" data-tool="highlighter" aria-pressed="false" aria-label="Highlighter" title="Highlighter (H)"><svg viewBox="0 0 24 24"><path d="M9 14l-4 4v2h5l2-2"/><path d="M9 14l7-9 4 3-7 9z"/><path d="M4 21h16"/></svg></button>
-    <button class="tb" data-tool="laser" aria-pressed="false" aria-label="Laser pointer" title="Laser pointer, leaves no marks (L)"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/></svg></button>
+    <button class="tb" data-tool="pen" data-ink aria-pressed="false" aria-haspopup="true" aria-expanded="false" aria-label="Pen" title="Pen (P). Tap again to choose the colour"><svg viewBox="0 0 24 24"><path d="M4 20l1.2-4.4L15.6 5.2a2 2 0 0 1 2.8 0l.4.4a2 2 0 0 1 0 2.8L8.4 18.8z"/><path d="M13.5 7.3l3.2 3.2"/></svg></button>
+    <button class="tb" data-tool="highlighter" data-ink aria-pressed="false" aria-haspopup="true" aria-expanded="false" aria-label="Highlighter" title="Highlighter (H). Tap again to choose the colour"><svg viewBox="0 0 24 24"><path d="M9 14l-4 4v2h5l2-2"/><path d="M9 14l7-9 4 3-7 9z"/><path d="M4 21h16"/></svg></button>
+    <button class="tb" data-tool="laser" data-ink aria-pressed="false" aria-haspopup="true" aria-expanded="false" aria-label="Laser pointer" title="Laser pointer, leaves no marks (L). Tap again to choose the colour"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/></svg></button>
     <button class="tb" data-tool="eraser" aria-pressed="false" aria-label="Eraser" title="Eraser (E)"><svg viewBox="0 0 24 24"><path d="M9 20h11"/><path d="M4.6 14.6l9-9a2 2 0 0 1 2.8 0l2 2a2 2 0 0 1 0 2.8L11 18H8z"/></svg></button>
   </div>
-  <div class="grp" id="swatches"></div>
   <div class="grp">
     <button class="tb" id="bUndo" aria-label="Undo" title="Undo on this slide (⌘Z, redo ⇧⌘Z)"><svg viewBox="0 0 24 24"><path d="M9 6L4 11l5 5"/><path d="M4 11h10a5 5 0 0 1 0 10h-3"/></svg></button>
     <button class="tb" id="bClear" aria-label="Clear ink on this slide" title="Clear ink on this slide"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg></button>
@@ -248,6 +256,8 @@ body.audience #stage{cursor:none}
   </div>
 </header>
 <div class="hint" aria-hidden="true"></div>
+
+<div id="pop" class="pop" role="menu" aria-label="Colours" hidden></div>
 
 <section id="sheet" aria-label="Slide overview"><div class="grab" id="grab"></div>
   <div id="lect" hidden>
@@ -282,7 +292,7 @@ body.audience #stage{cursor:none}
   </section>
   <section class="set">
     <div class="set-h"><h3>Pen colours</h3><span class="count" id="penCount"></span></div>
-    <p>Tap to add or remove, up to 10. The toolbar shows them in the order you pick them.</p>
+    <p>Tap to add or remove, up to 10. The pen's colour menu shows them in the order you pick them.</p>
     <div class="pick" id="pickPen"></div>
   </section>
   <section class="set">
@@ -711,6 +721,7 @@ function endZoom() {
   if (before.tx !== view.tx || before.ty !== view.ty) animateTo(view.s, view.tx, view.ty); else scheduleHiRes();
 }
 function tap(x, y) {
+  if (swallowTap) { swallowTap = false; return; }   // this tap closed the colour popover
   if (sheet.classList.contains('open') && !LECTURER()) { closeSheet(); return; }
   const now = performance.now(), dbl = now - lastTap.t < 320 && Math.hypot(x - lastTap.x, y - lastTap.y) < 40;
   lastTap = { t: now, x, y };
@@ -771,28 +782,67 @@ stage.addEventListener('gesturechange', e => {
 });
 
 // ---------- toolbar ----------
-function toggleBar(force) { bar.classList.toggle('hidden', force === undefined ? !bar.classList.contains('hidden') : !force); }
+function toggleBar(force) { bar.classList.toggle('hidden', force === undefined ? !bar.classList.contains('hidden') : !force); if (bar.classList.contains('hidden')) closePop(); }
 function updateCounter() { counter.textContent = numPages ? `${pageNum} / ${numPages}` : '– / –'; }
 function setTool(t) {
   tool = t;
   stage.style.cursor = t === 'hand' ? '' : 'crosshair';
   if (t !== 'laser') { laser = laser.filter(p => p.id !== 'hover'); }
   document.querySelectorAll('[data-tool]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.tool === t)));
-  buildSwatches();
+  closePop(); syncColours();
 }
-function buildSwatches() {
-  const box = $('#swatches'), list = paletteFor(tool);
-  if (list && !list.includes(colors[tool])) colors[tool] = list[0];
-  box.hidden = !list; box.innerHTML = '';
-  if (!list) return;
+// Colours. The toolbar itself never changes: each drawing tool shows its colour as a dot on its
+// button, and a tap on the tool that is already selected opens its colours in a popover below.
+const pop = $('#pop');
+let popTool = null, swallowTap = false;
+const toolBtn = t => document.querySelector('[data-tool="' + t + '"]');
+const inkOf = t => t === 'laser' ? LASERS[settings.laser].hex : colors[t];
+function choicesFor(t) {
+  if (t === 'laser') return Object.entries(LASERS).map(([key, l]) => ({ hex: l.hex, name: l.name, on: settings.laser === key, pick() { settings.laser = key; saveSettings(); post({ t: 'laserColour', laser: key }); } }));
+  const list = paletteFor(t); if (!list) return null;
+  return list.map(c => ({ hex: c, name: COLOR_NAMES[c] || c, on: colors[t] === c, pick() { colors[t] = c; } }));
+}
+function syncColours() {
+  for (const t of ['pen', 'highlighter']) { const list = paletteFor(t); if (!list.includes(colors[t])) colors[t] = list[0]; }
+  for (const t of ['pen', 'highlighter', 'laser']) toolBtn(t).style.setProperty('--ink', inkOf(t));
+  if (popTool) renderPop();
+}
+function renderPop() {
+  const list = choicesFor(popTool); pop.innerHTML = '';
+  pop.style.gridTemplateColumns = 'repeat(' + (list.length <= 6 ? list.length : Math.ceil(list.length / 2)) + ', 34px)';   // one row up to six, else two even rows
   for (const c of list) {
     const b = document.createElement('button');
-    b.className = 'sw'; b.style.background = c; b.setAttribute('aria-label', COLOR_NAMES[c] || c); b.title = COLOR_NAMES[c] || c; b.setAttribute('aria-pressed', String(colors[tool] === c));
-    b.onclick = () => { colors[tool] = c; buildSwatches(); };
-    box.appendChild(b);
+    b.className = 'sw'; b.style.background = c.hex; b.title = c.name;
+    b.setAttribute('role', 'menuitemradio'); b.setAttribute('aria-label', c.name); b.setAttribute('aria-checked', String(c.on)); b.setAttribute('aria-pressed', String(c.on));
+    b.onclick = () => { c.pick(); closePop(); syncColours(); };
+    pop.appendChild(b);
   }
 }
-document.querySelectorAll('[data-tool]').forEach(b => b.onclick = () => setTool(b.dataset.tool));
+function openPop(t) {
+  if (!choicesFor(t)) return;
+  popTool = t; renderPop(); pop.hidden = false; toolBtn(t).setAttribute('aria-expanded', 'true');
+  // under the toolbar, centred on the tool button, kept inside the window
+  const r = toolBtn(t).getBoundingClientRect(), w = pop.offsetWidth, cx = r.left + r.width / 2;
+  const left = Math.max(8, Math.min(innerWidth - w - 8, cx - w / 2));
+  pop.style.left = left + 'px'; pop.style.top = (bar.getBoundingClientRect().bottom + 10) + 'px';
+  pop.style.setProperty('--cx', Math.max(14, Math.min(w - 14, cx - left)) + 'px');
+}
+function closePop() {
+  if (!popTool) return false;
+  toolBtn(popTool).setAttribute('aria-expanded', 'false'); popTool = null; pop.hidden = true; return true;
+}
+// A touch anywhere else closes the popover. On the slide, a stroke that starts there is still
+// drawn, but a tap that would have turned the page only closes the popover.
+document.addEventListener('pointerdown', e => {
+  swallowTap = false;
+  if (!popTool || pop.contains(e.target) || toolBtn(popTool).contains(e.target)) return;
+  closePop(); swallowTap = stage.contains(e.target);
+}, true);
+window.addEventListener('resize', closePop);
+document.querySelectorAll('[data-tool]').forEach(b => b.onclick = () => {
+  const t = b.dataset.tool;
+  if (t !== tool) setTool(t); else if (popTool === t) closePop(); else openPop(t);
+});
 $('#bOpen').onclick = () => openPicker();
 $('#bReload').onclick = () => reloadDeck();
 $('#bPrev').onclick = () => go(-1);
@@ -981,7 +1031,7 @@ window.addEventListener('keydown', e => {
   else if (k === 'f') toggleFs();
   else if (k === 't') toggleBar();
   else if (k === 'g') sheet.classList.contains('open') ? closeSheet() : openSheet();
-  else if (k === 'Escape') { if (tool !== 'hand' && !settings.pencil && $('#setPanel').hidden && $('#savePanel').hidden && $('#projPanel').hidden) setTool('hand'); if (!LECTURER()) closeSheet(); $('#savePanel').hidden = true; $('#setPanel').hidden = true; $('#projPanel').hidden = true; }
+  else if (k === 'Escape') { if (closePop()) return; if (tool !== 'hand' && !settings.pencil && $('#setPanel').hidden && $('#savePanel').hidden && $('#projPanel').hidden) setTool('hand'); if (!LECTURER()) closeSheet(); $('#savePanel').hidden = true; $('#setPanel').hidden = true; $('#projPanel').hidden = true; }
 });
 
 // ---------- saving ----------
@@ -1486,7 +1536,7 @@ function mediaRemote(msg) {
 }
 
 // ---------- update check: GitLab stamps the build into APP_VERSION and version.json ----------
-const APP_RELEASE = '1.3.0';            // raise by hand for notable releases
+const APP_RELEASE = '1.4.0';            // raise by hand for notable releases
 const APP_VERSION = '__BUILD__';      // replaced by GitLab with the commit id on every deployment
 const STAMPED = !APP_VERSION.startsWith('__');
 const BUILD4 = STAMPED ? APP_VERSION.slice(0, 4) : 'dev';
@@ -1581,7 +1631,7 @@ function renderSettings() {
     pl.appendChild(b);
   }
 }
-function settingsChanged() { saveSettings(); buildSwatches(); renderSettings(); updatePresenterUi(); post({ t: 'laserColour', laser: settings.laser }); }
+function settingsChanged() { saveSettings(); syncColours(); renderSettings(); updatePresenterUi(); post({ t: 'laserColour', laser: settings.laser }); }
 $('#bSettings').onclick = () => { renderSettings(); setPanel.hidden = false; };
 $('#bSetDone').onclick = () => { setPanel.hidden = true; };
 $('#bSetReset').onclick = () => { const p = settings.presenter, pc = settings.pencil; /* keep presenter and Pencil state */ settings = cleanSettings(DEFAULTS); settings.presenter = p; settings.pencil = pc; colors.pen = settings.pen[0]; colors.highlighter = settings.hl[0]; settingsChanged(); };

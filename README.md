@@ -13,6 +13,8 @@ It runs in Safari; use Share › Add to Home Screen to install it as a full-scre
   overview.
 - Reload (toolbar, next to Open) reads the PDF again and keeps the slide and the ink.
 - Pen, highlighter, laser pointer and eraser in UZH colours, for Apple Pencil, mouse or finger.
+  The toolbar buttons never move: each tool shows its colour as a dot, and a tap on the tool
+  that is already selected opens its colours below it.
 - Save writes the ink into a new PDF.
 - Same view / separate views (toolbar button): mirror one screen, or show the slides full
   screen in a projector window while this window becomes the lecturer view (elapsed time,
