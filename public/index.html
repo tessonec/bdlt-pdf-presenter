@@ -203,6 +203,16 @@ body.audience #stage{cursor:none}
   -webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
 #update .btn{height:36px}
 .ver{font-family:var(--num);font-size:12px;color:var(--muted);margin-right:auto;align-self:center}
+#bAbout{display:inline-flex;align-items:center;gap:8px}
+#bAbout img{width:22px;height:22px;border-radius:5px}
+#aboutPanel{text-align:center}
+#aboutPanel .about{display:grid;justify-items:center;gap:10px}
+#aboutPanel img{width:96px;height:96px;border-radius:21px;box-shadow:0 10px 30px rgba(0,0,0,.4)}
+#aboutPanel h2{font-size:22px}
+#aboutPanel .who{color:var(--fg);font-size:15px}
+#aboutPanel .fine{font-size:12.5px}
+#aboutPanel a{color:var(--accent)}
+#aboutPanel .row{justify-content:center}
 #audHint div{display:grid;gap:10px;max-width:520px}
 #audHint h2{margin:0;font-size:22px}
 #audHint p{margin:0;color:var(--muted);font-size:15px;line-height:1.5}
@@ -256,6 +266,20 @@ body.audience #stage{cursor:none}
   </div>
 </header>
 <div class="hint" aria-hidden="true"></div>
+
+<div id="aboutPanel" class="panel" role="dialog" aria-modal="true" aria-labelledby="aboutTitle" hidden>
+  <div class="about">
+    <img src="icon.png" alt="">
+    <h2 id="aboutTitle">BDLT PDF Presenter</h2>
+    <p class="ver" id="aboutVer" style="margin:0"></p>
+    <p id="aboutWhat">Shows a PDF as a full-screen slide show, with pen, live media and a projector view.</p>
+    <p class="who"><b>Blockchain &amp; DLT Research Group</b><br>University of Zurich<br>Prof. Claudio J. Tessone</p>
+    <p class="who">Designed and built with Claude, by Anthropic.</p>
+    <p class="fine">Uses PDF.js (Mozilla, Apache 2.0), pdf-lib (MIT), icons from Tabler Icons (MIT) and the IBM Plex typefaces (OFL). Your PDFs stay on this device: nothing is uploaded.</p>
+    <p class="fine"><a href="https://www.blockchain.uzh.ch" target="_blank" rel="noopener">blockchain.uzh.ch</a></p>
+  </div>
+  <div class="row"><button class="btn pri" id="bAboutClose">Close</button></div>
+</div>
 
 <div id="pop" class="pop" role="menu" aria-label="Colours" hidden></div>
 
@@ -314,6 +338,7 @@ body.audience #stage{cursor:none}
   </section>
   <div class="row">
     <span class="ver" id="verLbl"></span>
+    <button class="btn" id="bAbout"><img src="icon.png" alt="">About</button>
     <button class="btn" id="bSetReset">Reset to defaults</button>
     <button class="btn pri" id="bSetDone">Done</button>
   </div>
@@ -1031,7 +1056,7 @@ window.addEventListener('keydown', e => {
   else if (k === 'f') toggleFs();
   else if (k === 't') toggleBar();
   else if (k === 'g') sheet.classList.contains('open') ? closeSheet() : openSheet();
-  else if (k === 'Escape') { if (closePop()) return; if (tool !== 'hand' && !settings.pencil && $('#setPanel').hidden && $('#savePanel').hidden && $('#projPanel').hidden) setTool('hand'); if (!LECTURER()) closeSheet(); $('#savePanel').hidden = true; $('#setPanel').hidden = true; $('#projPanel').hidden = true; }
+  else if (k === 'Escape') { if (closePop()) return; if (tool !== 'hand' && !settings.pencil && $('#setPanel').hidden && $('#savePanel').hidden && $('#projPanel').hidden && $('#aboutPanel').hidden) setTool('hand'); if (!LECTURER()) closeSheet(); $('#savePanel').hidden = true; $('#setPanel').hidden = true; $('#projPanel').hidden = true; $('#aboutPanel').hidden = true; }
 });
 
 // ---------- saving ----------
@@ -1459,6 +1484,9 @@ else if(m.t==='asset'){var w=aw[m.id];delete aw[m.id];if(!w)return;if(m.err)w[1]
 if(C.role!=='projector'){setInterval(function(){P({t:'clock',ms:b.now()})},2000);
 ['pointerdown','pointermove','pointerup','pointercancel'].forEach(function(ty){addEventListener(ty,function(e){if(e.pointerType!=='pen'||b.pen==='widget')return;
 e.preventDefault();e.stopImmediatePropagation();P({t:'pen',type:ty,x:e.clientX,y:e.clientY,p:e.pressure||.5,id:e.pointerId})},true)});
+addEventListener('keydown',function(e){if(e.defaultPrevented||e.metaKey||e.ctrlKey||e.altKey)return;var t=e.target;
+if(t&&(/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)||t.isContentEditable))return;
+if(['ArrowRight','ArrowLeft','ArrowUp','ArrowDown','PageDown','PageUp','Home','End','Escape'].indexOf(e.key)<0)return;e.preventDefault();P({t:'key',key:e.key})});
 var sty=function(e){for(var i=0;i<e.changedTouches.length;i++)if(e.changedTouches[i].touchType==='stylus'){if(e.cancelable)e.preventDefault();return}};
 addEventListener('touchstart',sty,{capture:true,passive:false});addEventListener('touchmove',sty,{capture:true,passive:false});}
 })();<\/script>`;
@@ -1519,8 +1547,11 @@ function makeWidget(m) {
 window.addEventListener('message', e => {
   const msg = e.data; if (!msg || !msg.__bdlt) return;
   const m = widgetFrames.get(e.source); if (!m || !m.fromWidget) return;
+  // After a click in a live figure the keyboard belongs to it: the keys that turn pages are handed back
+  if (msg.t === 'key') { if (WIDGET_KEYS.includes(msg.key)) window.dispatchEvent(new KeyboardEvent('keydown', { key: msg.key })); return; }
   m.fromWidget(msg);
 });
+const WIDGET_KEYS = ['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown', 'PageDown', 'PageUp', 'Home', 'End', 'Escape'];
 // Pencil over a widget: the widget forwards pen events, and they become ink as usual
 function penFromWidget(f, msg) {
   dbg('widget→ink ' + msg.type.slice(7));
@@ -1634,6 +1665,13 @@ function renderSettings() {
 function settingsChanged() { saveSettings(); syncColours(); renderSettings(); updatePresenterUi(); post({ t: 'laserColour', laser: settings.laser }); }
 $('#bSettings').onclick = () => { renderSettings(); setPanel.hidden = false; };
 $('#bSetDone').onclick = () => { setPanel.hidden = true; };
+// About: the icon, the version, who made it and what it is built on
+$('#bAbout').onclick = () => {
+  $('#aboutTitle').textContent = APP_NAME; $('#aboutVer').textContent = VERSION_TEXT;
+  if (LITE) $('#aboutWhat').textContent = 'Shows the slides of a PDF with their live media, and lets you write on them and save.';
+  setPanel.hidden = true; $('#aboutPanel').hidden = false;
+};
+$('#bAboutClose').onclick = () => { $('#aboutPanel').hidden = true; };
 $('#bSetReset').onclick = () => { const p = settings.presenter, pc = settings.pencil; /* keep presenter and Pencil state */ settings = cleanSettings(DEFAULTS); settings.presenter = p; settings.pencil = pc; colors.pen = settings.pen[0]; colors.highlighter = settings.hl[0]; settingsChanged(); };
 $('#optPencil').onchange = e => { settings.pencil = e.target.checked; saveSettings(); setTool(settings.pencil ? (tool === 'hand' ? 'pen' : tool) : 'hand'); };
 $('#optDbg').onchange = e => { dbgOn = e.target.checked; if (!dbgOn) { const el = document.getElementById('dbg'); if (el) el.remove(); dbgLines.length = 0; } };

@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Still here, alive there: the same figure in any PDF viewer and in BDLT PDF Presenter</title>
+<!-- Two copies of one small figure, a chain of blocks with its forks. The left one never moves:
+     it is what every PDF viewer shows. The right one runs, which only BDLT PDF Presenter (and its viewer edition) does.
+     In any other viewer both halves are a picture, and that is the point of the slide.
+     The house style with Source Sans cut down to Latin (../style), the chips (../bar), D3's selections and transitions.
+     Built by ./build.sh into alive.html, one file with everything inside. -->
+<link rel="stylesheet" href="../style/bdlt-style-latin.css">
+<script src="../../bdltplots/web/bdlt-style.js"></script>
+<!-- D3, only the modules these figures use (selections and transitions): 51 kB in place of 280 kB -->
+<script src="https://cdn.jsdelivr.net/npm/d3-color@3.1.0/dist/d3-color.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3-dispatch@3.0.1/dist/d3-dispatch.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3-ease@3.0.1/dist/d3-ease.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3-interpolate@3.0.1/dist/d3-interpolate.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3-selection@3.0.0/dist/d3-selection.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3-timer@3.0.1/dist/d3-timer.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3-transition@3.0.1/dist/d3-transition.min.js"></script>
+<script src="../lib/bdlt-icons.js"></script>
+<link rel="stylesheet" href="../bar/bdlt-bar.css">
+<script src="../bar/bdlt-bar.js"></script>
+<style>
+  #wrap { position: absolute; inset: 0; display: flex; flex-direction: column; }
+  #main { flex: 1; min-height: 0; display: flex; gap: 14px; padding: 2px 10px 8px; }
+  .half { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .half h2 { margin: 0 0 6px; font-size: 19px; font-weight: 600; line-height: 26px; height: 26px; white-space: nowrap; }
+  .half h2 span { font-weight: 400; color: var(--bdlt-ink-2); }
+  .pane { flex: 1; min-height: 0; position: relative; border: 1.6px solid #000; }
+  .pane > svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  #still .pane { border-color: var(--bdlt-mark-muted); }
+  .link { stroke: #000; stroke-width: 1.8; }
+  .link.off { stroke: var(--bdlt-mark-muted); }
+  .blk { stroke: var(--uzh-blue); stroke-width: 2; fill: var(--uzh-blue); }
+  .blk.off { stroke: var(--bdlt-mark-muted); fill: #fff; }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div id="main">
+    <div class="half" id="still"><h2>Any other PDF viewer <span>a picture</span></h2><div class="pane"><svg id="a" role="img" aria-label="The finished chain of blocks, as a still picture"></svg></div></div>
+    <div class="half" id="live"><h2>BDLT PDF Presenter and Viewer <span>the figure runs</span></h2><div class="pane"><svg id="b" role="img" aria-label="The chain of blocks, growing block by block"></svg></div></div>
+  </div>
+  <div class="bar">
+    <button id="reset" data-icon="reset" aria-label="Back to the start"></button><button id="play" data-icon="play" aria-label="Play"></button><button id="stepb" data-icon="step" aria-label="One more block"></button>
+    <span class="chip" id="cT" data-max="block 12 / 12"></span>
+    <span class="chip" id="cO" data-max="orphaned 3"></span>
+    <span class="note" id="msg"></span>
+    <span class="key"><i style="background:var(--uzh-blue)"></i>longest chain</span>
+    <span class="key"><i style="background:#fff;border:2px solid var(--bdlt-mark-muted)"></i>orphaned</span>
+  </div>
+</div>
+<script>
+/* BEGIN bdlt-stub (copied from widgets/lib/bdlt-stub.js by tools/inline-widget.py) */
+/* END bdlt-stub */
+
+// ---- the run: T blocks are found one after the other. Most extend the longest chain; now and then
+//      a second block is found at the height of the tip (a fork). The next block decides which of the
+//      two is built on, and the other is orphaned. The whole run is computed once from the seed;
+//      step t of the picture is a look-up. An illustration of the longest-chain rule, not a model
+//      with real parameters.
+const T = 12;                                               // blocks found after the first one
+const FORK = 0.22;                                          // chance that a new block competes with the tip
+const SEED = parseInt(bdlt.params.seed || '59', 10);        // chosen by eye: three forks, well apart, won by either side
+const START = Math.min(T, Math.max(0, parseInt(bdlt.params.start || '0', 10)));
+const MS = Math.max(150, parseInt(bdlt.params.ms || '700', 10));        // time per block while it plays
+
+function prng(seed) {                                        // mulberry32: the same numbers in every copy
+  let s = seed >>> 0;
+  return () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+}
+const blocks = [{ i: 0, parent: -1, h: 0, lane: 0 }];        // i: order found; h: height; lane: 0 centre, 1 below
+(function run() {
+  const rnd = prng(SEED * 7919 + 13);
+  for (let i = 1; i <= T; i++) {
+    const top = Math.max(...blocks.map(b => b.h)), tips = blocks.filter(b => b.h === top);
+    if (tips.length === 1 && top > 0 && rnd() < FORK) {      // a competitor of the tip: same parent, same height, the other lane
+      blocks.push({ i, parent: tips[0].parent, h: top, lane: 1 - tips[0].lane });
+    } else {                                                 // builds on a tip (on either of two, with equal chance)
+      const p = tips[Math.floor(rnd() * tips.length)];
+      blocks.push({ i, parent: p.i, h: top + 1, lane: p.lane });
+    }
+  }
+})();
+// what the picture shows after t blocks: which blocks are there, and which of them are orphaned
+function at(t) {
+  const seen = blocks.slice(0, t + 1), top = Math.max(...seen.map(b => b.h));
+  const on = new Set();
+  seen.filter(b => b.h === top).forEach(b => { for (let c = b; c; c = c.parent < 0 ? null : blocks[c.parent]) on.add(c.i); });
+  const tied = seen.filter(b => b.h === top).length > 1;
+  return { seen, on, tied, orphans: seen.filter(b => !on.has(b.i)).length, heights: top };
+}
+const HEIGHTS = Math.max(...blocks.map(b => b.h));
+
+function paint(sel, t, animate) {
+  const svg = d3.select(sel), box = svg.node().getBoundingClientRect(), w = box.width, h = box.height;
+  if (!w || !h) return;
+  const side = Math.max(14, Math.min(34, (w - 40) / (HEIGHTS + 1) * 0.62)), pitch = (w - 40 - side) / Math.max(1, HEIGHTS);
+  const x = b => 20 + side / 2 + b.h * pitch;
+  const yy = b => h * 0.42 + b.lane * Math.min(h * 0.3, side * 2.1);     // lane 0: the upper row; lane 1: the row below
+  const v = at(t);
+  svg.selectAll('line').data(v.seen.filter(b => b.parent >= 0), b => b.i).join('line').attr('class', b => 'link' + (v.on.has(b.i) ? '' : ' off'))
+    .attr('x1', b => x(blocks[b.parent])).attr('y1', b => yy(blocks[b.parent])).attr('x2', x).attr('y2', yy);
+  svg.selectAll('rect').data(v.seen, b => b.i).join(
+    enter => enter.append('rect').attr('rx', 3).attr('opacity', animate ? 0 : 1).call(e => animate && e.transition().duration(260).attr('opacity', 1)))
+    .attr('class', b => 'blk' + (v.on.has(b.i) ? '' : ' off'))
+    .attr('x', b => x(b) - side / 2).attr('y', b => yy(b) - side / 2).attr('width', side).attr('height', side);
+  svg.selectAll('line').lower();
+}
+function words(t) {
+  if (t === 0) return 'Press play: the right half builds the chain.';
+  const before = at(t - 1), now = at(t);
+  if (now.tied && !before.tied) return 'A fork: two blocks at one height.';
+  if (before.tied && !now.tied) return 'The longer chain wins; one block is orphaned.';
+  return 'A new block extends the chain.';
+}
+function draw(s) {
+  paint('#a', T, false);                                     // the still half: always the finished picture
+  paint('#b', s.t, true);
+  const v = at(s.t);
+  BDLT.chip('cT', 'block ' + s.t + ' / ' + T);
+  BDLT.chip('cO', 'orphaned ' + v.orphans);
+  document.getElementById('msg').textContent = words(s.t);
+}
+
+// ---- state: {t, running}. Only the lecturer's (or the single) copy changes it.
+const playB = document.getElementById('play');
+let timer = null;
+const S = () => bdlt.state;
+playB.onclick = () => { const s = S(); bdlt.setState(s.running ? { ...s, running: false } : { t: s.t >= T ? 0 : s.t, running: true }); };
+document.getElementById('stepb').onclick = () => bdlt.setState({ t: Math.min(T, S().t + 1), running: false });
+document.getElementById('reset').onclick = () => bdlt.setState({ t: 0, running: false });
+bdlt.onState(s => {
+  draw(s);
+  if (playB.dataset.icon !== (s.running ? 'pause' : 'play') || !playB.firstChild) bdltIcon(playB, s.running ? 'pause' : 'play', s.running ? 'Pause' : 'Play');
+  const driver = bdlt.role !== 'projector';                  // the clock runs only in the copy that may change the state
+  if (driver && s.running && !timer) timer = setInterval(tick, MS);
+  if ((!s.running || !driver) && timer) { clearInterval(timer); timer = null; }
+});
+function tick() { const s = S(); bdlt.setState(s.t >= T - 1 ? { t: T, running: false } : { t: s.t + 1, running: true }); }
+bdlt.onHide(() => { if (bdlt.role !== 'projector' && S() && S().running) bdlt.setState({ ...S(), running: false }); });
+if ('ResizeObserver' in window) new ResizeObserver(() => S() && draw(S())).observe(document.getElementById('wrap'));
+BDLT.whenFonts(() => { BDLT.sizeChips(); if (S()) draw(S()); });
+
+bdlt.setState(bdlt.state || { t: START, running: false });
+</script>
+</body>
+</html>

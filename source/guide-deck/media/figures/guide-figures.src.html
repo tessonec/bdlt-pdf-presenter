@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The live figures of the guide deck of BDLT PDF Presenter</title>
+<!-- Written by make-figures.py from the sources of the figures; do not edit. The key "figure"
+     (x-figure=... on the slide, ?figure=... in a browser) chooses which one runs. -->
+<link rel="stylesheet" href="../style/bdlt-style-latin.css">
+<script src="../../bdltplots/web/bdlt-style.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3-color@3.1.0/dist/d3-color.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3-dispatch@3.0.1/dist/d3-dispatch.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3-ease@3.0.1/dist/d3-ease.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3-interpolate@3.0.1/dist/d3-interpolate.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3-selection@3.0.0/dist/d3-selection.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3-timer@3.0.1/dist/d3-timer.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3-transition@3.0.1/dist/d3-transition.min.js"></script>
+<script src="../lib/bdlt-icons.js"></script>
+<link rel="stylesheet" href="../bar/bdlt-bar.css">
+<script src="../bar/bdlt-bar.js"></script>
+</head>
+<body>
+<template id="fig-gestures">
+<style>
+  #wrap { position: absolute; inset: 0; display: flex; flex-direction: column; }
+  #main { flex: 1; min-height: 0; display: flex; gap: 18px; padding: 4px 10px 8px; }
+  #screen { flex: 1.5; min-width: 0; position: relative; }
+  #screen > svg { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: pointer; -webkit-user-select: none; user-select: none; }
+  #legend { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 12px; font-size: 19px; line-height: 1.25; }
+  #legend .row { display: flex; align-items: flex-start; gap: 10px; }
+  #legend .row i { flex: none; width: 18px; height: 18px; margin-top: 3px; border-radius: 3px; }
+  #legend b { display: block; }
+  #legend .quiet { color: var(--bdlt-ink-2); padding-left: 28px; }
+  .zone { transition: fill-opacity .55s ease-out; }
+  .zone.lit { transition: none; }
+  .glow { transition: opacity .7s ease-out; opacity: 0; pointer-events: none; }
+  .glow.lit { transition: none; opacity: 1; }
+  .zlabel { font-weight: 600; font-size: 17px; pointer-events: none; }
+  .znote { font-size: 15px; pointer-events: none; }
+  svg text { -webkit-user-select: none; user-select: none; }
+</style>
+<div id="wrap">
+  <div id="main">
+    <div id="screen"><svg id="svg" role="img" aria-label="A small screen with the four tap zones"></svg></div>
+    <div id="legend">
+      <div class="row"><i style="background:var(--uzh-apple)"></i><span><b>Left third</b>one tap: the previous slide</span></div>
+      <div class="row"><i style="background:var(--uzh-berry)"></i><span><b>Right third</b>one tap: the next slide</span></div>
+      <div class="row"><i style="background:var(--uzh-gold)"></i><span><b>Top centre</b>one tap: the toolbar, on or off</span></div>
+      <div class="row"><i style="background:var(--uzh-blue)"></i><span><b>Lower quarter</b>three quick taps: the slide overview</span></div>
+      <div class="quiet">The middle does nothing, so a stray touch is harmless.</div>
+    </div>
+  </div>
+  <div class="bar">
+    <button id="reset" data-icon="reset" aria-label="Back to the start"></button>
+    <span class="chip" id="cP" data-max="slide 5 / 5"></span>
+    <span class="chip" id="cB" data-max="toolbar off"></span>
+    <span class="chip" id="cO" data-max="overview closed"></span>
+    <span class="note" id="msg"></span>
+  </div>
+</div>
+</template>
+<script type="text/plain" id="code-gestures">
+// ---- the small deck and its zones. Positions are shares of the small slide, as in the presenter:
+//      right and left third (upper three quarters), top quarter of the middle third, lower quarter.
+const N = 5;                                      // slides of the small deck
+const W = 640, H = 360, PAD = 14;                 // px of the drawing: the screen and its bezel
+const ZONES = [
+  { id: 'prev',  x: 0,     y: 0,    w: 1 / 3, h: 0.75, colour: BDLT.hues.apple[0], ink: '#000', label: 'Previous', sub: 'tap' },
+  { id: 'next',  x: 2 / 3, y: 0,    w: 1 / 3, h: 0.75, colour: BDLT.hues.berry[0], ink: '#fff', label: 'Next', sub: 'tap' },
+  { id: 'bar',   x: 1 / 3, y: 0,    w: 1 / 3, h: 0.25, colour: BDLT.hues.gold[0],  ink: '#000', label: 'Toolbar', sub: 'tap' },
+  { id: 'sheet', x: 0,     y: 0.75, w: 1,     h: 0.25, colour: BDLT.hues.blue[0],  ink: '#fff', label: 'Slide overview', sub: 'three quick taps' }
+];
+const IDLE = 0.18, LIT = 0.92;                    // how strongly a zone is filled at rest and when it lights up
+const ALL_LIT = bdlt.params.lit === '1';          // the poster: every lamp on, so that the picture reads alone
+const TRIPLE_MS = 450;                            // three taps count as one triple tap within this time, as in the presenter
+
+const svg = d3.select('#svg').attr('viewBox', `0 0 ${W + 2 * PAD} ${H + 2 * PAD}`).attr('preserveAspectRatio', 'xMidYMid meet');
+svg.append('rect').attr('width', W + 2 * PAD).attr('height', H + 2 * PAD).attr('rx', 22).attr('fill', '#17181C');          // the bezel
+const g = svg.append('g').attr('transform', `translate(${PAD},${PAD})`);
+g.append('rect').attr('width', W).attr('height', H).attr('rx', 6).attr('fill', '#fff');                                   // the small slide
+const numeral = g.append('text').attr('x', W / 2).attr('y', H * 0.5 + 34).attr('text-anchor', 'middle').attr('font-size', 110).attr('font-weight', 600).attr('fill', '#000');
+const caption = g.append('text').attr('x', W / 2).attr('y', H * 0.5 + 62).attr('text-anchor', 'middle').attr('font-size', 17).attr('fill', BDLT.ink2);
+
+// the lamps: a soft halo under each zone (seen only while it lights up), then the zone itself
+const defs = svg.append('defs');
+defs.append('filter').attr('id', 'halo').attr('x', '-30%').attr('y', '-30%').attr('width', '160%').attr('height', '160%')
+  .append('feGaussianBlur').attr('stdDeviation', 9);
+const glows = g.append('g').selectAll('rect').data(ALL_LIT ? [] : ZONES).join('rect').attr('class', 'glow')
+  .attr('x', d => d.x * W).attr('y', d => d.y * H).attr('width', d => d.w * W).attr('height', d => d.h * H)
+  .attr('fill', d => d.colour).attr('filter', 'url(#halo)');
+const zones = g.append('g').selectAll('g').data(ZONES).join('g');
+zones.append('rect').attr('class', 'zone').attr('x', d => d.x * W + 1.5).attr('y', d => d.y * H + 1.5)
+  .attr('width', d => d.w * W - 3).attr('height', d => d.h * H - 3).attr('rx', 4)
+  .attr('fill', d => d.colour).attr('fill-opacity', ALL_LIT ? LIT : IDLE).attr('stroke', d => d.colour).attr('stroke-width', 2);
+zones.append('text').attr('class', 'zlabel').attr('text-anchor', 'middle')
+  .attr('x', d => (d.x + d.w / 2) * W).attr('y', d => (d.y + d.h / 2) * H - 2 + (d.id === 'bar' ? 14 : 0)).text(d => d.label);
+zones.append('text').attr('class', 'znote').attr('text-anchor', 'middle')
+  .attr('x', d => (d.x + d.w / 2) * W).attr('y', d => (d.y + d.h / 2) * H + 19 + (d.id === 'bar' ? 13 : 0)).text(d => d.sub);
+const ink = (d, lit) => (lit ? d.ink : '#000');
+zones.selectAll('text').attr('fill', d => ink(d, ALL_LIT));
+
+// the small toolbar (top centre) and the small overview (a strip of the slides along the lower edge)
+const tool = g.append('g').attr('pointer-events', 'none');
+tool.append('rect').attr('x', W * 0.3).attr('y', 8).attr('width', W * 0.4).attr('height', 26).attr('rx', 8).attr('fill', '#17181C');
+tool.selectAll('circle').data([0, 1, 2, 3, 4, 5, 6]).join('circle').attr('cx', i => W * 0.3 + 22 + i * (W * 0.4 - 44) / 6).attr('cy', 21).attr('r', 4.5)
+  .attr('fill', i => (i === 3 ? BDLT.hues.gold[0] : '#EEF0F3'));
+const sheet = g.append('g');
+sheet.append('rect').attr('x', 0).attr('y', H * 0.7).attr('width', W).attr('height', H * 0.3).attr('fill', '#17181C');
+const TW = 96, TH = 54, TGAP = 18, TX0 = (W - N * TW - (N - 1) * TGAP) / 2, TY = H * 0.7 + (H * 0.3 - TH) / 2;
+const thumbs = sheet.selectAll('g').data(Array.from({ length: N }, (_, i) => i + 1)).join('g').attr('transform', i => `translate(${TX0 + (i - 1) * (TW + TGAP)},${TY})`);
+thumbs.append('rect').attr('width', TW).attr('height', TH).attr('rx', 3).attr('fill', '#fff').attr('stroke-width', 4);
+thumbs.append('text').attr('x', TW / 2).attr('y', TH / 2 + 9).attr('text-anchor', 'middle').attr('font-size', 26).attr('font-weight', 600).attr('fill', '#000').text(i => i);
+
+// ---- what a tap does: one function from the state and the place of the tap to the next state.
+//      p: slide, bar: toolbar shown, sheet: overview open, taps: taps counted in the lower quarter,
+//      hit: the zone that lights up, k: a counter of taps (a new k lights the lamp in every copy), msg: what to say.
+function zoneAt(fx, fy) {
+  if (fy > 0.75) return 'sheet';
+  if (fx < 1 / 3) return 'prev';
+  if (fx > 2 / 3) return 'next';
+  return fy < 0.25 ? 'bar' : null;
+}
+function tapped(s, fx, fy, thumb) {
+  const n = { ...s, k: s.k + 1, hit: null, taps: 0, pick: 0 };
+  if (s.sheet) {                                   // overview open: a tap on a small slide jumps to it, any other tap closes it
+    if (thumb) return { ...n, p: thumb, sheet: false, msg: 'pick', pick: thumb };
+    return { ...n, sheet: false, msg: 'close' };
+  }
+  const z = zoneAt(fx, fy);
+  if (z === 'next') return { ...n, hit: z, p: Math.min(N, s.p + 1), msg: s.p < N ? 'next' : 'last' };
+  if (z === 'prev') return { ...n, hit: z, p: Math.max(1, s.p - 1), msg: s.p > 1 ? 'prev' : 'first' };
+  if (z === 'bar') return { ...n, hit: z, bar: !s.bar, msg: s.bar ? 'baroff' : 'baron' };
+  if (z === 'sheet') {
+    if (s.taps >= 2) return { ...n, hit: z, sheet: true, msg: 'sheet' };
+    return { ...n, hit: z, taps: s.taps + 1, msg: s.taps ? 'tap2' : 'tap1' };
+  }
+  return { ...n, msg: 'middle' };
+}
+const WORDS = {
+  start: 'Tap a zone of the small screen.',
+  next: 'Right third: the next slide.', last: 'Right third: this is the last slide.',
+  prev: 'Left third: the previous slide.', first: 'Left third: this is the first slide.',
+  baron: 'Top centre: the toolbar shows.', baroff: 'Top centre: the toolbar hides.',
+  tap1: 'Lower quarter: two more quick taps.', tap2: 'Lower quarter: one more quick tap.',
+  slow: 'The overview needs three quick taps.', sheet: 'Three taps: the slide overview opens.',
+  pick: 'Overview: a tap on a slide jumps to it.', close: 'A tap outside closes the overview.',
+  middle: 'The middle does nothing.'
+};
+
+let shownK = null;
+function draw(s) {
+  numeral.text(s.p); caption.text('slide ' + s.p + ' of the small deck');
+  tool.attr('display', s.bar ? null : 'none');
+  sheet.attr('display', s.sheet ? null : 'none');
+  thumbs.select('rect').attr('stroke', i => (i === s.p ? BDLT.hues.gold[0] : 'none'));
+  BDLT.chip('cP', 'slide ' + s.p + ' / ' + N);
+  BDLT.chip('cB', s.bar ? 'toolbar on' : 'toolbar off');
+  BDLT.chip('cO', s.sheet ? 'overview open' : 'overview closed');
+  document.getElementById('msg').textContent = WORDS[s.msg] || '';
+  // the lamp: lights at once when k is new, then fades (the transition is in the style sheet)
+  if (!ALL_LIT && shownK !== null && s.k !== shownK && s.hit) {
+    const on = d => d.id === s.hit;
+    zones.select('rect').filter(on).classed('lit', true).attr('fill-opacity', LIT);
+    zones.selectAll('text').filter(on).attr('fill', d => ink(d, true));
+    glows.filter(on).classed('lit', true);
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      zones.select('rect').filter(on).classed('lit', false).attr('fill-opacity', IDLE);
+      glows.filter(on).classed('lit', false);
+      setTimeout(() => { if (shownK === s.k) zones.selectAll('text').filter(on).attr('fill', d => ink(d, false)); }, 260);
+    }));
+  }
+  shownK = s.k;
+}
+
+// ---- state: {p, bar, sheet, taps, hit, k, msg, pick}. Only the lecturer's (or the single) copy changes it.
+const S = () => bdlt.state;
+const first = () => ({ p: Math.min(N, Math.max(1, parseInt(bdlt.params.p || '1', 10))), bar: bdlt.params.bar === '1', sheet: bdlt.params.sheet === '1',
+                       taps: 0, hit: null, k: 0, msg: 'start', pick: 0 });
+let tripleTimer = null;
+document.getElementById('svg').addEventListener('pointerdown', e => {
+  if (bdlt.role === 'projector' || (e.pointerType === 'mouse' && e.button !== 0)) return;
+  e.preventDefault();
+  const box = g.select('rect').node().getBoundingClientRect();
+  const fx = (e.clientX - box.left) / box.width, fy = (e.clientY - box.top) / box.height;
+  if (fx < 0 || fx > 1 || fy < 0 || fy > 1) return;                       // the bezel
+  let thumb = 0;
+  if (S().sheet) thumbs.each(function (i) { const b = this.getBoundingClientRect(); if (e.clientX >= b.left && e.clientX <= b.right && e.clientY >= b.top && e.clientY <= b.bottom) thumb = i; });
+  bdlt.setState(tapped(S(), fx, fy, thumb));
+});
+document.getElementById('reset').onclick = () => bdlt.setState({ ...first(), p: 1, bar: false, sheet: false, k: S().k + 1 });
+bdlt.onState(s => {
+  draw(s);
+  // taps in the lower quarter that do not become three in time are forgotten (the clock runs in one copy only)
+  clearTimeout(tripleTimer); tripleTimer = null;
+  if (bdlt.role !== 'projector' && s.taps > 0)
+    tripleTimer = setTimeout(() => { const c = S(); if (c.taps > 0) bdlt.setState({ ...c, taps: 0, hit: null, msg: 'slow' }); }, TRIPLE_MS);
+});
+bdlt.onHide(() => { clearTimeout(tripleTimer); tripleTimer = null; });
+if ('ResizeObserver' in window) new ResizeObserver(() => S() && draw(S())).observe(document.getElementById('wrap'));
+BDLT.whenFonts(() => { BDLT.sizeChips(); if (S()) draw(S()); });
+
+bdlt.setState(bdlt.state || first());
+</script>
+<template id="fig-alive">
+<style>
+  #wrap { position: absolute; inset: 0; display: flex; flex-direction: column; }
+  #main { flex: 1; min-height: 0; display: flex; gap: 14px; padding: 2px 10px 8px; }
+  .half { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .half h2 { margin: 0 0 6px; font-size: 19px; font-weight: 600; line-height: 26px; height: 26px; white-space: nowrap; }
+  .half h2 span { font-weight: 400; color: var(--bdlt-ink-2); }
+  .pane { flex: 1; min-height: 0; position: relative; border: 1.6px solid #000; }
+  .pane > svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  #still .pane { border-color: var(--bdlt-mark-muted); }
+  .link { stroke: #000; stroke-width: 1.8; }
+  .link.off { stroke: var(--bdlt-mark-muted); }
+  .blk { stroke: var(--uzh-blue); stroke-width: 2; fill: var(--uzh-blue); }
+  .blk.off { stroke: var(--bdlt-mark-muted); fill: #fff; }
+</style>
+<div id="wrap">
+  <div id="main">
+    <div class="half" id="still"><h2>Any other PDF viewer <span>a picture</span></h2><div class="pane"><svg id="a" role="img" aria-label="The finished chain of blocks, as a still picture"></svg></div></div>
+    <div class="half" id="live"><h2>BDLT PDF Presenter and Viewer <span>the figure runs</span></h2><div class="pane"><svg id="b" role="img" aria-label="The chain of blocks, growing block by block"></svg></div></div>
+  </div>
+  <div class="bar">
+    <button id="reset" data-icon="reset" aria-label="Back to the start"></button><button id="play" data-icon="play" aria-label="Play"></button><button id="stepb" data-icon="step" aria-label="One more block"></button>
+    <span class="chip" id="cT" data-max="block 12 / 12"></span>
+    <span class="chip" id="cO" data-max="orphaned 3"></span>
+    <span class="note" id="msg"></span>
+    <span class="key"><i style="background:var(--uzh-blue)"></i>longest chain</span>
+    <span class="key"><i style="background:#fff;border:2px solid var(--bdlt-mark-muted)"></i>orphaned</span>
+  </div>
+</div>
+</template>
+<script type="text/plain" id="code-alive">
+// ---- the run: T blocks are found one after the other. Most extend the longest chain; now and then
+//      a second block is found at the height of the tip (a fork). The next block decides which of the
+//      two is built on, and the other is orphaned. The whole run is computed once from the seed;
+//      step t of the picture is a look-up. An illustration of the longest-chain rule, not a model
+//      with real parameters.
+const T = 12;                                               // blocks found after the first one
+const FORK = 0.22;                                          // chance that a new block competes with the tip
+const SEED = parseInt(bdlt.params.seed || '59', 10);        // chosen by eye: three forks, well apart, won by either side
+const START = Math.min(T, Math.max(0, parseInt(bdlt.params.start || '0', 10)));
+const MS = Math.max(150, parseInt(bdlt.params.ms || '700', 10));        // time per block while it plays
+
+function prng(seed) {                                        // mulberry32: the same numbers in every copy
+  let s = seed >>> 0;
+  return () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+}
+const blocks = [{ i: 0, parent: -1, h: 0, lane: 0 }];        // i: order found; h: height; lane: 0 centre, 1 below
+(function run() {
+  const rnd = prng(SEED * 7919 + 13);
+  for (let i = 1; i <= T; i++) {
+    const top = Math.max(...blocks.map(b => b.h)), tips = blocks.filter(b => b.h === top);
+    if (tips.length === 1 && top > 0 && rnd() < FORK) {      // a competitor of the tip: same parent, same height, the other lane
+      blocks.push({ i, parent: tips[0].parent, h: top, lane: 1 - tips[0].lane });
+    } else {                                                 // builds on a tip (on either of two, with equal chance)
+      const p = tips[Math.floor(rnd() * tips.length)];
+      blocks.push({ i, parent: p.i, h: top + 1, lane: p.lane });
+    }
+  }
+})();
+// what the picture shows after t blocks: which blocks are there, and which of them are orphaned
+function at(t) {
+  const seen = blocks.slice(0, t + 1), top = Math.max(...seen.map(b => b.h));
+  const on = new Set();
+  seen.filter(b => b.h === top).forEach(b => { for (let c = b; c; c = c.parent < 0 ? null : blocks[c.parent]) on.add(c.i); });
+  const tied = seen.filter(b => b.h === top).length > 1;
+  return { seen, on, tied, orphans: seen.filter(b => !on.has(b.i)).length, heights: top };
+}
+const HEIGHTS = Math.max(...blocks.map(b => b.h));
+
+function paint(sel, t, animate) {
+  const svg = d3.select(sel), box = svg.node().getBoundingClientRect(), w = box.width, h = box.height;
+  if (!w || !h) return;
+  const side = Math.max(14, Math.min(34, (w - 40) / (HEIGHTS + 1) * 0.62)), pitch = (w - 40 - side) / Math.max(1, HEIGHTS);
+  const x = b => 20 + side / 2 + b.h * pitch;
+  const yy = b => h * 0.42 + b.lane * Math.min(h * 0.3, side * 2.1);     // lane 0: the upper row; lane 1: the row below
+  const v = at(t);
+  svg.selectAll('line').data(v.seen.filter(b => b.parent >= 0), b => b.i).join('line').attr('class', b => 'link' + (v.on.has(b.i) ? '' : ' off'))
+    .attr('x1', b => x(blocks[b.parent])).attr('y1', b => yy(blocks[b.parent])).attr('x2', x).attr('y2', yy);
+  svg.selectAll('rect').data(v.seen, b => b.i).join(
+    enter => enter.append('rect').attr('rx', 3).attr('opacity', animate ? 0 : 1).call(e => animate && e.transition().duration(260).attr('opacity', 1)))
+    .attr('class', b => 'blk' + (v.on.has(b.i) ? '' : ' off'))
+    .attr('x', b => x(b) - side / 2).attr('y', b => yy(b) - side / 2).attr('width', side).attr('height', side);
+  svg.selectAll('line').lower();
+}
+function words(t) {
+  if (t === 0) return 'Press play: the right half builds the chain.';
+  const before = at(t - 1), now = at(t);
+  if (now.tied && !before.tied) return 'A fork: two blocks at one height.';
+  if (before.tied && !now.tied) return 'The longer chain wins; one block is orphaned.';
+  return 'A new block extends the chain.';
+}
+function draw(s) {
+  paint('#a', T, false);                                     // the still half: always the finished picture
+  paint('#b', s.t, true);
+  const v = at(s.t);
+  BDLT.chip('cT', 'block ' + s.t + ' / ' + T);
+  BDLT.chip('cO', 'orphaned ' + v.orphans);
+  document.getElementById('msg').textContent = words(s.t);
+}
+
+// ---- state: {t, running}. Only the lecturer's (or the single) copy changes it.
+const playB = document.getElementById('play');
+let timer = null;
+const S = () => bdlt.state;
+playB.onclick = () => { const s = S(); bdlt.setState(s.running ? { ...s, running: false } : { t: s.t >= T ? 0 : s.t, running: true }); };
+document.getElementById('stepb').onclick = () => bdlt.setState({ t: Math.min(T, S().t + 1), running: false });
+document.getElementById('reset').onclick = () => bdlt.setState({ t: 0, running: false });
+bdlt.onState(s => {
+  draw(s);
+  if (playB.dataset.icon !== (s.running ? 'pause' : 'play') || !playB.firstChild) bdltIcon(playB, s.running ? 'pause' : 'play', s.running ? 'Pause' : 'Play');
+  const driver = bdlt.role !== 'projector';                  // the clock runs only in the copy that may change the state
+  if (driver && s.running && !timer) timer = setInterval(tick, MS);
+  if ((!s.running || !driver) && timer) { clearInterval(timer); timer = null; }
+});
+function tick() { const s = S(); bdlt.setState(s.t >= T - 1 ? { t: T, running: false } : { t: s.t + 1, running: true }); }
+bdlt.onHide(() => { if (bdlt.role !== 'projector' && S() && S().running) bdlt.setState({ ...S(), running: false }); });
+if ('ResizeObserver' in window) new ResizeObserver(() => S() && draw(S())).observe(document.getElementById('wrap'));
+BDLT.whenFonts(() => { BDLT.sizeChips(); if (S()) draw(S()); });
+
+bdlt.setState(bdlt.state || { t: START, running: false });
+</script>
+<script>
+/* BEGIN bdlt-stub (copied from widgets/lib/bdlt-stub.js by tools/inline-widget.py) */
+/* END bdlt-stub */
+// put the chosen figure into the page, then run its script
+(function () {
+  var name = window.bdlt.params.figure || 'gestures';
+  var fig = document.getElementById('fig-' + name), code = document.getElementById('code-' + name);
+  if (!fig || !code) { document.body.textContent = 'This file has no figure "' + name + '".'; return; }
+  document.body.appendChild(fig.content.cloneNode(true));
+  var run = document.createElement('script'); run.textContent = code.textContent; document.body.appendChild(run);
+})();
+</script>
+</body>
+</html>

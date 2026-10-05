@@ -1,0 +1,9 @@
+build/
+media/build/
+media/*/check/
+*.aux
+*.log
+*.nav
+*.out
+*.snm
+*.toc

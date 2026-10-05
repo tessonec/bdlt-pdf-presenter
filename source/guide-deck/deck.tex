@@ -1,0 +1,285 @@
+% bdlt-units: cm
+% deck.tex -- the guide deck of BDLT PDF Presenter: the PDF that opens first (public/sample.pdf).
+%
+%   python3 <bdlt-beamer-media>/tools/bdlt-deck.py build deck.tex          the presenter's guide
+%   python3 <bdlt-beamer-media>/tools/bdlt-deck.py build deck-viewer.tex   the viewer's guide (students)
+%   ./build.sh                                                             both, and copies them to public/
+%
+% One source for both editions: \ifguideviewer is true in deck-viewer.tex, which leaves out what
+% only a lecturer needs. Every picture is a vector drawing (guide-icons.tex, made by
+% make-icons.py; cover.pdf; the posters of the two live figures), so the PDF stays small:
+% every visitor of the presenter downloads it. For the same reason both live figures come from
+% one embedded file, media/figures/guide-figures.html (the key x-figure chooses), so that the
+% PDF carries Source Sans and D3 once; each figure has its own source in media/<name>/.
+\documentclass{beamer}
+\usetheme[media]{BDLT26}
+\bdltmediasetup{mediapath={media/}}
+\graphicspath{{media/}}
+\usetikzlibrary{svg.path}
+
+\newif\ifguideviewer
+\ifdefined\guideviewer \guideviewertrue \fi
+
+\title{\ifguideviewer BDLT PDF Viewer\else BDLT PDF Presenter\fi}
+\subtitle{\ifguideviewer How to read, annotate and save\else How to present, annotate and save\fi}
+\author{Blockchain \& DLT Research Group, UZH}
+\date{Guide}
+\titlegraphic{cover}
+
+% ---------------------------------------------------------------- drawing helpers (lengths in cm)
+\definecolor{guidetile}{HTML}{17181C}   % a toolbar button of the presenter
+\definecolor{guideink}{HTML}{EEF0F3}
+\definecolor{guidegold}{HTML}{FFC845}   % the selected tool
+\definecolor{guidepanel}{HTML}{E8EBF3}  % the slide in the gesture pictures
+\definecolor{guiderule}{HTML}{C9CEDC}
+\definecolor{guidemute}{HTML}{555B6B}
+\input{guide-icons}
+% the content area of a slide: x 0.75 to 33.11 cm, y 2.42 to 16.73 cm
+\def\GX{0.75}\def\GY{2.42}\def\GW{32.36}\def\GH{14.31}
+
+% \guideglyph[colour]{name}{x}{y}{size}{line}: the 24-unit icon with its top-left corner at (x,y),
+% <size> cm wide; <line> is the line width in units of the icon (the toolbar uses 1.8). In a bdltdiagram.
+\newcommand\guideglyph[6][black]{%
+  \begin{scope}[shift={(#3,#4)}, scale=#5*28.4528/24, yscale=-1, draw=#1, line cap=round, line join=round,
+                line width={#6*#5*28.4528/24*1pt}]
+    \csname guideicon@#2\endcsname
+  \end{scope}}
+% \guidetile[active]{name}{x}{y}{size}: the icon on its dark tile, as a button of the toolbar
+\newcommand\guidetile[5][]{%
+  \def\guidetmp{#1}%
+  \edef\guidefillc{\ifx\guidetmp\empty guidetile\else guidegold\fi}\edef\guideinkc{\ifx\guidetmp\empty guideink\else black\fi}%
+  \fill[fill=\guidefillc, rounded corners=#5*0.25cm] (#3,#4) rectangle ++(#5,#5);
+  \guideglyph[\guideinkc]{#2}{#3+#5*14/64}{#4+#5*14/64}{#5*36/64}{1.8}}
+% \guidecmd: the Command key sign of a Mac keyboard, drawn (Source Sans has no such character)
+\newcommand\guidecmd{\tikz[baseline=-11.4pt, scale=0.6, yscale=-1, line cap=round, line join=round, line width=1.15pt]{%
+  \draw svg {M 7 9 a 2 2 0 1 1 2 -2 v 10 a 2 2 0 1 1 -2 -2 h 10 a 2 2 0 1 1 -2 2 v -10 a 2 2 0 1 1 2 2 h -10};}}
+% \guideicon[colour]{name}{size}: the icon as a picture of its own (for the tiles of a layout)
+\newcommand\guideicon[3][white]{%
+  \begin{tikzpicture}[x=1cm, y=-1cm]
+    \path[use as bounding box] (0,0) rectangle (#3,#3);
+    \guideglyph[#1]{#2}{0}{0}{#3}{1.5}
+  \end{tikzpicture}}
+% the slide of the gesture pictures: a grey panel with thin lines at the thirds and quarters
+\newcommand\guideslidepanel{%
+  \fill[guidepanel] (\GX,\GY) rectangle ++(\GW,\GH);
+  \draw[guiderule, line width=1pt] (\GX+\GW/3,\GY) -- ++(0,\GH*0.75) (\GX+2*\GW/3,\GY) -- ++(0,\GH*0.75)
+    (\GX,\GY+\GH*0.75) -- ++(\GW,0) (\GX+\GW/3,\GY+\GH*0.25) -- ++(\GW/3,0);}
+% \guidezonetall{x}{Head}{Sub}: a zone over a third of the slide (upper three quarters), hand above the words
+\newcommand\guidezonetall[3]{%
+  \fill[uzh@blue] (#1,\GY) rectangle ++(\GW/3,\GH*0.75);
+  \guideglyph[white]{tap}{#1+\GW/6-2.48}{\GY+1.6}{4.96}{1.5}
+  \node[anchor=north, text=white, align=center, text width=9.6cm, inner sep=0pt] at (#1+\GW/6,\GY+7.35)
+    {{\bdltfont{28}{100}\bfseries #2}\\[0.2cm]{\bdltfont{20}{100}#3}};}
+% \guidezonewide{x}{y}{w}{icon x}{Head}{Sub}{badge}: a zone a quarter of the slide high, hand left of the words
+\newcommand\guidezonewide[7]{%
+  \fill[uzh@blue] (#1,#2) rectangle ++(#3,\GH*0.25);
+  \guideglyph[white]{tap}{#4}{#2+0.5}{2.58}{1.5}
+  \def\guidetmp{#7}%
+  \ifx\guidetmp\empty\else \node[anchor=north west, text=white, inner sep=0pt] at (#4+2.6,#2+0.55) {\bdltfont{30}{100}\bfseries #7};\fi
+  \node[anchor=west, text=white, align=left, inner sep=0pt] at (#4+\ifx\guidetmp\empty 3.4\else 5.3\fi,#2+\GH*0.125)
+    {\parbox{16cm}{\raggedright{\bdltfont{28}{100}\bfseries #5}\\[0.15cm]{\bdltfont{20}{100}#6}}};}
+% \guiderow{y}{row height}{tile size}{x}{text width}{Name}{What it does}: the words next to a tile
+\newcommand\guidewords[5]{%
+  \node[anchor=west, align=left, inner sep=0pt] at (#1,#2)
+    {\parbox{#3cm}{\raggedright{\bdltfont{22}{100}\bfseries #4}\\[0.12cm]{\bdltfont{17}{100}\color{guidemute}#5}}};}
+\newcommand\guidedot[4][]{%   [outline]{x}{y}{colour}: a colour of a tool, 1.33 cm across
+  \def\guidetmp{#1}%
+  \ifx\guidetmp\empty \fill[fill=#4] (#2+0.665,#3) circle [radius=0.665cm];
+  \else \filldraw[fill=#4, draw=guiderule, line width=1pt] (#2+0.665,#3) circle [radius=0.665cm];\fi}
+\definecolor{dotblue}{HTML}{0028A5}\definecolor{dotorange}{HTML}{FC4C02}\definecolor{dotgold}{HTML}{FFC845}
+\definecolor{dotapple}{HTML}{A4D233}\definecolor{dotcyan}{HTML}{4AC9E3}\definecolor{dotberry}{HTML}{BF0D3E}
+\definecolor{dotgreen}{HTML}{4E6B12}\definecolor{dotblack}{HTML}{000000}
+
+% the rows of the tools slide: \toolrow{tile}{active}{Name}{words}{the colours of the tool}
+\newcount\guiderowno
+\ifguideviewer \def\ToolRH{\GH/4}\else \def\ToolRH{\GH/5}\fi
+\newcommand\toolrow[5]{%
+  \pgfmathsetmacro\ry{\GY+\the\guiderowno*\ToolRH+\ToolRH/2}
+  \guidetile[#2]{#1}{\GX}{\ry-0.89}{1.78}
+  \guidewords{\GX+2.61}{\ry-0.05}{14.4}{#3}{#4}
+  \def\dx{\GX+18.06}
+  \foreach \c [count=\k from 0] in {#5} {%
+    \edef\cname{\c}\def\cwhite{white}%
+    \ifx\cname\cwhite \guidedot[o]{\dx+\k*1.80}{\ry}{white}\else \guidedot{\dx+\k*1.80}{\ry}{dot\c}\fi}
+  \ifnum\guiderowno>0 \draw[guiderule, line width=0.6pt] (\GX,\ry-\ToolRH/2) -- ++(\GW,0);\fi
+  \global\advance\guiderowno by 1 }
+% the items of the toolbar slide, in two columns: \baritem{icon}{second icon or empty}{Name}{words}
+\newcount\guideitemno
+\ifguideviewer \def\BarRH{\GH/5}\def\BarTS{1.67}\def\BarPER{5}\else \def\BarRH{\GH/6}\def\BarTS{1.44}\def\BarPER{6}\fi
+\newcommand\baritem[4]{%
+  \pgfmathsetmacro\cx{\GX+int(\the\guideitemno/\BarPER)*\GW/2}
+  \pgfmathsetmacro\ry{\GY+mod(\the\guideitemno,\BarPER)*\BarRH+\BarRH/2}
+  \guidetile{#1}{\cx}{\ry-\BarTS/2}{\BarTS}
+  \def\guidesecond{#2}\ifx\guidesecond\empty\else \guidetile{#2}{\cx+\BarTS+0.25}{\ry-\BarTS/2}{\BarTS}\fi
+  \guidewords{\cx+2*\BarTS+1.03}{\ry-0.03}{11.6}{#3}{#4}
+  \global\advance\guideitemno by 1 }
+
+\begin{document}
+
+% ---------------------------------------------------------------- cover
+% @slide S01
+\begin{frame}
+  \titlepage
+\end{frame}
+
+% ---------------------------------------------------------------- three ways to use it
+% @slide S02
+\begin{frame}{Three ways to use it}
+  \bdlticontiles[height=7.8, icon=0.6, text=22]{
+    \bdlttile{\guideicon{pen}{4.4}}{iPad with Apple Pencil}{The Pencil draws and fingers navigate. Pencil mode starts at the first touch of the Pencil.}
+    \bdlttile{\guideicon{mouse}{4.4}}{Computer with a mouse}{Click to turn pages, pick a tool to draw, and press Esc to go back to Navigate.}
+    \bdlttile{\guideicon{tap}{4.4}}{Phone or tablet}{A finger works like the mouse, and two fingers always zoom.}
+  }
+\end{frame}
+
+% ---------------------------------------------------------------- the four tap zones
+% @slide S03
+\begin{frame}{Tap the right third: next slide}
+  \begin{bdltdiagram}
+    \guideslidepanel
+    \guidezonetall{\GX+2*\GW/3}{Tap here}{Next slide}
+  \end{bdltdiagram}
+\end{frame}
+
+% @slide S04
+\begin{frame}{Tap the left third: previous slide}
+  \begin{bdltdiagram}
+    \guideslidepanel
+    \guidezonetall{\GX}{Tap here}{Previous slide}
+  \end{bdltdiagram}
+\end{frame}
+
+% @slide S05
+\begin{frame}{Tap the top centre: show or hide the toolbar}
+  \begin{bdltdiagram}
+    \guideslidepanel
+    \guidezonewide{\GX+\GW/3}{\GY}{\GW/3}{\GX+\GW/3+0.83}{Tap here}{Toolbar on or off}{}
+  \end{bdltdiagram}
+\end{frame}
+
+% @slide S06
+\begin{frame}{Triple-tap the lower quarter: slide overview}
+  \begin{bdltdiagram}
+    \guideslidepanel
+    \guidezonewide{\GX}{\GY+\GH*0.75}{\GW}{\GX+\GW*0.22}{Triple-tap here}{Opens the strip of slides; tap one to jump to it}{\texttimes 3}
+  \end{bdltdiagram}
+\end{frame}
+
+% ---------------------------------------------------------------- live: the gestures to try
+% @slide S14
+\begin{frame}
+  \bdltfullimage{Try the gestures}
+    {\bdltwidget[id=gestures, x-figure=gestures, poster=gestures/gestures-poster.pdf, title={A small screen with the four tap zones}]{figures/guide-figures.html}}
+    {Tap the zones of the small screen, with a finger or the mouse: it answers like the presenter, and each zone lights up.
+     In any other PDF viewer this is a picture.}
+\end{frame}
+
+% ---------------------------------------------------------------- pinch
+% @slide S07
+\begin{frame}{Pinch to zoom}
+  \begin{bdltdiagram}
+    \fill[uzh@blue] (\GX,\GY) rectangle ++(\GW,\GH);
+    % two hands pointing at each other along a diagonal, arrows spreading outward (a 48-unit drawing, 10 cm)
+    \begin{scope}[shift={(\GX+2.5,\GY+2.15)}, scale=10*28.4528/48, yscale=-1, draw=white, line cap=round, line join=round, line width=1.5*10*28.4528/48*1pt]
+      \begin{scope}[shift={(2pt,22pt)}, rotate around={45:(12pt,12pt)}]\csname guideicon@handonly\endcsname\end{scope}
+      \begin{scope}[shift={(22pt,2pt)}, rotate around={225:(12pt,12pt)}]\csname guideicon@handonly\endcsname\end{scope}
+      \draw svg {M 7 19 L 19 7 M 7 19 h 4.5 M 7 19 v -4.5 M 19 7 h -4.5 M 19 7 v 4.5};
+    \end{scope}
+    \node[anchor=west, text=white, align=left, inner sep=0pt] at (\GX+14.5,\GY+\GH/2)
+      {\parbox{17cm}{\raggedright{\bdltfont{28}{100}\bfseries Pinch with two fingers to zoom}\\[0.35cm]
+        {\bdltfont{20}{130}Drag with one finger to move around while zoomed in.\\ Double-tap to fit the whole slide again.\\
+         The Pencil keeps writing while you are zoomed in.}}};
+  \end{bdltdiagram}
+\end{frame}
+
+% ---------------------------------------------------------------- the tools
+% @slide S08
+\begin{frame}{\ifguideviewer Tools: navigate, write, erase\else Tools: navigate, write, point, erase\fi}
+  \begin{bdltdiagram}
+    \guiderowno=0
+    \toolrow{hand}{a}{Navigate}{Tap or click to turn pages (Esc returns here).}{}
+    \toolrow{pen}{}{Pen}{Pressure-sensitive ink. Tap again for the colours.}{blue,orange,gold,apple,black,white}
+    \toolrow{highlighter}{}{Highlighter}{Transparent marks. Tap again for the colours.}{gold,apple,cyan,orange,berry}
+    \ifguideviewer\else
+    \toolrow{laser}{}{Laser pointer}{Points without marking. Tap again for the colour.}{berry,green}
+    \fi
+    \toolrow{eraser}{}{Eraser}{Touch a stroke to remove it.}{}
+  \end{bdltdiagram}
+\end{frame}
+
+% ---------------------------------------------------------------- the toolbar
+% @slide S09
+\begin{frame}{The toolbar, button by button}
+  \begin{bdltdiagram}
+    \guideitemno=0
+    \baritem{open}{}{Open}{Load a PDF from Files or iCloud Drive (\guidecmd\,O).}
+    \ifguideviewer\else
+    \baritem{reload}{}{Reload}{Reads the PDF again; slide and ink stay (\guidecmd\,R).}
+    \fi
+    \baritem{first}{last}{First / last slide}{Also at both ends of the slide overview.}
+    \baritem{prev}{next}{Previous / next}{Same as tapping the left or right third.}
+    \baritem{grid}{}{Slide overview}{Same as the lower-quarter triple-tap.}
+    \baritem{undo}{}{Undo}{Takes back the last change on this slide (\guidecmd\,Z).}
+    \baritem{clear}{}{Clear}{Removes all ink on this slide.}
+    \baritem{save}{}{Save}{Writes your ink into a new PDF (\guidecmd\,S).}
+    \baritem{fs}{}{Full screen}{Hides the browser bars where allowed.}
+    \ifguideviewer\else
+    \baritem{split}{}{Same or separate views}{One mirrored screen, or projector and lecturer.}
+    \fi
+    \baritem{settings}{}{Settings}{\ifguideviewer Colours, Pencil mode, About.\else Colours, slide strip speed and glide, About.\fi}
+    \baritem{hide}{}{Hide toolbar}{Tap the top centre of the slide to bring it back.}
+  \end{bdltdiagram}
+\end{frame}
+
+% ---------------------------------------------------------------- live media (the viewer's guide names the kinds)
+\ifguideviewer
+% @slide S16
+\begin{frame}{Slides can be alive}
+  \bdlticontiles[height=7.8, icon=0.6, text=22]{
+    \bdlttile{\guideicon{play}{4.4}}{Videos and sound}{Tap the picture to play or pause, and drag the bar to move in time.}
+    \bdlttile{\guideicon{frames}{4.4}}{Animations}{Let them run, or step through the frames one by one.}
+    \bdlttile{\guideicon{sliders}{4.4}}{Interactive figures}{Move the sliders and drag the points with a finger or the mouse.}
+  }
+\end{frame}
+\fi
+
+% ---------------------------------------------------------------- live: still here, alive there
+% @slide S15
+\begin{frame}
+  \bdltfullimage{A slide that runs}
+    {\bdltwidget[id=alive, x-figure=alive, poster=alive/alive-poster.pdf, title={A chain of blocks: a picture on the left, running on the right}]{figures/guide-figures.html}}
+    {Left: what every PDF viewer shows. Right: the same figure, run by \ifguideviewer BDLT PDF Viewer\else BDLT PDF Presenter\fi.
+     If pressing play changes nothing, you are reading this PDF somewhere else.}
+\end{frame}
+
+\ifguideviewer\else
+% ---------------------------------------------------------------- presenting: one screen or two
+% @slide S10
+\infoframe{Same view: mirror the iPad, then tap the top centre to hide the toolbar}
+
+% @slide S11
+\begin{frame}{Separate views: projector and lecturer}
+  \bdlticontiles[height=7.8, icon=0.6, text=22]{
+    \bdlttile{\guideicon{split}{4.4}}{1. Two-screens button}{Tap it in the toolbar, in Safari. An iPad needs an M1 chip or later.}
+    \bdlttile{\guideicon{screen}{4.4}}{2. Projector window}{Touch and hold Projector window, choose Open in New Window, and drag it to the display.}
+    \bdlttile{\guideicon{fs}{4.4}}{3. Fill the screen}{Tap the projector window. This iPad then shows the clock and the slide strip.}
+  }
+\end{frame}
+\fi
+
+% ---------------------------------------------------------------- save
+% @slide S12
+\begin{frame}{Save keeps your notes}
+  \begin{bdltdiagram}
+    \fill[uzh@blue] (\GX,\GY) rectangle ++(\GW,\GH);
+    \guideglyph[white]{save}{\GX+3.05}{\GY+3.43}{7.44}{1.6}
+    \node[anchor=west, text=white, align=left, inner sep=0pt] at (\GX+13.0,\GY+\GH/2)
+      {\parbox{18cm}{\raggedright{\bdltfont{28}{100}\bfseries Save writes your ink into a new PDF}\\[0.35cm]
+        {\bdltfont{20}{130}On iPad, choose Save to Files and pick a folder.\\ Try it: circle something on this slide, then tap Save.}}};
+  \end{bdltdiagram}
+\end{frame}
+
+% @slide S13
+\infoframe{Open your own PDF from the toolbar to begin}
+
+\end{document}

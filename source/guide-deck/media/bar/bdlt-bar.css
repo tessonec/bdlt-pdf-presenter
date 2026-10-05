@@ -1,0 +1,10 @@
+/* bdlt-bar.css -- the row under the picture of a widget: buttons, chips, a few words.
+   Values that change stand in chips: cells of fixed width at fixed places, white on UZH blue.
+   A minimal copy written for the guide deck of BDLT PDF Presenter (the release v3.4.1 has no bar/). */
+.bar { display: flex; align-items: center; gap: 10px; padding: 6px 10px; border-top: 1px solid var(--bdlt-line); min-height: 34px; white-space: nowrap; }
+.chip { display: inline-block; box-sizing: border-box; background: var(--uzh-blue); color: #fff; font-weight: 600; font-size: 18px; line-height: 30px;
+        height: 30px; padding: 0 10px; border-radius: 6px; text-align: center; font-variant-numeric: tabular-nums; flex: none; overflow: hidden; }
+.note { flex: 1; min-width: 0; height: 30px; line-height: 30px; font-size: 18px; color: #000; overflow: hidden; text-overflow: ellipsis; }
+.key { display: inline-flex; align-items: center; gap: 6px; font-size: 17px; color: #000; flex: none; }
+.key i { display: inline-block; width: 14px; height: 14px; box-sizing: border-box; flex: none; }
+button[hidden] { display: none; }

@@ -1,5 +1,25 @@
 # Changelog
 
+## Unreleased
+
+### Added
+- About panel (Settings › About): icon, version and build, the group, the author, the credit
+  to Claude and the libraries used.
+- The guide decks have two live figures that document the presenter by being operated: "Try
+  the gestures", a small screen whose four tap zones light up like the lamps of the Simon game,
+  and "A slide that runs", one figure that is a picture on the left and runs on the right.
+- Keys pressed after a click in a live figure still turn the page (arrows, Page Up and Down,
+  Home, End, Esc): the figure hands them back to the presenter.
+
+### Changed
+- The guide decks are written in LaTeX Beamer on the BDLT26 theme (`source/guide-deck/`), in
+  place of PowerPoint, and hold vector drawings only: 199 kB in place of 678 kB (viewer: 197 kB
+  in place of 662 kB). A first visit downloads about a third less.
+
+### Removed
+- `source/guide-deck.pptx` and `source/guide-deck-viewer.pptx`, the PowerPoint sources of the
+  earlier guide decks (they are in the history up to 1.4.0).
+
 ## 1.4.0 (5 October 2026)
 
 ### Changed
