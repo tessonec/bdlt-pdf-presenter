@@ -24,6 +24,12 @@
   of the keyboard (17 kB in place of 34 kB). `./build.sh check` in `source/guide-deck/` compares
   each picture with its live figure.
 
+### Fixed
+- With the mouse or a finger on a drawing tool, a hidden toolbar could not be brought back
+  except with the T key: a tap at the top centre drew a dot. A small tab now appears at the top
+  edge in that case; a click on it shows the toolbar. In Navigate and in Pencil mode nothing
+  changes: the tap at the top centre does it, and the slide stays clean.
+
 ## 1.5.0 (5 October 2026)
 
 ### Added

@@ -113,6 +113,15 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;touch-
 .hint{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 8px);width:120px;height:5px;margin-left:-60px;
   border-radius:3px;background:rgba(255,255,255,.24);pointer-events:none;transition:opacity .2s;z-index:5}
 .bar.hidden ~ .hint{opacity:0}
+/* The toolbar is hidden and a tap at the top centre would draw (a drawing tool with the mouse or a
+   finger): a small tab at the top edge brings the toolbar back. In Navigate, and in Pencil mode,
+   the tap at the top centre does that and the slide stays clean. */
+#barTab{position:fixed;left:50%;top:env(safe-area-inset-top,0px);transform:translateX(-50%);width:156px;height:30px;
+  display:none;align-items:flex-start;justify-content:center;padding-top:8px;z-index:9;cursor:pointer;touch-action:manipulation}
+#barTab span{width:120px;height:6px;border-radius:3px;background:rgba(23,24,28,.5);box-shadow:0 0 0 1px rgba(255,255,255,.55);transition:background .15s, height .15s}
+#barTab:hover span,#barTab:focus-visible span{background:var(--accent);height:8px}
+.tabon #barTab{display:flex}
+body.audience #barTab,.no-toolbar #barTab{display:none!important}
 
 #sheet{position:fixed;left:0;right:0;bottom:0;z-index:12;background:var(--chrome);border-top:1px solid var(--line);
   -webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);
@@ -274,6 +283,7 @@ body.audience #stage{cursor:none}
   </div>
 </header>
 <div class="hint" aria-hidden="true"></div>
+<button id="barTab" aria-label="Show toolbar" title="Show the toolbar (T)"><span></span></button>
 
 <div id="aboutPanel" class="panel" role="dialog" aria-modal="true" aria-labelledby="aboutTitle" hidden>
   <div class="about">
@@ -674,7 +684,7 @@ function onDown(e) {
   if (e.pointerType !== 'pen' && inMedia(e)) return;
   if (e.pointerType === 'mouse' && e.button !== 0) return;
   // The first Pencil contact switches Pencil mode on: from then on only the Pencil draws
-  if (e.pointerType === 'pen' && !settings.pencil && shown('ink')) { settings.pencil = true; saveSettings(); if (tool === 'hand') setTool('pen'); toast('Pencil mode: the Pencil draws, fingers navigate', 2500); }
+  if (e.pointerType === 'pen' && !settings.pencil && shown('ink')) { settings.pencil = true; saveSettings(); if (tool === 'hand') setTool('pen'); syncTab(); toast('Pencil mode: the Pencil draws, fingers navigate', 2500); }
   // Who draws? The Pencil with any drawing tool; a finger or the mouse only when Pencil mode is off
   const draws = tool !== 'hand' && (e.pointerType === 'pen' || !settings.pencil);
   if (!draws) return touchDown(e);        // navigate: tap zones, swipe, pan, pinch
@@ -856,7 +866,10 @@ stage.addEventListener('gesturechange', e => {
 });
 
 // ---------- toolbar ----------
-function toggleBar(force) { if (!shown('toolbar')) return; bar.classList.toggle('hidden', force === undefined ? !bar.classList.contains('hidden') : !force); if (bar.classList.contains('hidden')) closePop(); }
+function toggleBar(force) { if (!shown('toolbar')) return; bar.classList.toggle('hidden', force === undefined ? !bar.classList.contains('hidden') : !force); if (bar.classList.contains('hidden')) closePop(); syncTab(); }
+// The tab at the top edge: shown while the toolbar is hidden and a tap would draw instead of bringing it back
+function syncTab() { document.documentElement.classList.toggle('tabon', bar.classList.contains('hidden') && tool !== 'hand' && !settings.pencil); }
+$('#barTab').onclick = () => toggleBar(true);
 function updateCounter() { counter.textContent = numPages ? `${pageNum} / ${numPages}` : '– / –'; }
 function setTool(t) {
   if ((['pen', 'highlighter', 'eraser'].includes(t) && !shown('ink')) || (t === 'laser' && !shown('laser'))) t = 'hand';
@@ -864,7 +877,7 @@ function setTool(t) {
   stage.style.cursor = t === 'hand' ? '' : 'crosshair';
   if (t !== 'laser') { laser = laser.filter(p => p.id !== 'hover'); }
   document.querySelectorAll('[data-tool]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.tool === t)));
-  closePop(); syncColours();
+  closePop(); syncColours(); syncTab();
 }
 // Colours. The toolbar itself never changes: each drawing tool shows its colour as a dot on its
 // button, and a tap on the tool that is already selected opens its colours in a popover below.
@@ -929,7 +942,7 @@ $('#bNext').onclick = () => go(1);
 $('#bGrid').onclick = () => sheet.classList.contains('open') ? closeSheet() : openSheet();
 $('#bUndo').onclick = undo;
 $('#bClear').onclick = clearSlide;
-$('#bHide').onclick = () => { toggleBar(false); toast('Tap the top centre of the slide to show the toolbar', 2200); };
+$('#bHide').onclick = () => { toggleBar(false); toast(document.documentElement.classList.contains('tabon') ? 'The small bar at the top edge shows the toolbar again (or press T)' : 'Tap the top centre of the slide to show the toolbar', 2600); };
 $('#bFs').onclick = toggleFs;
 $('#bSave').onclick = savePdf;
 

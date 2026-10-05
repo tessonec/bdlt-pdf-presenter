@@ -6,7 +6,9 @@ It runs in Safari; use Share › Add to Home Screen to install it as a full-scre
 ## What it does
 
 - Tap the right or left third of a slide for the next or previous slide.
-- Tap the top centre to show or hide the toolbar.
+- Tap the top centre to show or hide the toolbar. While a drawing tool is in use with the
+  mouse or a finger, a tap there draws, so a small tab appears at the top edge when the toolbar
+  is hidden: a click on it, or the T key, brings the toolbar back.
 - Triple-tap the lower quarter for the slide overview.
 - Pinch to zoom, drag with one finger to pan, double-tap to fit.
 - First and last slide: the « and » buttons in the toolbar and at the two ends of the slide
