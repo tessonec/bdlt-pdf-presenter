@@ -5,6 +5,8 @@
     bdlt-pdf-pack.py lecture03.pdf -o view.html --title "Lecture 3"
     bdlt-pdf-pack.py lecture03.pdf --artifact         (page content only, for a page shown in a chat)
     bdlt-pdf-pack.py lecture03.pdf --presenter        (with projector and lecturer views)
+    bdlt-pdf-pack.py lecture03.pdf --hide open,save   (without these controls)
+    bdlt-pdf-pack.py lecture03.pdf --show nav,counter,fullscreen   (with these controls only)
 
 The page opens directly on the PDF, with its live media, pen and highlighter. It needs no other
 file: the PDF and the icon are inside it. It still loads PDF.js and pdf-lib from cdnjs and the
@@ -13,7 +15,7 @@ interface typeface from Google Fonts, so it needs a network connection, as the p
 The presenter is taken from ../public/index.html next to this script (--app names another copy).
 Only the Python standard library is used.
 """
-import argparse, base64, html, os, re, sys
+import argparse, base64, html, json, os, re, sys
 
 MARK = re.compile(r'<!-- bdlt:deck\b.*?-->')
 LIMIT = 16 * 1024 * 1024          # a page shown in a chat may not be larger
@@ -26,6 +28,8 @@ def main():
     ap.add_argument('--title', help='the name of the page (default: the file name of the PDF)')
     ap.add_argument('--artifact', action='store_true', help='write the page content only, without <html>, <head> and <body>')
     ap.add_argument('--presenter', action='store_true', help='pack the presenter edition in place of the viewer')
+    ap.add_argument('--hide', help='controls to leave out, separated by commas (the README lists them)')
+    ap.add_argument('--show', help='the only controls to keep, separated by commas; the toolbar itself stays unless hidden')
     ap.add_argument('--app', help='the index.html of the presenter (default: ../public/index.html next to this script)')
     a = ap.parse_args()
 
@@ -36,6 +40,23 @@ def main():
     page = open(app, encoding='utf-8').read()
     if not MARK.search(page):
         sys.exit('This copy of the presenter cannot carry a PDF: it is older than this tool. Update the presenter.')
+
+    # which controls are shown: the names come from the presenter itself
+    config = ''
+    if a.hide or a.show:
+        m = re.search(r"const CONTROLS = \[(.*?)\];", page)
+        if not m:
+            sys.exit('This copy of the presenter cannot hide controls: it is older than this tool. Update the presenter.')
+        known = re.findall(r"'([a-z]+)'", m.group(1))
+        cfg = {}
+        for key, val in (('show', a.show), ('hide', a.hide)):
+            names = [x.strip().lower() for x in re.split(r'[\s,]+', val or '') if x.strip()]
+            bad = [x for x in names if x not in known]
+            if bad:
+                sys.exit('Unknown control: %s. Known: %s.' % (', '.join(bad), ', '.join(known)))
+            if names:
+                cfg[key] = names
+        config = '<script type="application/json" id="bdltConfig">%s</script>\n' % json.dumps(cfg)
 
     pdf = open(a.pdf, 'rb').read()
     if not pdf.lstrip()[:5] == b'%PDF-':
@@ -66,7 +87,7 @@ def main():
     lines = '\n'.join(b64[i:i + 120] for i in range(0, len(b64), 120))
     tag = '<script type="application/pdf;base64" id="bdltDeck" data-name="%s"%s>\n%s\n</script>' % (
         html.escape(name, quote=True), '' if a.presenter else ' data-edition="viewer"', lines)
-    page = MARK.sub(lambda m: tag + icon, page, count=1)
+    page = MARK.sub(lambda m: config + tag + icon, page, count=1)
 
     if a.artifact:
         i, j = page.find('<body>'), page.rfind('</body>')

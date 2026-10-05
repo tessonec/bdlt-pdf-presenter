@@ -132,9 +132,51 @@ network, as the presenter does. The page is about 150 kB plus four thirds of the
 | `--title "Lecture 3"` | the name of the page (default: the file name of the PDF) |
 | `--presenter` | pack the presenter, with projector and lecturer views, in place of the viewer |
 | `--artifact` | write the page content only, for a page shown in a chat (at most 16 MB) |
+| `--hide open,save` | leave these controls out (names in the next section) |
+| `--show nav,counter` | keep these controls only |
 
 Inside another page (a chat, a learning platform) the packed page takes the keyboard when it
 opens and after every tap, so the arrow keys turn the slides; the page itself never scrolls.
+
+## Choosing which controls are shown
+
+Every control is shown unless it is switched off. A control that is off is not drawn and its
+shortcut does nothing; turning pages with the keys and by tapping always works.
+
+| Name | What it covers |
+|---|---|
+| `open` | Open button, ⌘O, drag and drop of a PDF |
+| `reload` | Reload button, ⌘R |
+| `nav` | the four buttons first, previous, next, last |
+| `counter` | the slide counter |
+| `overview` | slide overview: its button, G, and the gestures that open it |
+| `ink` | pen, highlighter, eraser, undo, clear, and their settings |
+| `laser` | laser pointer |
+| `save` | Save button, ⌘S |
+| `fullscreen` | Full screen button, F |
+| `projector` | separate views (projector and lecturer) and their settings |
+| `settings` | Settings button (and with it About) |
+| `hide` | the button that hides the toolbar |
+| `toolbar` | the whole toolbar |
+| `splash` | the name and version shown for a moment at the start |
+
+There are three places to say it, with the same names:
+
+```
+viewer.html?pdf=lecture03.pdf&hide=open,save            in the address: without these
+viewer.html?pdf=lecture03.pdf&show=nav,counter,fullscreen   in the address: these and nothing else
+tools/bdlt-pdf-pack.py lecture03.pdf --show nav,counter     in a packed page
+```
+
+```html
+<script type="application/json" id="bdltConfig">{"hide": ["open", "projector"]}</script>
+```
+
+The last one goes into the page itself, anywhere before the presenter's own script; the packer
+writes it for `--hide` and `--show`. `show` leaves the toolbar itself in place: only `hide`
+with `toolbar` removes it. The address can switch off more than the page does; it cannot bring
+back what the page has switched off. A name that does not exist is reported in the browser's
+console and otherwise ignored.
 
 ## Media in slides (video, animations, interactive widgets)
 

@@ -9,6 +9,12 @@
 - Inside another page (a chat, a learning platform) the app takes the keyboard when it opens
   and after every tap, so the arrow keys turn the slides without a click first.
 
+- Which controls are shown can be chosen, with one list of names (`open`, `reload`, `nav`,
+  `counter`, `overview`, `ink`, `laser`, `save`, `fullscreen`, `projector`, `settings`, `hide`,
+  `toolbar`, `splash`): in the address (`?hide=open,save` or `?show=nav,counter,fullscreen`), in
+  the page (a `bdltConfig` block), or in a packed page (`--hide`, `--show`). A control that is
+  off is not drawn and its shortcut does nothing.
+
 ### Changed
 - The page itself can no longer scroll, whatever it is shown in.
 

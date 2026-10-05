@@ -86,6 +86,13 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;touch-
 /* viewer edition: no projector, laser, reload button, status row (elapsed time, clock, slide number) or fine-tuning settings */
 .lite #bPresent,.lite #presSet,.lite #bReload,.lite [data-tool="laser"],.lite #lect,
 .lite #stripSet,.lite #laserSet,.lite #dbgSet{display:none!important}
+/* controls switched off by the page or by the address (CONTROLS in the script) */
+.no-open #bOpen,.no-reload #bReload,.no-nav #bFirst,.no-nav #bPrev,.no-nav #bNext,.no-nav #bLast,.no-counter #counter,
+.no-overview #bGrid,.no-overview .hint,.no-ink [data-tool="pen"],.no-ink [data-tool="highlighter"],.no-ink [data-tool="eraser"],
+.no-ink #bUndo,.no-ink #bClear,.no-ink #pencilSet,.no-ink #penSet,.no-ink #hlSet,.no-laser [data-tool="laser"],.no-laser #laserSet,
+.no-ink.no-laser [data-tool="hand"],.no-save #bSave,.no-fullscreen #bFs,.no-projector #bPresent,.no-projector #presSet,
+.no-projector #lect,.no-projector #stripSet,.no-settings #bSettings,.no-hide #bHide,.no-toolbar #bar,.bar .grp.empty{display:none!important}
+.bar .grp.first{border-left:0}
 .tb.live{position:relative}
 .tb.live::after{content:"";position:absolute;top:6px;right:6px;width:8px;height:8px;border-radius:50%;background:#A4D233;box-shadow:0 0 0 2px var(--chrome)}
 .tb svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
@@ -311,16 +318,16 @@ body.audience #stage{cursor:none}
     <div class="set-h"><h3>Presenter mode (two screens)</h3><label class="switch"><input type="checkbox" id="optPresenter" aria-describedby="presNote"><span></span></label></div>
     <p id="presNote"></p>
   </section>
-  <section class="set">
+  <section class="set" id="pencilSet">
     <div class="set-h"><h3>Pencil mode</h3><label class="switch"><input type="checkbox" id="optPencil" aria-describedby="pencilNote"><span></span></label></div>
     <p id="pencilNote">On: only the Apple Pencil draws, and fingers navigate. It switches on by itself the first time a Pencil touches the screen. Off: the mouse or a finger draws with the selected tool; choose Navigate to turn pages.</p>
   </section>
-  <section class="set">
+  <section class="set" id="penSet">
     <div class="set-h"><h3>Pen colours</h3><span class="count" id="penCount"></span></div>
     <p>Tap to add or remove, up to 10. The pen's colour menu shows them in the order you pick them.</p>
     <div class="pick" id="pickPen"></div>
   </section>
-  <section class="set">
+  <section class="set" id="hlSet">
     <h3>Highlighter colours</h3>
     <div class="pick" id="pickHl"></div>
   </section>
@@ -397,6 +404,41 @@ if (LITE) {
   const m = document.querySelector('meta[name="apple-mobile-web-app-title"]'); if (m) m.content = 'BDLT Viewer';
   const a = document.querySelector('meta[name="application-name"]'); if (a) a.content = APP_NAME;
 }
+// ---------- which controls are shown ----------
+// Every control is shown unless the page or the address switches it off:
+//   in the page      a script element of type application/json with the id bdltConfig, anywhere before
+//                    this script, holding {"hide": ["open", "save"]} (tools/bdlt-pdf-pack.py writes it
+//                    with --hide and --show; the README shows the element in full)
+//   in the address   ?hide=open,save     or     ?show=nav,counter,fullscreen   (these and nothing else)
+// A control that is off is not drawn and its shortcut does nothing. "show" leaves the toolbar
+// itself alone: only "hide": ["toolbar"] removes it. The address can switch off more than the page
+// does; it cannot bring back what the page has switched off.
+const CONTROLS = ['open', 'reload', 'nav', 'counter', 'overview', 'ink', 'laser', 'save', 'fullscreen', 'projector', 'settings', 'hide', 'toolbar', 'splash'];
+const OFF = (() => {
+  const off = new Set();
+  const list = v => (Array.isArray(v) ? v : String(v == null ? '' : v).split(/[\s,]+/)).map(x => String(x).trim().toLowerCase()).filter(Boolean);
+  const take = (show, hide) => {
+    const s = list(show), h = list(hide);
+    [...s, ...h].filter(n => !CONTROLS.includes(n)).forEach(n => console.warn('BDLT: unknown control "' + n + '". Known: ' + CONTROLS.join(', ') + '.'));
+    if (s.length) CONTROLS.filter(n => n !== 'toolbar' && !s.includes(n)).forEach(n => off.add(n));
+    h.filter(n => CONTROLS.includes(n)).forEach(n => off.add(n));
+  };
+  let cfg = {}; const el = document.getElementById('bdltConfig');
+  if (el) { try { cfg = JSON.parse(el.textContent) || {}; } catch (e) { console.warn('BDLT: the bdltConfig block is not valid JSON and was ignored.'); } }
+  take(cfg.show, cfg.hide);
+  const q = new URLSearchParams(location.search); take(q.get('show'), q.get('hide'));
+  if (LITE) off.add('laser');   // the viewer edition has no laser pointer
+  off.forEach(n => document.documentElement.classList.add('no-' + n));
+  // a group of the toolbar with nothing left in it goes too, and the first group left has no separator
+  let first = true;
+  document.querySelectorAll('#bar .grp').forEach(g => {
+    const any = [...g.children].some(c => getComputedStyle(c).display !== 'none');
+    g.classList.toggle('empty', !any); g.classList.toggle('first', any && first); if (any) first = false;
+  });
+  return off;
+})();
+const shown = name => !OFF.has(name);
+const SOLO = LITE || !shown('projector');   // no separate views (projector and lecturer)
 const stage = $('#stage'), pageEl = $('#page'), pdfc = $('#pdfc'), inkc = $('#inkc'), livec = $('#livec');
 const bar = $('#bar'), sheet = $('#sheet'), strip = $('#strip'), counter = $('#counter'), fileIn = $('#file');
 const inFrame = (() => { try { return window.self !== window.top; } catch (e) { return true; } })();
@@ -632,7 +674,7 @@ function onDown(e) {
   if (e.pointerType !== 'pen' && inMedia(e)) return;
   if (e.pointerType === 'mouse' && e.button !== 0) return;
   // The first Pencil contact switches Pencil mode on: from then on only the Pencil draws
-  if (e.pointerType === 'pen' && !settings.pencil) { settings.pencil = true; saveSettings(); if (tool === 'hand') setTool('pen'); toast('Pencil mode: the Pencil draws, fingers navigate', 2500); }
+  if (e.pointerType === 'pen' && !settings.pencil && shown('ink')) { settings.pencil = true; saveSettings(); if (tool === 'hand') setTool('pen'); toast('Pencil mode: the Pencil draws, fingers navigate', 2500); }
   // Who draws? The Pencil with any drawing tool; a finger or the mouse only when Pencil mode is off
   const draws = tool !== 'hand' && (e.pointerType === 'pen' || !settings.pencil);
   if (!draws) return touchDown(e);        // navigate: tap zones, swipe, pan, pinch
@@ -814,9 +856,10 @@ stage.addEventListener('gesturechange', e => {
 });
 
 // ---------- toolbar ----------
-function toggleBar(force) { bar.classList.toggle('hidden', force === undefined ? !bar.classList.contains('hidden') : !force); if (bar.classList.contains('hidden')) closePop(); }
+function toggleBar(force) { if (!shown('toolbar')) return; bar.classList.toggle('hidden', force === undefined ? !bar.classList.contains('hidden') : !force); if (bar.classList.contains('hidden')) closePop(); }
 function updateCounter() { counter.textContent = numPages ? `${pageNum} / ${numPages}` : '– / –'; }
 function setTool(t) {
+  if ((['pen', 'highlighter', 'eraser'].includes(t) && !shown('ink')) || (t === 'laser' && !shown('laser'))) t = 'hand';
   tool = t;
   stage.style.cursor = t === 'hand' ? '' : 'crosshair';
   if (t !== 'laser') { laser = laser.filter(p => p.id !== 'hover'); }
@@ -891,6 +934,7 @@ $('#bFs').onclick = toggleFs;
 $('#bSave').onclick = savePdf;
 
 function toggleFs() {
+  if (!shown('fullscreen') && !AUDIENCE) return;
   const d = document, el = d.documentElement;
   const on = d.fullscreenElement || d.webkitFullscreenElement;
   const fail = () => toast('Full screen isn’t available here. On iPad, use Share › Add to Home Screen for a full-screen app.', 4200);
@@ -939,7 +983,7 @@ function markThumbs() {
   });
 }
 function openSheet() {
-  if (!pdfDoc) return;
+  if (!pdfDoc || (!shown('overview') && !LECTURER())) return;
   sheet.classList.add('open'); markThumbs(); updateLect(false);
   const el = strip.querySelector(`[data-n="${pageNum}"]`);
   if (el) strip.scrollLeft = el.offsetLeft - strip.clientWidth / 2 + el.offsetWidth / 2;
@@ -982,6 +1026,7 @@ async function openLocal(f, handle) {
   updateReloadUi(); return true;
 }
 async function openPicker() {
+  if (!shown('open')) return;
   if (window.showOpenFilePicker && !inFrame) {
     try {
       const [h] = await window.showOpenFilePicker({ id: 'bdlt-pdf', types: [{ description: 'PDF', accept: { 'application/pdf': ['.pdf'] } }] });
@@ -1022,10 +1067,11 @@ function updateReloadUi() {
   b.title = live ? 'Reload the PDF (⌘R). It also reloads by itself when the file changes.' : 'Reload the PDF (⌘R)';
 }
 const dz = $('#dropzone');
-window.addEventListener('dragover', e => { e.preventDefault(); dz.hidden = false; });
+window.addEventListener('dragover', e => { e.preventDefault(); dz.hidden = !shown('open'); });
 window.addEventListener('dragleave', e => { if (!e.relatedTarget) dz.hidden = true; });
 window.addEventListener('drop', async e => {
   e.preventDefault(); dz.hidden = true;
+  if (!shown('open')) return;
   const files = [...(e.dataTransfer?.files || [])], i = files.findIndex(f => /pdf$/i.test(f.type) || /\.pdf$/i.test(f.name));
   if (i < 0) return;
   let hp = null;   // the handle has to be asked for before the first await
@@ -1052,9 +1098,9 @@ window.addEventListener('keydown', e => {
     const c = e.code || '', key = k.toLowerCase();
     if (key === 'z' || c === 'KeyZ') { e.preventDefault(); e.shiftKey ? redo() : undo(); }
     else if (key === 'y' || c === 'KeyY') { e.preventDefault(); redo(); }
-    else if ((key === 'o' || c === 'KeyO') && !e.shiftKey) { e.preventDefault(); openPicker(); }
-    else if ((key === 's' || c === 'KeyS') && !e.shiftKey) { e.preventDefault(); savePdf(); }
-    else if ((key === 'r' || c === 'KeyR') && !e.shiftKey) { e.preventDefault(); reloadDeck(); }   // Shift+Cmd+R still reloads the whole app
+    else if ((key === 'o' || c === 'KeyO') && !e.shiftKey && shown('open')) { e.preventDefault(); openPicker(); }
+    else if ((key === 's' || c === 'KeyS') && !e.shiftKey && shown('save')) { e.preventDefault(); savePdf(); }
+    else if ((key === 'r' || c === 'KeyR') && !e.shiftKey && shown('reload')) { e.preventDefault(); reloadDeck(); }   // Shift+Cmd+R still reloads the whole app
     return;
   }
   if (['ArrowRight', 'ArrowDown', 'PageDown', ' ', 'Enter'].includes(k)) { e.preventDefault(); go(1); }
@@ -1077,7 +1123,7 @@ let readyFile = null, readyUrl = null, dlCap = null;
 try { if (window.claude && window.claude.use) window.claude.use('downloads').then(x => { dlCap = x; }).catch(() => {}); } catch (e) {}
 function hexRgb(h) { const n = parseInt(h.slice(1), 16); return PDFLib.rgb(((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255); }
 async function savePdf() {
-  if (!pdfBytes) return;
+  if (!pdfBytes || !shown('save')) return;
   const count = [...ink.values()].reduce((a, s) => a + s.length, 0);
   toast(count ? 'Writing your ink into the PDF…' : 'No ink yet. Saving a copy of the PDF…', 1800);
   try {
@@ -1182,7 +1228,7 @@ async function watchTick() {
 
 // Reload the open PDF from where it came (toolbar button, Cmd/Ctrl+R), keeping the slide and the ink
 async function reloadDeck() {
-  if (!pdfDoc && deckSrc !== 'url') return;
+  if ((!pdfDoc && deckSrc !== 'url') || !shown('reload')) return;
   const keep = { quiet: true, page: pageNum, ink: [...ink.entries()] };
   try {
     if (deckSrc === 'url') {
@@ -1593,7 +1639,7 @@ const VERSION_TEXT = STAMPED ? `Version ${APP_RELEASE} · ${BUILD4}` : EMBED ? `
 // Splash: confirms at a glance which version is running
 (function splash() {
   const el = $('#splash');
-  if (!LITE && location.hash === '#audience') { el.remove(); return; }
+  if (!shown('splash') || (!SOLO && location.hash === '#audience')) { el.remove(); return; }
   $('#splashVer').innerHTML = STAMPED ? `Version ${APP_RELEASE} · <b>${BUILD4}</b>` : VERSION_TEXT;
   const close = () => { el.classList.add('out'); setTimeout(() => el.remove(), 500); };
   el.addEventListener('pointerdown', close); setTimeout(close, 1800);
@@ -1701,9 +1747,9 @@ optPres.onchange = () => {
 };
 
 // ---------- presenter mode: a second window for the projector, kept in sync on this device ----------
-const AUDIENCE = !LITE && location.hash === '#audience';
+const AUDIENCE = !SOLO && location.hash === '#audience';
 const STANDALONE = navigator.standalone === true || (window.matchMedia && (matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches));
-const chan = (!LITE && 'BroadcastChannel' in window) ? new BroadcastChannel('bdlt-pdf-presenter') : null;
+const chan = (!SOLO && 'BroadcastChannel' in window) ? new BroadcastChannel('bdlt-pdf-presenter') : null;
 let lastPing = 0, audWin = null, timerStart = 0, viewRAF = 0, liveRAF = 0, remoteView = null;
 const connected = () => performance.now() - lastPing < 5000;
 // Messages go out whenever presenter mode is on; the projector window may be briefly throttled while Safari moves it.
@@ -1909,7 +1955,7 @@ if (AUDIENCE && chan) {
   startAudience();
 } else {
   setTool(settings.pencil ? 'pen' : 'hand');
-  if (LITE || presenterBlocker()) settings.presenter = false;
+  if (SOLO || presenterBlocker()) settings.presenter = false;
   updatePresenterUi();
   if (PDF_URL) openFromUrl();
   else sampleDeck().then(b => loadBytes(new Uint8Array(b), HOME_NAME)).catch(e => { console.error(e); toast('Open a PDF to begin'); });
