@@ -17,8 +17,11 @@
 
 ### Changed
 - The page itself can no longer scroll, whatever it is shown in.
-- The guide decks are 147 kB (presenter) and 144 kB (viewer), in place of 202 kB and 200 kB,
-  and look the same. The pictures that other PDF readers show in place of the two live figures
+- Guide decks: the live gestures figure is now the page itself, on slide 6. It is drawn like
+  the three gesture slides before it, with a hand and its words in each of the four zones, no
+  device frame, no bar below and no text at the side; the separate "Try the gestures" slide is
+  gone (14 slides in the presenter's guide, 13 in the viewer's).
+- The guide decks are 143 kB (presenter) and 141 kB (viewer), in place of 202 kB and 200 kB. The pictures that other PDF readers show in place of the two live figures
   are now TikZ drawings read off the figures themselves, with the text in the deck's own
   typeface (12 kB in place of 45 kB), and the figures carry Source Sans only for the characters
   of the keyboard (17 kB in place of 34 kB). `./build.sh check` in `source/guide-deck/` compares

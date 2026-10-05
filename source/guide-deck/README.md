@@ -25,9 +25,9 @@ Playwright (`npm install playwright`); `media` needs `pip install fonttools brot
 | `check.mjs` | operates both figures in the presenter, lecturer view and projector window |
 | `media/check-posters.py` | compares the poster of each figure, as it stands in the built decks, with the figure in the browser |
 
-Every picture is a vector drawing: the PDF has no bitmap. The presenter's deck is 147 kB (the
+Every picture is a vector drawing: the PDF has no bitmap. The presenter's deck is 143 kB (the
 PowerPoint guide was 678 kB): 52 kB for the two live figures, which share one embedded file,
 38 kB for the three logos of the footer, 30 kB for the contents of the slides (8 kB of it the
 two posters), 14 kB for Source Sans in three weights, and the rest structure. `media/README.md`,
-decisions 3, 7, 8 and 10, says how it was kept small. qpdf is used where it is installed;
+decisions 3, 7, 8 and 10, says how it was kept small; decision 11 why slide S06 is live. qpdf is used where it is installed;
 without it the deck is about 3 kB larger.

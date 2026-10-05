@@ -8,9 +8,9 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 R="${BDLT_REPO:-$HOME/Projects/bdlt-beamer-media}"
-# AREA: Full Image, 1147 x 445 CSS px (32.36 x 12.57 cm on the slide)
-NAME=gestures; AREA=1147x445; KEYS=""                 # the slide starts at slide 1, lamps off
-POSTER="lit=1&p=2&bar=1"                              # the poster: every lamp on, the small toolbar shown
+# AREA: the page of a diagram slide, 1147 x 507 CSS px (32.36 x 14.31 cm on the slide, as the gesture slides before it)
+NAME=gestures; AREA=1147x507; KEYS=""                 # the slide starts with the lamps off
+POSTER="lit=1"                                        # the poster: every lamp on
 if [ "${1:-}" = clean ]; then rm -rf check built.txt "$NAME.html" "$NAME-poster.tex"; exit; fi
 if [ "${1:-}" = fresh ]; then
   mkdir -p ../../build

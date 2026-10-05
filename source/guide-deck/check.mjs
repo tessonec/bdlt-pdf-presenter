@@ -70,11 +70,11 @@ const centre = (fr, sel) => fr.evaluate(s => { const b = document.querySelector(
 const picture = fr => fr.evaluate(() => JSON.stringify({ state: window.bdlt.state, chips: [...document.querySelectorAll('.chip')].map(c => c.textContent),
   note: document.querySelector('#msg').textContent, marks: [...document.querySelectorAll('svg rect, svg line, svg text')].filter(e => e.getAttribute('display') !== 'none' && !e.closest('[display="none"]') && !e.classList.contains('glow'))
     .map(e => e.tagName + ':' + (e.textContent || '') + ':' + (e.getAttribute('class') || '').replace(' lit', '') + ':' + (e.getAttribute('stroke') || '')).join('|') }));
-const fits = fr => fr.evaluate(() => { const d = document.documentElement, bar = document.querySelector('.bar'); return d.scrollWidth <= innerWidth && d.scrollHeight <= innerHeight && bar.scrollWidth <= bar.clientWidth + 1; });
+const fits = fr => fr.evaluate(() => { const d = document.documentElement, bar = document.querySelector('.bar'); return d.scrollWidth <= innerWidth && d.scrollHeight <= innerHeight && (!bar || bar.scrollWidth <= bar.clientWidth + 1); });
 const chipWidths = fr => fr.evaluate(() => [...document.querySelectorAll('.chip')].map(c => Math.round(c.getBoundingClientRect().width)).join(','));
 async function same(l, a, what) { await page.waitForTimeout(450); const x = await picture(l), y = await picture(a); ok(x === y, 'projector shows the same: ' + what, x === y ? '' : '\n   lecturer  ' + x.slice(0, 300) + '\n   projector ' + y.slice(0, 300)); }
 
-// ---- Try the gestures
+// ---- The four zones together (the live gesture slide)
 let at = await goTo('tap zones');
 ok(at > 0, 'the slide with the gestures figure is found');
 let L = await figure(page, '#svg'), A = await figure(aud, '#svg');
@@ -94,16 +94,14 @@ if (L && A) {
   ok(await L.evaluate(() => bdlt.state.taps === 0 && !bdlt.state.sheet && bdlt.state.msg === 'slow'), 'one tap in the lower quarter is forgotten after a moment');
   for (let i = 0; i < 3; i++) await zone(0.5, 0.88);
   ok(await L.evaluate(() => bdlt.state.sheet === true), 'three quick taps: the overview opens'); await same(L, A, 'overview open');
-  const th = await L.evaluate(() => { const g = [...document.querySelectorAll('#svg g g g')].filter(n => n.querySelector('text') && n.querySelector('text').textContent === '4' && n.querySelector('rect[stroke-width="4"]'))[0].getBoundingClientRect(); return [g.left + g.width / 2, g.top + g.height / 2]; });
-  await clickAt(L, th[0], th[1]); ok(await L.evaluate(() => bdlt.state.p === 4 && !bdlt.state.sheet), 'a tap on a small slide of the overview jumps to it'); await same(L, A, 'after the jump');
+  await zone(0.5, 0.5); ok(await L.evaluate(() => !bdlt.state.sheet && bdlt.state.msg === 'close'), 'with the overview open, the next tap closes it'); await same(L, A, 'overview closed again');
   // the lamp: a zone is lit at once when it is tapped, then fades
   const lit = await L.evaluate(() => { const r = document.querySelector('#svg g rect').getBoundingClientRect(), s = document.querySelector('#svg');
     s.dispatchEvent(new PointerEvent('pointerdown', { clientX: r.left + r.width * 0.85, clientY: r.top + r.height * 0.4, button: 0, pointerType: 'touch', bubbles: true }));
     return [...document.querySelectorAll('.zone')].map(z => +z.getAttribute('fill-opacity')); });
   ok(lit.filter(o => o > 0.8).length === 1, 'the tapped zone lights up', 'fill opacities ' + lit); await page.waitForTimeout(900);
   ok((await L.evaluate(() => [...document.querySelectorAll('.zone')].map(z => +z.getAttribute('fill-opacity')))).every(o => o < 0.3), 'and goes dark again');
-  const r = await centre(L, '#reset'); await clickAt(L, r[0], r[1]);
-  ok(await L.evaluate(() => bdlt.state.p === 1 && !bdlt.state.bar && !bdlt.state.sheet), 'back to the start'); await same(L, A, 'after back to the start');
+  ok(await L.evaluate(() => document.querySelectorAll('.label .hand').length === 5 && [...document.querySelectorAll('.label .head')].map(t => t.textContent).join('|') === 'Tap here|Tap here|Tap here|Triple-tap here'), 'each zone has its hand and its words');
   // hidden: the taps of a zapateo (right, right, left, right, right) start a memory game on the four lamps
   for (const fx of [0.85, 0.85, 0.15, 0.85, 0.85]) await zone(fx, 0.4);
   ok(await L.evaluate(() => !!bdlt.state.g && bdlt.state.g.seq.length === 8), 'right, right, left, right, right starts the memory game');
@@ -115,8 +113,9 @@ if (L && A) {
   ok(await L.evaluate(() => bdlt.state.best === 1), 'the best round is kept');
   await zone(...PADS[seq[0]]); await zone(...PADS[Object.keys(PADS).find(k => k !== seq[1])]);
   ok(await L.evaluate(() => bdlt.state.g.ph === 'lost' && bdlt.state.g.why === 'wrong'), 'a wrong lamp loses'); await page.waitForTimeout(1700); await same(L, A, 'after losing');
-  const r2 = await centre(L, '#reset'); await clickAt(L, r2[0], r2[1]); await page.waitForTimeout(600);
-  ok(await L.evaluate(() => !bdlt.state.g && bdlt.state.p === 1), 'back to the start ends the game'); await same(L, A, 'the small deck again');
+  ok(await L.evaluate(() => getComputedStyle(document.querySelector('.label')).display === 'none'), 'in the game the hands and words are gone');
+  await zone(0.5, 0.5); await page.waitForTimeout(600);
+  ok(await L.evaluate(() => !bdlt.state.g && bdlt.state.p === 1), 'a tap in the middle ends the game'); await same(L, A, 'the zones again');
   ok(await chipWidths(L) === w0, 'every chip kept its width', w0 + ' -> ' + await chipWidths(L));
   ok(await fits(L) && await fits(A), 'nothing overflows its box');
 }

@@ -1,6 +1,6 @@
 # Guide deck of BDLT PDF Presenter: outline
 
-One source, two editions: `deck.tex` (presenter, 15 slides) and `deck-viewer.tex` (students, 14
+One source, two editions: `deck.tex` (presenter, 14 slides) and `deck-viewer.tex` (students, 13
 slides; written by `build.sh`). Slide IDs are stable; the order below is the order in the deck.
 The content is that of the earlier PowerPoint guide (13 slides), plus the two live figures.
 
@@ -11,8 +11,7 @@ The content is that of the earlier PowerPoint guide (13 slides), plus the two li
 | S03 | Blank (diagram) | Tap the right third: next slide | Where to tap for the next slide. | tap-zone drawing | both | checked |
 | S04 | Blank (diagram) | Tap the left third: previous slide | Where to tap for the previous slide. | tap-zone drawing | both | checked |
 | S05 | Blank (diagram) | Tap the top centre: show or hide the toolbar | Where to tap for the toolbar. | tap-zone drawing | both | checked |
-| S06 | Blank (diagram) | Triple-tap the lower quarter: slide overview | Three taps open the overview. | tap-zone drawing | both | checked |
-| S14 | Full Image + Caption | Try the gestures | The four zones can be tried on a small screen. | widget `gestures` | both | checked |
+| S06 | Title + picture area (`\bdltarea`) | The four zones together: try them here | All four zones on one page, and each answers a tap; the triple tap is shown here. | widget `gestures` | both | checked |
 | S07 | Blank (diagram) | Pinch to zoom | Two fingers zoom, one finger pans. | pinch drawing | both | checked |
 | S08 | Blank (diagram) | Tools: navigate, write, point, erase | What each tool does and how to choose its colour. | toolbar tiles, colour dots | both (viewer: no laser) | checked |
 | S09 | Blank (diagram) | The toolbar, button by button | What each button does. | toolbar tiles | both (viewer: no Reload, no views) | checked |
@@ -22,3 +21,5 @@ The content is that of the earlier PowerPoint guide (13 slides), plus the two li
 | S11 | Title + Content, icon tiles | Separate views: projector and lecturer | The three steps to a projector window. | icons split, screen, full screen | presenter | checked |
 | S12 | Blank (diagram) | Save keeps your notes | Save writes the ink into a new PDF. | save drawing | both | checked |
 | S13 | Keypoint (info) | Open your own PDF from the toolbar to begin | What to do next. | none | both | checked |
+
+S14 (Try the gestures, a small screen in a frame) was merged into S06 on 6 October 2026 and its ID is retired.

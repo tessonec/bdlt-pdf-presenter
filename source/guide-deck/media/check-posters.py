@@ -20,9 +20,9 @@ from PIL import Image, ImageChops, ImageFilter
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DECK = os.path.dirname(HERE)
-# name, title of its slide, size of the figure in CSS px (AREA in its build.sh)
-FIGURES = [("gestures", "Try the gestures", 1147, 445), ("alive", "A slide that runs", 1147, 445)]
-AREA_CM = (0.75, 2.42, 32.36, 12.57)          # the picture area of \bdltfullimage: x, y, width, height
+# name, title of its slide, size of the figure in CSS px (AREA in its build.sh), its picture area on the slide in cm (x, y, width, height)
+FIGURES = [("gestures", "The four zones together", 1147, 507, (0.75, 2.42, 32.36, 14.31)),      # the page of a diagram slide (\bdltarea)
+           ("alive", "A slide that runs", 1147, 445, (0.75, 2.42, 32.36, 12.57))]                # the picture area of \bdltfullimage
 BLUR, CLEAR, LIMIT = 3, 48, 0.05              # blur in px of the picture (2 per CSS px); a clear difference (of 255); % allowed
 CM = 72 / 2.54
 bad = 0
@@ -35,7 +35,7 @@ def say(ok, text):
 def body(path):
     return [l for l in open(path, encoding="utf-8").read().split("\n") if not l.startswith("%")]
 
-for name, title, W, H in FIGURES:
+for name, title, W, H, AREA_CM in FIGURES:
     fresh, kept, live = (os.path.join(DECK, "build", name + "-poster-fresh.tex"), os.path.join(HERE, name, name + "-poster.tex"),
                          os.path.join(DECK, "build", name + "-live.png"))
     if not (os.path.exists(fresh) and os.path.exists(live)):

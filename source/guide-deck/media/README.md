@@ -9,9 +9,9 @@ departures listed under "Decisions".
 
 | Folder | Command | Slide | What it is | A pattern for |
 |---|---|---|---|---|
-| `gestures/` | in words (an interactive figure) | S14 | A small screen with the four tap zones; a tapped zone lights up like a lamp of the Simon game | a figure that answers taps at places; state-driven flashes that also show on the projector; a triple tap with a time limit |
+| `gestures/` | in words (an interactive figure) | S06 | The page with its four tap zones, as on the slides before it; a tapped zone lights up like a lamp of the Simon game | a figure that answers taps at places; state-driven flashes that also show on the projector; a triple tap with a time limit; a figure drawn to continue the static slides around it |
 | `alive/` | in words (a small simulation) | S15 | One figure twice: a still picture on the left, running on the right | a run computed once from a seed and looked up per step; a slide that tells readers of other viewers what they miss |
-| `figures/` | | S14, S15 | `guide-figures.html`: both figures in one file, which is what the deck embeds (decision 7) | several figures of a deck sharing their fonts and library |
+| `figures/` | | S06, S15 | `guide-figures.html`: both figures in one file, which is what the deck embeds (decision 7) | several figures of a deck sharing their fonts and library |
 | `cover.svg`, `cover.pdf`, `make-cover.mjs` | | S01 | the picture of the title slide, as a vector drawing | |
 
 ## What they share
@@ -87,6 +87,17 @@ departures listed under "Decisions".
    (the figures render as before, pixel for pixel) but only the keyboard's characters: 17 kB
    in place of 34 kB. A character beyond them that a source uses is taken in by the next build.
    The guide decks are 147 kB (presenter) and 144 kB (viewer).
+11. **The gestures figure is the page itself** (Claudio, 6 October 2026): "slide 6 in the guide
+   serves no purpose, it can be merged in slide 7 ... no need for the controls below ... we do
+   not need even the right part explanation, all can go into the slide", and, choosing between
+   a larger tablet and the flat page: "without a round cover to the device. This would be more
+   transparent as there is no interface nested artificially". So the figure is drawn as the
+   page of slides S03 to S05, with the hand and words of those slides at the same places (their
+   positions are those of `\guidezonetall` and `\guidezonewide` in `../deck.tex`), and stands on
+   S06 in place of the static triple-tap slide; S14 is gone. Departures from the rules of
+   `bdlt-media`, both asked for: no bar under the picture, and the chips stand inside it, in
+   the middle of the page, where a tap does nothing. The words in the zones of S03 to S05 are
+   set in semibold, the weight the figure has. The guide decks are 143 kB and 141 kB.
 
 ## Build, check, look
 

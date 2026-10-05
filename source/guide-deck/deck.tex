@@ -70,7 +70,7 @@
   \fill[uzh@blue] (#1,\GY) rectangle ++(\GW/3,\GH*0.75);
   \guideglyph[white]{tap}{#1+\GW/6-2.48}{\GY+1.6}{4.96}{1.5}
   \node[anchor=north, text=white, align=center, text width=9.6cm, inner sep=0pt] at (#1+\GW/6,\GY+7.35)
-    {{\bdltfont{28}{100}\bfseries #2}\\[0.2cm]{\bdltfont{20}{100}#3}};}
+    {{\bdltfont{28}{100}\fontseries{sb}\selectfont #2}\\[0.2cm]{\bdltfont{20}{100}#3}};}
 % \guidezonewide{x}{y}{w}{icon x}{Head}{Sub}{badge}: a zone a quarter of the slide high, hand left of the words
 \newcommand\guidezonewide[7]{%
   \fill[uzh@blue] (#1,#2) rectangle ++(#3,\GH*0.25);
@@ -78,7 +78,7 @@
   \def\guidetmp{#7}%
   \ifx\guidetmp\empty\else \node[anchor=north west, text=white, inner sep=0pt] at (#4+2.6,#2+0.55) {\bdltfont{30}{100}\bfseries #7};\fi
   \node[anchor=west, text=white, align=left, inner sep=0pt] at (#4+\ifx\guidetmp\empty 3.4\else 5.3\fi,#2+\GH*0.125)
-    {\parbox{16cm}{\raggedright{\bdltfont{28}{100}\bfseries #5}\\[0.15cm]{\bdltfont{20}{100}#6}}};}
+    {\parbox{16cm}{\raggedright{\bdltfont{28}{100}\fontseries{sb}\selectfont #5}\\[0.15cm]{\bdltfont{20}{100}#6}}};}
 % \guiderow{y}{row height}{tile size}{x}{text width}{Name}{What it does}: the words next to a tile
 \newcommand\guidewords[5]{%
   \node[anchor=west, align=left, inner sep=0pt] at (#1,#2)
@@ -159,21 +159,11 @@
 \end{frame}
 
 % @slide S06
-\begin{frame}{Triple-tap the lower quarter: slide overview}
-  \begin{bdltdiagram}
-    \guideslidepanel
-    \guidezonewide{\GX}{\GY+\GH*0.75}{\GW}{\GX+\GW*0.22}{Triple-tap here}{Opens the strip of slides; tap one to jump to it}{\texttimes 3}
-  \end{bdltdiagram}
-\end{frame}
-
-% ---------------------------------------------------------------- live: the gestures to try
-% @slide S14
-\begin{frame}
-  \bdltfullimage{Try the gestures}
-    {\guideposter{media/gestures/gestures-poster.tex}{1147}{445}%
-     \bdltwidget[id=gestures, x-figure=gestures, poster=blank-poster.pdf, title={A small screen with the four tap zones}]{figures/guide-figures.html}}
-    {Tap the zones of the small screen, with a finger or the mouse: it answers like the presenter, and each zone lights up.
-     In any other PDF viewer this is a picture.}
+% live: the page of the three slides before, with all four zones. Each answers a tap; the triple tap is here.
+\begin{frame}{The four zones together: try them here}
+  \bdltarea{0.75}{2.42}{32.36}{14.31}
+    {\guideposter{media/gestures/gestures-poster.tex}{1147}{507}%
+     \bdltwidget[id=gestures, x-figure=gestures, poster=blank-poster.pdf, title={This page with its four tap zones}]{figures/guide-figures.html}}
 \end{frame}
 
 % ---------------------------------------------------------------- pinch

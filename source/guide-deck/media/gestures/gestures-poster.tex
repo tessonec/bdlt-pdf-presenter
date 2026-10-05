@@ -1,6 +1,6 @@
-% gestures-poster.tex -- written by make-poster-tikz.mjs from gestures.html (lit=1&p=2&bar=1); do not edit.
-% The poster of the figure, read off the figure in the browser: 26 shapes and 24 lines of text. One unit is one CSS px
-% of the figure (1147 x 445); the length \posterlen says how long it is on the page. Needs \usetikzlibrary{svg.path}.
+% gestures-poster.tex -- written by make-poster-tikz.mjs from gestures.html (lit=1); do not edit.
+% The poster of the figure, read off the figure in the browser: 45 shapes and 13 lines of text. One unit is one CSS px
+% of the figure (1147 x 507); the length \posterlen says how long it is on the page. Needs \usetikzlibrary{svg.path}.
 \begingroup\makeatletter\edef\posterk{\strip@pt\posterlen}\makeatother%
 % \T{anchor}{colour}{x,y}{size in px}{weight and shape}{text}: one line of text; the weights are regular (m), semibold (s) and bold (b)
 \def\T#1#2#3#4#5#6{\node[anchor=#1,inner sep=0pt,outer sep=0pt,text=#2] at (#3) {\fontsize{#4\posterlen}{#4\posterlen}\csname posterface@#5\endcsname\frenchspacing #6};}%
@@ -10,68 +10,72 @@
 \expandafter\def\csname posterface@si\endcsname{\fontseries{sb}\fontshape{it}\selectfont}%
 \expandafter\def\csname posterface@bn\endcsname{\fontseries{b}\fontshape{n}\selectfont}%
 \expandafter\def\csname posterface@bi\endcsname{\fontseries{b}\fontshape{it}\selectfont}%
-\definecolor{pcaa}{RGB}{23,24,28}%
-\definecolor{pcab}{RGB}{255,255,255}%
+\definecolor{pcaa}{RGB}{232,235,243}%
+\definecolor{pcab}{RGB}{164,210,51}%
 \definecolor{pcac}{RGB}{0,0,0}%
-\definecolor{pcad}{RGB}{102,102,102}%
-\definecolor{pcae}{RGB}{164,210,51}%
-\definecolor{pcaf}{RGB}{191,13,62}%
-\definecolor{pcag}{RGB}{255,200,69}%
-\definecolor{pcah}{RGB}{0,40,165}%
-\definecolor{pcai}{RGB}{238,240,243}%
-\definecolor{pcaj}{RGB}{215,215,215}%
-\definecolor{pcak}{RGB}{243,245,251}%
-\definecolor{pcal}{RGB}{199,207,232}%
+\definecolor{pcad}{RGB}{191,13,62}%
+\definecolor{pcae}{RGB}{255,255,255}%
+\definecolor{pcaf}{RGB}{255,200,69}%
+\definecolor{pcag}{RGB}{0,40,165}%
+\definecolor{pcah}{RGB}{201,206,220}%
 \begin{tikzpicture}[x=\posterlen,y=-\posterlen]
-\useasboundingbox (0,0) rectangle (1147,445);%
-\path[fill=pcaa,rounded corners=21.89*\posterk] (10.42,4) rectangle (674.98,390);
-\path[fill=pcab,rounded corners=5.97*\posterk] (24.35,17.93) rectangle (661.05,376.07);
-\T{base}{pcac}{342.7,230.82}{109.43}{sn}{2}
-\T{base}{pcad}{342.7,258.68}{16.91}{mn}{slide 2 of the small deck}
-\path[fill=pcae,fill opacity=0.92,draw=pcae,line width=1.99*\posterk,rounded corners=3.98*\posterk] (25.84,19.42) rectangle (235.09,285.04);
-\T{base}{pcac}{130.47,150.24}{16.91}{sn}{Previous}
-\T{base}{pcac}{130.47,171.13}{14.92}{mn}{tap}
-\path[fill=pcaf,fill opacity=0.92,draw=pcaf,line width=1.99*\posterk,rounded corners=3.98*\posterk] (450.31,19.42) rectangle (659.56,285.04);
-\T{base}{pcab}{554.94,150.24}{16.91}{sn}{Next}
-\T{base}{pcab}{554.94,171.13}{14.92}{mn}{tap}
-\path[fill=pcag,fill opacity=0.92,draw=pcag,line width=1.99*\posterk,rounded corners=3.98*\posterk] (238.08,19.42) rectangle (447.33,105.97);
-\T{base}{pcac}{342.7,74.63}{16.91}{sn}{Toolbar}
-\T{base}{pcac}{342.7,94.53}{14.92}{mn}{tap}
-\path[fill=pcah,fill opacity=0.92,draw=pcah,line width=1.99*\posterk,rounded corners=3.98*\posterk] (25.84,288.03) rectangle (659.56,374.58);
-\T{base}{pcab}{342.7,329.31}{16.91}{sn}{Slide overview}
-\T{base}{pcab}{342.7,350.21}{14.92}{mn}{three quick taps}
-\path[fill=pcaa,rounded corners=7.96*\posterk] (215.36,25.89) rectangle (470.04,51.75);
-\path[fill=pcai] (237.25,38.82) ellipse [x radius=4.48,y radius=4.48];
-\path[fill=pcai] (272.4,38.82) ellipse [x radius=4.48,y radius=4.48];
-\path[fill=pcai] (307.55,38.82) ellipse [x radius=4.48,y radius=4.48];
-\path[fill=pcag] (342.7,38.82) ellipse [x radius=4.48,y radius=4.48];
-\path[fill=pcai] (377.85,38.82) ellipse [x radius=4.48,y radius=4.48];
-\path[fill=pcai] (413.01,38.82) ellipse [x radius=4.48,y radius=4.48];
-\path[fill=pcai] (448.16,38.82) ellipse [x radius=4.48,y radius=4.48];
-\path[fill=pcae,rounded corners=3*\posterk] (693.41,57.25) rectangle (711.41,75.25);
-\T{base west}{pcac}{721.41,72.25}{19}{sn}{Left third}
-\T{base west}{pcac}{721.41,96}{19}{mn}{one tap: the previous slide}
-\path[fill=pcaf,rounded corners=3*\posterk] (693.41,116.75) rectangle (711.41,134.75);
-\T{base west}{pcac}{721.41,131.75}{19}{sn}{Right third}
-\T{base west}{pcac}{721.41,155.5}{19}{mn}{one tap: the next slide}
-\path[fill=pcag,rounded corners=3*\posterk] (693.41,176.25) rectangle (711.41,194.25);
-\T{base west}{pcac}{721.41,191.25}{19}{sn}{Top centre}
-\T{base west}{pcac}{721.41,215}{19}{mn}{one tap: the toolbar, on or off}
-\path[fill=pcah,rounded corners=3*\posterk] (693.41,235.75) rectangle (711.41,253.75);
-\T{base west}{pcac}{721.41,250.75}{19}{sn}{Lower quarter}
-\T{base west}{pcac}{721.41,274.5}{19}{mn}{three quick taps: the slide overview}
-\T{base west}{pcad}{721.41,310.25}{19}{mn}{The middle does nothing, so a stray touch is}
-\T{base west}{pcad}{721.41,334}{19}{mn}{harmless.}
-\path[draw=pcaj,line width=1*\posterk] (0,398.5) -- (1147,398.5);
-\path[fill=pcak,rounded corners=6*\posterk] (10,405) rectangle (52,439);
-\path[draw=pcal,line width=1*\posterk,rounded corners=5.5*\posterk] (10.5,405.5) rectangle (51.5,438.5);
-\path[draw=pcac,line width=1.65*\posterk,line cap=round,line join=round,shift={(20,411)},scale=0.91667*\posterk,yscale=-1] svg {M 6 5 v 14};
-\path[draw=pcac,line width=1.65*\posterk,line cap=round,line join=round,shift={(20,411)},scale=0.91667*\posterk,yscale=-1] svg {M 19 5 l -10 7 10 7 z};
-\path[fill=pcah,rounded corners=6*\posterk] (62,407) rectangle (166,437);
-\T{base}{pcab}{114,428}{18}{sn}{slide 2 / 5}
-\path[fill=pcah,rounded corners=6*\posterk] (176,407) rectangle (279,437);
-\T{base}{pcab}{227.5,428}{18}{sn}{toolbar on}
-\path[fill=pcah,rounded corners=6*\posterk] (289,407) rectangle (435,437);
-\T{base}{pcab}{362,428}{18}{sn}{overview closed}
-\T{base west}{pcac}{445,428}{18}{mn}{Tap a zone of the small screen.}
+\useasboundingbox (0,0) rectangle (1147,507);%
+\path[fill=pcaa] (0,0) rectangle (1147,507);
+\path[fill=pcab,fill opacity=0.92] (0,0) rectangle (382.33,380.25);
+\path[draw=pcac,line width=10.99*\posterk,line cap=round,line join=round,shift={(103.27,56.7)},scale=7.325*\posterk,yscale=-1] svg {M 8 13 v -8.5 a 1.5 1.5 0 0 1 3 0 v 7.5};
+\path[draw=pcac,line width=10.99*\posterk,line cap=round,line join=round,shift={(103.27,56.7)},scale=7.325*\posterk,yscale=-1] svg {M 11 11.5 v -2 a 1.5 1.5 0 0 1 3 0 v 2.5};
+\path[draw=pcac,line width=10.99*\posterk,line cap=round,line join=round,shift={(103.27,56.7)},scale=7.325*\posterk,yscale=-1] svg {M 14 10.5 a 1.5 1.5 0 0 1 3 0 v 1.5};
+\path[draw=pcac,line width=10.99*\posterk,line cap=round,line join=round,shift={(103.27,56.7)},scale=7.325*\posterk,yscale=-1] svg {M 17 11.5 a 1.5 1.5 0 0 1 3 0 v 4.5 a 6 6 0 0 1 -6 6 h -2 h 0.208 a 6 6 0 0 1 -5.012 -2.7 l -0.196 -0.3 c -0.312 -0.479 -1.407 -2.388 -3.286 -5.728 a 1.5 1.5 0 0 1 0.536 -2.022 a 1.867 1.867 0 0 1 2.28 0.28 l 1.47 1.47};
+\path[draw=pcac,line width=10.99*\posterk,line cap=round,line join=round,shift={(103.27,56.7)},scale=7.325*\posterk,yscale=-1] svg {M 5 3 l -1 -1};
+\path[draw=pcac,line width=10.99*\posterk,line cap=round,line join=round,shift={(103.27,56.7)},scale=7.325*\posterk,yscale=-1] svg {M 4 7 h -1};
+\path[draw=pcac,line width=10.99*\posterk,line cap=round,line join=round,shift={(103.27,56.7)},scale=7.325*\posterk,yscale=-1] svg {M 14 3 l 1 -1};
+\path[draw=pcac,line width=10.99*\posterk,line cap=round,line join=round,shift={(103.27,56.7)},scale=7.325*\posterk,yscale=-1] svg {M 15 6 h 1};
+\T{base}{pcac}{191.17,285.4}{35}{sn}{Tap here}
+\T{base}{pcac}{191.17,329.6}{25}{mn}{Previous slide}
+\path[fill=pcad,fill opacity=0.92] (764.67,0) rectangle (1147,380.25);
+\path[draw=pcae,line width=10.99*\posterk,line cap=round,line join=round,shift={(867.93,56.7)},scale=7.325*\posterk,yscale=-1] svg {M 8 13 v -8.5 a 1.5 1.5 0 0 1 3 0 v 7.5};
+\path[draw=pcae,line width=10.99*\posterk,line cap=round,line join=round,shift={(867.93,56.7)},scale=7.325*\posterk,yscale=-1] svg {M 11 11.5 v -2 a 1.5 1.5 0 0 1 3 0 v 2.5};
+\path[draw=pcae,line width=10.99*\posterk,line cap=round,line join=round,shift={(867.93,56.7)},scale=7.325*\posterk,yscale=-1] svg {M 14 10.5 a 1.5 1.5 0 0 1 3 0 v 1.5};
+\path[draw=pcae,line width=10.99*\posterk,line cap=round,line join=round,shift={(867.93,56.7)},scale=7.325*\posterk,yscale=-1] svg {M 17 11.5 a 1.5 1.5 0 0 1 3 0 v 4.5 a 6 6 0 0 1 -6 6 h -2 h 0.208 a 6 6 0 0 1 -5.012 -2.7 l -0.196 -0.3 c -0.312 -0.479 -1.407 -2.388 -3.286 -5.728 a 1.5 1.5 0 0 1 0.536 -2.022 a 1.867 1.867 0 0 1 2.28 0.28 l 1.47 1.47};
+\path[draw=pcae,line width=10.99*\posterk,line cap=round,line join=round,shift={(867.93,56.7)},scale=7.325*\posterk,yscale=-1] svg {M 5 3 l -1 -1};
+\path[draw=pcae,line width=10.99*\posterk,line cap=round,line join=round,shift={(867.93,56.7)},scale=7.325*\posterk,yscale=-1] svg {M 4 7 h -1};
+\path[draw=pcae,line width=10.99*\posterk,line cap=round,line join=round,shift={(867.93,56.7)},scale=7.325*\posterk,yscale=-1] svg {M 14 3 l 1 -1};
+\path[draw=pcae,line width=10.99*\posterk,line cap=round,line join=round,shift={(867.93,56.7)},scale=7.325*\posterk,yscale=-1] svg {M 15 6 h 1};
+\T{base}{pcae}{955.83,285.4}{35}{sn}{Tap here}
+\T{base}{pcae}{955.83,329.6}{25}{mn}{Next slide}
+\path[fill=pcaf,fill opacity=0.92] (382.33,0) rectangle (764.67,126.75);
+\path[draw=pcac,line width=5.71*\posterk,line cap=round,line join=round,shift={(411.75,17.72)},scale=3.81*\posterk,yscale=-1] svg {M 8 13 v -8.5 a 1.5 1.5 0 0 1 3 0 v 7.5};
+\path[draw=pcac,line width=5.71*\posterk,line cap=round,line join=round,shift={(411.75,17.72)},scale=3.81*\posterk,yscale=-1] svg {M 11 11.5 v -2 a 1.5 1.5 0 0 1 3 0 v 2.5};
+\path[draw=pcac,line width=5.71*\posterk,line cap=round,line join=round,shift={(411.75,17.72)},scale=3.81*\posterk,yscale=-1] svg {M 14 10.5 a 1.5 1.5 0 0 1 3 0 v 1.5};
+\path[draw=pcac,line width=5.71*\posterk,line cap=round,line join=round,shift={(411.75,17.72)},scale=3.81*\posterk,yscale=-1] svg {M 17 11.5 a 1.5 1.5 0 0 1 3 0 v 4.5 a 6 6 0 0 1 -6 6 h -2 h 0.208 a 6 6 0 0 1 -5.012 -2.7 l -0.196 -0.3 c -0.312 -0.479 -1.407 -2.388 -3.286 -5.728 a 1.5 1.5 0 0 1 0.536 -2.022 a 1.867 1.867 0 0 1 2.28 0.28 l 1.47 1.47};
+\path[draw=pcac,line width=5.71*\posterk,line cap=round,line join=round,shift={(411.75,17.72)},scale=3.81*\posterk,yscale=-1] svg {M 5 3 l -1 -1};
+\path[draw=pcac,line width=5.71*\posterk,line cap=round,line join=round,shift={(411.75,17.72)},scale=3.81*\posterk,yscale=-1] svg {M 4 7 h -1};
+\path[draw=pcac,line width=5.71*\posterk,line cap=round,line join=round,shift={(411.75,17.72)},scale=3.81*\posterk,yscale=-1] svg {M 14 3 l 1 -1};
+\path[draw=pcac,line width=5.71*\posterk,line cap=round,line join=round,shift={(411.75,17.72)},scale=3.81*\posterk,yscale=-1] svg {M 15 6 h 1};
+\T{base west}{pcac}{532.63,54.3}{35}{sn}{Tap here}
+\T{base west}{pcac}{532.63,96.8}{25}{mn}{Toolbar on or off}
+\path[fill=pcag,fill opacity=0.92] (0,380.25) rectangle (1147,507);
+\path[draw=pcae,line width=5.71*\posterk,line cap=round,line join=round,shift={(252.34,397.97)},scale=3.81*\posterk,yscale=-1] svg {M 8 13 v -8.5 a 1.5 1.5 0 0 1 3 0 v 7.5};
+\path[draw=pcae,line width=5.71*\posterk,line cap=round,line join=round,shift={(252.34,397.97)},scale=3.81*\posterk,yscale=-1] svg {M 11 11.5 v -2 a 1.5 1.5 0 0 1 3 0 v 2.5};
+\path[draw=pcae,line width=5.71*\posterk,line cap=round,line join=round,shift={(252.34,397.97)},scale=3.81*\posterk,yscale=-1] svg {M 14 10.5 a 1.5 1.5 0 0 1 3 0 v 1.5};
+\path[draw=pcae,line width=5.71*\posterk,line cap=round,line join=round,shift={(252.34,397.97)},scale=3.81*\posterk,yscale=-1] svg {M 17 11.5 a 1.5 1.5 0 0 1 3 0 v 4.5 a 6 6 0 0 1 -6 6 h -2 h 0.208 a 6 6 0 0 1 -5.012 -2.7 l -0.196 -0.3 c -0.312 -0.479 -1.407 -2.388 -3.286 -5.728 a 1.5 1.5 0 0 1 0.536 -2.022 a 1.867 1.867 0 0 1 2.28 0.28 l 1.47 1.47};
+\path[draw=pcae,line width=5.71*\posterk,line cap=round,line join=round,shift={(252.34,397.97)},scale=3.81*\posterk,yscale=-1] svg {M 5 3 l -1 -1};
+\path[draw=pcae,line width=5.71*\posterk,line cap=round,line join=round,shift={(252.34,397.97)},scale=3.81*\posterk,yscale=-1] svg {M 4 7 h -1};
+\path[draw=pcae,line width=5.71*\posterk,line cap=round,line join=round,shift={(252.34,397.97)},scale=3.81*\posterk,yscale=-1] svg {M 14 3 l 1 -1};
+\path[draw=pcae,line width=5.71*\posterk,line cap=round,line join=round,shift={(252.34,397.97)},scale=3.81*\posterk,yscale=-1] svg {M 15 6 h 1};
+\T{base west}{pcae}{440.5,432.75}{35}{sn}{Triple-tap here}
+\T{base west}{pcae}{440.5,475.15}{25}{mn}{Opens the strip of slides; tap one to jump to it}
+\path[draw=pcae,line width=3.2*\posterk,shift={(0,0)},scale=1*\posterk,yscale=-1] svg {M 350.9 407.3 l 15.2 15.2 M 366.1 407.3 l -15.2 15.2};
+\T{base west}{pcae}{372.2,424.3}{37.5}{sn}{3}
+\path[draw=pcah,line width=1.25*\posterk] (382.33,0) -- (382.33,380.25);
+\path[draw=pcah,line width=1.25*\posterk] (764.67,0) -- (764.67,380.25);
+\path[draw=pcah,line width=1.25*\posterk] (0,380.25) -- (1147,380.25);
+\path[draw=pcah,line width=1.25*\posterk] (382.33,126.75) -- (764.67,126.75);
+\path[fill=pcag,rounded corners=6*\posterk] (488.5,160.75) rectangle (658.5,190.75);
+\T{base}{pcae}{573.5,182.15}{18}{sn}{slide 1 / 5}
+\path[fill=pcag,rounded corners=6*\posterk] (488.5,198.75) rectangle (658.5,228.75);
+\T{base}{pcae}{573.5,220.15}{18}{sn}{toolbar off}
+\path[fill=pcag,rounded corners=6*\posterk] (488.5,236.75) rectangle (658.5,266.75);
+\T{base}{pcae}{573.5,258.15}{18}{sn}{overview closed}
+\T{base}{pcac}{573.5,302.75}{18}{mn}{Tap a zone.}
 \end{tikzpicture}\endgroup%

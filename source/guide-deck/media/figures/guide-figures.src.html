@@ -22,72 +22,46 @@
 <body>
 <template id="fig-gestures">
 <style>
-  #wrap { position: absolute; inset: 0; display: flex; flex-direction: column; }
-  #main { flex: 1; min-height: 0; display: flex; gap: 18px; padding: 4px 10px 8px; }
-  #screen { flex: 1.5; min-width: 0; position: relative; }
-  #screen > svg { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: pointer; -webkit-user-select: none; user-select: none; }
-  #legend, #rules { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 12px; font-size: 19px; line-height: 1.25; }
-  #legend .row, #rules .row { display: flex; align-items: flex-start; gap: 10px; }
-  #legend .row i { flex: none; width: 18px; height: 18px; margin-top: 3px; border-radius: 3px; }
-  #legend b, #rules b { display: block; }
-  #legend .quiet, #rules .quiet { color: var(--bdlt-ink-2); padding-left: 28px; }
-  #legend[hidden], #rules[hidden] { display: none; }
+  #wrap { position: absolute; inset: 0; }
+  #svg { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: pointer; -webkit-user-select: none; user-select: none; }
   .zone { transition: fill-opacity .55s ease-out; }
   .game .zone { transition: fill-opacity .12s linear; }
   .zone.lit { transition: none; }
   .glow { transition: opacity .7s ease-out; opacity: 0; pointer-events: none; }
   .glow.lit { transition: none; opacity: 1; }
-  .zlabel { font-weight: 600; font-size: 17px; pointer-events: none; }
-  .znote { font-size: 15px; pointer-events: none; }
-  svg text { -webkit-user-select: none; user-select: none; }
+  svg text { pointer-events: none; -webkit-user-select: none; user-select: none; }
+  .head { font-weight: 600; font-size: 35px; }
+  .sub { font-size: 25px; }
+  .times { font-weight: 600; font-size: 37.5px; }
+  .chip text { font-weight: 600; font-size: 18px; fill: #fff; font-variant-numeric: tabular-nums; }
+  #msg { font-size: 18px; fill: #000; }
+  #hint { font-size: 15px; fill: var(--bdlt-ink-2); }
 </style>
-<div id="wrap">
-  <div id="main">
-    <div id="screen"><svg id="svg" role="img" aria-label="A small screen with the four tap zones"></svg></div>
-    <div id="legend">
-      <div class="row"><i style="background:var(--uzh-apple)"></i><span><b>Left third</b>one tap: the previous slide</span></div>
-      <div class="row"><i style="background:var(--uzh-berry)"></i><span><b>Right third</b>one tap: the next slide</span></div>
-      <div class="row"><i style="background:var(--uzh-gold)"></i><span><b>Top centre</b>one tap: the toolbar, on or off</span></div>
-      <div class="row"><i style="background:var(--uzh-blue)"></i><span><b>Lower quarter</b>three quick taps: the slide overview</span></div>
-      <div class="quiet">The middle does nothing, so a stray touch is harmless.</div>
-    </div>
-    <div id="rules" hidden>
-      <div class="row"><span><b>A memory game</b>Watch the lamps, then tap them in the same order.</span></div>
-      <div class="row"><span>Each round adds one lamp. Eight in a row wins.</span></div>
-      <div class="row"><span>You have three seconds for each lamp.</span></div>
-      <div class="quiet" style="padding-left:0">The button at the left of the bar ends the game.</div>
-    </div>
-  </div>
-  <div class="bar">
-    <button id="reset" data-icon="reset" aria-label="Back to the start"></button>
-    <span class="chip" id="cP" data-max="round 8 / 8"></span>
-    <span class="chip" id="cB" data-max="toolbar off"></span>
-    <span class="chip" id="cO" data-max="overview closed"></span>
-    <span class="note" id="msg"></span>
-  </div>
-</div>
+<div id="wrap"><svg id="svg" role="img" aria-label="This page with its four tap zones"></svg></div>
 </template>
 <script type="text/plain" id="code-gestures">
-// ---- the small deck and its zones. Positions are shares of the small slide, as in the presenter:
+// ---- the page and its zones, at the places and sizes of the slides before this one in the guide
+//      deck (deck.tex: \guideslidepanel, \guidezonetall, \guidezonewide; 1 cm there is 35.445 px here):
 //      right and left third (upper three quarters), top quarter of the middle third, lower quarter.
-const N = 5;                                      // slides of the small deck
-const W = 640, H = 360, PAD = 14;                 // px of the drawing: the screen and its bezel
+const N = 5;                                      // slides of the deck the taps are counted on
+const W = 1147, H = 507;                          // px of the drawing: the page
+// the hand of the gesture slides (Tabler Icons "hand-click", MIT; the same path data as make-icons.py)
+const HAND = ['M8 13v-8.5a1.5 1.5 0 0 1 3 0v7.5', 'M11 11.5v-2a1.5 1.5 0 0 1 3 0v2.5', 'M14 10.5a1.5 1.5 0 0 1 3 0v1.5',
+  'M17 11.5a1.5 1.5 0 0 1 3 0v4.5a6 6 0 0 1 -6 6h-2h.208a6 6 0 0 1 -5.012 -2.7l-.196 -.3c-.312 -.479 -1.407 -2.388 -3.286 -5.728a1.5 1.5 0 0 1 .536 -2.022a1.867 1.867 0 0 1 2.28 .28l1.47 1.47',
+  'M5 3l-1 -1', 'M4 7h-1', 'M14 3l1 -1', 'M15 6h1'];
 const ZONES = [
-  { id: 'prev',  x: 0,     y: 0,    w: 1 / 3, h: 0.75, colour: BDLT.hues.apple[0], ink: '#000', label: 'Previous', sub: 'tap' },
-  { id: 'next',  x: 2 / 3, y: 0,    w: 1 / 3, h: 0.75, colour: BDLT.hues.berry[0], ink: '#fff', label: 'Next', sub: 'tap' },
-  { id: 'bar',   x: 1 / 3, y: 0,    w: 1 / 3, h: 0.25, colour: BDLT.hues.gold[0],  ink: '#000', label: 'Toolbar', sub: 'tap' },
-  { id: 'sheet', x: 0,     y: 0.75, w: 1,     h: 0.25, colour: BDLT.hues.blue[0],  ink: '#fff', label: 'Slide overview', sub: 'three quick taps' }
+  { id: 'prev',  x: 0,     y: 0,    w: 1 / 3, h: 0.75, colour: BDLT.hues.apple[0], ink: '#000', head: 'Tap here', sub: 'Previous slide' },
+  { id: 'next',  x: 2 / 3, y: 0,    w: 1 / 3, h: 0.75, colour: BDLT.hues.berry[0], ink: '#fff', head: 'Tap here', sub: 'Next slide' },
+  { id: 'bar',   x: 1 / 3, y: 0,    w: 1 / 3, h: 0.25, colour: BDLT.hues.gold[0],  ink: '#000', head: 'Tap here', sub: 'Toolbar on or off' },
+  { id: 'sheet', x: 0,     y: 0.75, w: 1,     h: 0.25, colour: BDLT.hues.blue[0],  ink: '#fff', head: 'Triple-tap here', sub: 'Opens the strip of slides; tap one to jump to it' }
 ];
 const IDLE = 0.18, LIT = 0.92;                    // how strongly a zone is filled at rest and when it lights up
 const ALL_LIT = bdlt.params.lit === '1';          // the poster: every lamp on, so that the picture reads alone
 const TRIPLE_MS = 450;                            // three taps count as one triple tap within this time, as in the presenter
 
-const svg = d3.select('#svg').attr('viewBox', `0 0 ${W + 2 * PAD} ${H + 2 * PAD}`).attr('preserveAspectRatio', 'xMidYMid meet');
-svg.append('rect').attr('width', W + 2 * PAD).attr('height', H + 2 * PAD).attr('rx', 22).attr('fill', '#17181C');          // the bezel
-const g = svg.append('g').attr('transform', `translate(${PAD},${PAD})`);
-g.append('rect').attr('width', W).attr('height', H).attr('rx', 6).attr('fill', '#fff');                                   // the small slide
-const numeral = g.append('text').attr('x', W / 2).attr('y', H * 0.5 + 34).attr('text-anchor', 'middle').attr('font-size', 110).attr('font-weight', 600).attr('fill', '#000');
-const caption = g.append('text').attr('x', W / 2).attr('y', H * 0.5 + 62).attr('text-anchor', 'middle').attr('font-size', 17).attr('fill', BDLT.ink2);
+const svg = d3.select('#svg').attr('viewBox', `0 0 ${W} ${H}`).attr('preserveAspectRatio', 'xMidYMid meet');
+const g = svg.append('g');
+g.append('rect').attr('width', W).attr('height', H).attr('fill', '#E8EBF3');                                             // the page
 
 // the lamps: a soft halo under each zone (seen only while it lights up), then the zone itself
 const defs = svg.append('defs');
@@ -97,27 +71,41 @@ const glows = g.append('g').selectAll('rect').data(ALL_LIT ? [] : ZONES).join('r
   .attr('x', d => d.x * W).attr('y', d => d.y * H).attr('width', d => d.w * W).attr('height', d => d.h * H)
   .attr('fill', d => d.colour).attr('filter', 'url(#halo)');
 const zones = g.append('g').selectAll('g').data(ZONES).join('g');
-zones.append('rect').attr('class', 'zone').attr('x', d => d.x * W + 1.5).attr('y', d => d.y * H + 1.5)
-  .attr('width', d => d.w * W - 3).attr('height', d => d.h * H - 3).attr('rx', 4)
-  .attr('fill', d => d.colour).attr('fill-opacity', ALL_LIT ? LIT : IDLE).attr('stroke', d => d.colour).attr('stroke-width', 2);
-zones.append('text').attr('class', 'zlabel').attr('text-anchor', 'middle')
-  .attr('x', d => (d.x + d.w / 2) * W).attr('y', d => (d.y + d.h / 2) * H - 2 + (d.id === 'bar' ? 14 : 0)).text(d => d.label);
-zones.append('text').attr('class', 'znote').attr('text-anchor', 'middle')
-  .attr('x', d => (d.x + d.w / 2) * W).attr('y', d => (d.y + d.h / 2) * H + 19 + (d.id === 'bar' ? 13 : 0)).text(d => d.sub);
+zones.append('rect').attr('class', 'zone').attr('x', d => d.x * W).attr('y', d => d.y * H).attr('width', d => d.w * W).attr('height', d => d.h * H)
+  .attr('fill', d => d.colour).attr('fill-opacity', ALL_LIT ? LIT : IDLE);
+// in each zone: the hand and the words. Tall zones have the hand above the words, wide ones to their left.
+const labels = zones.append('g').attr('class', 'label');
+const tall = d => d.h > 0.5, X0 = d => d.x * W, Y0 = d => d.y * H;
+const handAt = d => (tall(d) ? [X0(d) + d.w * W / 2 - 87.9, 56.7, 7.325] : [d.id === 'sheet' ? 0.22 * W : X0(d) + 29.42, Y0(d) + 17.72, 3.81]);
+const hands = labels.append('g').attr('class', 'hand').attr('transform', d => { const q = handAt(d); return `translate(${q[0]},${q[1]}) scale(${q[2]})`; })
+  .attr('fill', 'none').attr('stroke-width', 1.5).attr('stroke-linecap', 'round').attr('stroke-linejoin', 'round');
+HAND.forEach(p => hands.append('path').attr('d', p));
+const wordsX = d => (tall(d) ? X0(d) + d.w * W / 2 : d.id === 'sheet' ? 440.5 : X0(d) + 150.3);
+labels.append('text').attr('class', 'head').attr('text-anchor', d => (tall(d) ? 'middle' : 'start')).attr('x', wordsX).attr('y', d => (tall(d) ? 285.4 : Y0(d) + (d.id === 'sheet' ? 52.5 : 54.3))).text(d => d.head);
+labels.append('text').attr('class', 'sub').attr('text-anchor', d => (tall(d) ? 'middle' : 'start')).attr('x', wordsX).attr('y', d => (tall(d) ? 329.6 : Y0(d) + (d.id === 'sheet' ? 94.9 : 96.8))).text(d => d.sub);
+// "x 3" next to the hand of the lower quarter; the cross is drawn, so that it looks the same in the poster
+const times = labels.filter(d => d.id === 'sheet');
+times.append('path').attr('class', 'hand').attr('fill', 'none').attr('stroke-width', 3.2).attr('d', 'M350.9 407.3l15.2 15.2M366.1 407.3l-15.2 15.2');
+times.append('text').attr('class', 'times').attr('x', 372.2).attr('y', 424.3).text('3');
 const ink = (d, lit) => (lit ? d.ink : '#000');
-zones.selectAll('text').attr('fill', d => ink(d, ALL_LIT));
+function inkOf(sel, lit) { sel.selectAll('text').attr('fill', d => ink(d, lit)); sel.selectAll('.hand').attr('stroke', d => ink(d, lit)); }
+inkOf(zones, ALL_LIT);
+// thin lines between the zones, as on the slides before
+g.append('g').attr('stroke', '#C9CEDC').attr('stroke-width', 1.25).attr('pointer-events', 'none').selectAll('line')
+  .data([[W / 3, 0, W / 3, 0.75 * H], [2 * W / 3, 0, 2 * W / 3, 0.75 * H], [0, 0.75 * H, W, 0.75 * H], [W / 3, 0.25 * H, 2 * W / 3, 0.25 * H]])
+  .join('line').attr('x1', d => d[0]).attr('y1', d => d[1]).attr('x2', d => d[2]).attr('y2', d => d[3]);
 
-// the small toolbar (top centre) and the small overview (a strip of the slides along the lower edge)
-const tool = g.append('g').attr('pointer-events', 'none');
-tool.append('rect').attr('x', W * 0.3).attr('y', 8).attr('width', W * 0.4).attr('height', 26).attr('rx', 8).attr('fill', '#17181C');
-tool.selectAll('circle').data([0, 1, 2, 3, 4, 5, 6]).join('circle').attr('cx', i => W * 0.3 + 22 + i * (W * 0.4 - 44) / 6).attr('cy', 21).attr('r', 4.5)
-  .attr('fill', i => (i === 3 ? BDLT.hues.gold[0] : '#EEF0F3'));
-const sheet = g.append('g');
-sheet.append('rect').attr('x', 0).attr('y', H * 0.7).attr('width', W).attr('height', H * 0.3).attr('fill', '#17181C');
-const TW = 96, TH = 54, TGAP = 18, TX0 = (W - N * TW - (N - 1) * TGAP) / 2, TY = H * 0.7 + (H * 0.3 - TH) / 2;
-const thumbs = sheet.selectAll('g').data(Array.from({ length: N }, (_, i) => i + 1)).join('g').attr('transform', i => `translate(${TX0 + (i - 1) * (TW + TGAP)},${TY})`);
-thumbs.append('rect').attr('width', TW).attr('height', TH).attr('rx', 3).attr('fill', '#fff').attr('stroke-width', 4);
-thumbs.append('text').attr('x', TW / 2).attr('y', TH / 2 + 9).attr('text-anchor', 'middle').attr('font-size', 26).attr('font-weight', 600).attr('fill', '#000').text(i => i);
+// the middle of the page does nothing, so what the taps did stands there: three chips of fixed width and a few words
+const mid = g.append('g').attr('pointer-events', 'none');
+const CHIP_W = 170, CHIP_H = 30, CHIP_Y = 0.25 * H + 34;
+const chipText = ['cP', 'cB', 'cO'].map((id, i) => {
+  const c = mid.append('g').attr('class', 'chip').attr('id', id).attr('transform', `translate(${W / 2 - CHIP_W / 2},${CHIP_Y + i * (CHIP_H + 8)})`);
+  c.append('rect').attr('width', CHIP_W).attr('height', CHIP_H).attr('rx', 6).attr('fill', BDLT.hues.blue[0]);
+  return c.append('text').attr('x', CHIP_W / 2).attr('y', 21.4).attr('text-anchor', 'middle');
+});
+const chip = (i, t) => { if (chipText[i].text() !== t) chipText[i].text(t); };
+const msg = mid.append('text').attr('id', 'msg').attr('x', W / 2).attr('y', CHIP_Y + 3 * (CHIP_H + 8) + 28).attr('text-anchor', 'middle');
+const hint = mid.append('text').attr('id', 'hint').attr('x', W / 2).attr('y', CHIP_Y + 3 * (CHIP_H + 8) + 54).attr('text-anchor', 'middle');
 
 // ---- what a tap does: one function from the state and the place of the tap to the next state.
 //      p: slide, bar: toolbar shown, sheet: overview open, taps: taps counted in the lower quarter,
@@ -128,12 +116,9 @@ function zoneAt(fx, fy) {
   if (fx > 2 / 3) return 'next';
   return fy < 0.25 ? 'bar' : null;
 }
-function tapped(s, fx, fy, thumb) {
-  const n = { ...s, k: s.k + 1, hit: null, taps: 0, pick: 0 };
-  if (s.sheet) {                                   // overview open: a tap on a small slide jumps to it, any other tap closes it
-    if (thumb) return { ...n, p: thumb, sheet: false, msg: 'pick', pick: thumb };
-    return { ...n, sheet: false, msg: 'close' };
-  }
+function tapped(s, fx, fy) {
+  const n = { ...s, k: s.k + 1, hit: null, taps: 0 };
+  if (s.sheet) return { ...n, sheet: false, msg: 'close' };          // overview open: the next tap closes it
   const z = zoneAt(fx, fy);
   if (z === 'next') return { ...n, hit: z, p: Math.min(N, s.p + 1), msg: s.p < N ? 'next' : 'last' };
   if (z === 'prev') return { ...n, hit: z, p: Math.max(1, s.p - 1), msg: s.p > 1 ? 'prev' : 'first' };
@@ -145,13 +130,13 @@ function tapped(s, fx, fy, thumb) {
   return { ...n, msg: 'middle' };
 }
 const WORDS = {
-  start: 'Tap a zone of the small screen.',
+  start: 'Tap a zone.',
   next: 'Right third: the next slide.', last: 'Right third: this is the last slide.',
   prev: 'Left third: the previous slide.', first: 'Left third: this is the first slide.',
   baron: 'Top centre: the toolbar shows.', baroff: 'Top centre: the toolbar hides.',
   tap1: 'Lower quarter: two more quick taps.', tap2: 'Lower quarter: one more quick tap.',
   slow: 'The overview needs three quick taps.', sheet: 'Three taps: the slide overview opens.',
-  pick: 'Overview: a tap on a slide jumps to it.', close: 'A tap outside closes the overview.',
+  close: 'The next tap closes the overview.',
   middle: 'The middle does nothing.'
 };
 
@@ -168,11 +153,6 @@ const TONE = { prev: 415, next: 310, bar: 252, sheet: 209 };            // Hz
 const WIN_AT = 8, ANSWER_MS = 3000, LOSE_HZ = 42, LOSE_MS = 1500, GAP_MS = 50, PRESS_MS = 260;
 const lampMs = n => (n <= 5 ? 420 : 320);
 const SOUND = bdlt.params.sound !== '0';
-// in the game the zones become four pads around a small display (shares of the small slide)
-const PADS = { prev: [0.04, 0.2, 0.26, 0.6], next: [0.70, 0.2, 0.26, 0.6], bar: [0.34, 0.06, 0.32, 0.26], sheet: [0.34, 0.68, 0.32, 0.26] };
-const box = (d, game) => (game ? { x: PADS[d.id][0] * W, y: PADS[d.id][1] * H, w: PADS[d.id][2] * W, h: PADS[d.id][3] * H, r: 16 }
-                               : { x: d.x * W + 1.5, y: d.y * H + 1.5, w: d.w * W - 3, h: d.h * H - 3, r: 4 });
-const padAt = (fx, fy) => { for (const id in PADS) { const q = PADS[id]; if (fx >= q[0] && fx <= q[0] + q[2] && fy >= q[1] && fy <= q[1] + q[3]) return id; } return null; };
 const GAME_WORDS = {
   show: 'Zapateo! Watch the lamps.', input: 'Your turn: repeat them.',
   won: 'Eight in a row. Tap a lamp to play again.',
@@ -199,62 +179,47 @@ function tone(hz) {
 let shownK = null, shownGame = null;
 function draw(s) {
   const game = !!s.g;
-  if (game !== shownGame) {                        // the screen changes between the small deck and the game
-    const initial = shownGame === null, move = sel => (initial ? sel : sel.transition().duration(450));
-    svg.classed('game', game);
-    move(g.select('rect')).attr('fill', game ? '#17181C' : '#fff');
-    [zones.select('rect'), glows].forEach(sel => move(sel).attr('x', d => box(d, game).x).attr('y', d => box(d, game).y)
-      .attr('width', d => box(d, game).w).attr('height', d => box(d, game).h).attr('rx', d => box(d, game).r));
-    zones.selectAll('text').attr('display', game ? 'none' : null);
-    numeral.attr('font-size', game ? 72 : 110).attr('y', H * 0.5 + (game ? 14 : 34)).attr('fill', game ? '#fff' : '#000');
-    caption.attr('y', H * 0.5 + (game ? 40 : 62)).attr('fill', game ? '#EEF0F3' : BDLT.ink2);
-    document.getElementById('legend').hidden = game; document.getElementById('rules').hidden = !game;
-    shownGame = game;
+  if (game !== shownGame) {                        // in the game the zones are four lamps: the hands and words go
+    svg.classed('game', game); labels.attr('display', game ? 'none' : null); shownGame = game;
   }
   if (game) {
     const q = s.g, why = q.ph === 'lost' ? q.why : q.ph;
-    numeral.text(q.n); caption.text(q.ph === 'show' ? 'watch' : q.ph === 'input' ? 'your turn' : q.ph === 'won' ? 'well done' : 'try again');
-    tool.attr('display', 'none'); sheet.attr('display', 'none');
     zones.select('rect').classed('lit', false).attr('fill-opacity', d => (d.id === q.on ? 1 : 0.3));
     glows.classed('lit', d => d.id === q.on);
-    BDLT.chip('cP', 'round ' + q.n + ' / ' + WIN_AT);
-    BDLT.chip('cB', q.ph === 'show' ? 'watch' : q.ph === 'input' ? 'your turn' : q.ph === 'won' ? 'well done' : 'try again');
-    BDLT.chip('cO', 'best ' + (s.best || 0));
-    document.getElementById('msg').textContent = GAME_WORDS[why] || '';
+    chip(0, 'round ' + q.n + ' / ' + WIN_AT);
+    chip(1, q.ph === 'show' ? 'watch' : q.ph === 'input' ? 'your turn' : q.ph === 'won' ? 'well done' : 'try again');
+    chip(2, 'best ' + (s.best || 0));
+    msg.text(GAME_WORDS[why] || ''); hint.text('Tap the middle to end the game.');
     const want = q.bz ? 'lose' : q.on;               // what should sound now
     if (want !== sounding) { sounding = want; tone(want === 'lose' ? LOSE_HZ : TONE[want] || 0); }
     shownK = s.k; return;
   }
   if (sounding) { sounding = null; tone(0); }
-  numeral.text(s.p); caption.text('slide ' + s.p + ' of the small deck');
-  tool.attr('display', s.bar ? null : 'none');
-  sheet.attr('display', s.sheet ? null : 'none');
-  thumbs.select('rect').attr('stroke', i => (i === s.p ? BDLT.hues.gold[0] : 'none'));
-  BDLT.chip('cP', 'slide ' + s.p + ' / ' + N);
-  BDLT.chip('cB', s.bar ? 'toolbar on' : 'toolbar off');
-  BDLT.chip('cO', s.sheet ? 'overview open' : 'overview closed');
-  document.getElementById('msg').textContent = WORDS[s.msg] || '';
+  chip(0, 'slide ' + s.p + ' / ' + N);
+  chip(1, s.bar ? 'toolbar on' : 'toolbar off');
+  chip(2, s.sheet ? 'overview open' : 'overview closed');
+  msg.text(WORDS[s.msg] || ''); hint.text('');
   zones.select('rect').filter(d => !(shownK !== null && s.k !== shownK && d.id === s.hit)).attr('fill-opacity', ALL_LIT ? LIT : IDLE);
   // the lamp: lights at once when k is new, then fades (the transition is in the style sheet)
   if (!ALL_LIT && shownK !== null && s.k !== shownK && s.hit) {
     const on = d => d.id === s.hit;
     zones.select('rect').filter(on).classed('lit', true).attr('fill-opacity', LIT);
-    zones.selectAll('text').filter(on).attr('fill', d => ink(d, true));
+    inkOf(zones.filter(on), true);
     glows.filter(on).classed('lit', true);
     requestAnimationFrame(() => requestAnimationFrame(() => {
       zones.select('rect').filter(on).classed('lit', false).attr('fill-opacity', IDLE);
       glows.filter(on).classed('lit', false);
-      setTimeout(() => { if (shownK === s.k) zones.selectAll('text').filter(on).attr('fill', d => ink(d, false)); }, 260);
+      setTimeout(() => { if (shownK === s.k) inkOf(zones.filter(on), false); }, 260);
     }));
   }
   shownK = s.k;
 }
 
-// ---- state: {p, bar, sheet, taps, hit, k, msg, pick}, and in the game g: {seq, n, ph, i, on, bz, why} and best.
+// ---- state: {p, bar, sheet, taps, hit, k, msg}, and in the game g: {seq, n, ph, i, on, bz, why} and best.
 //      Only the lecturer's (or the single) copy changes it.
 const S = () => bdlt.state;
 const first = () => ({ p: Math.min(N, Math.max(1, parseInt(bdlt.params.p || '1', 10))), bar: bdlt.params.bar === '1', sheet: bdlt.params.sheet === '1',
-                       taps: 0, hit: null, k: 0, msg: 'start', pick: 0 });
+                       taps: 0, hit: null, k: 0, msg: 'start' });
 // the game is run by the clock of the copy that is operated; a new "run" number stops the timers of an earlier game
 let run = 0, answerTimer = null, recent = [];
 const later = (ms, f) => { const r = run; setTimeout(() => { if (r === run && S() && S().g) f(); }, ms); };
@@ -299,22 +264,20 @@ function press(id) {                                // a tap on a pad during the
   });
 }
 let tripleTimer = null;
+const leave = () => { run++; clearTimeout(answerTimer); recent = []; };
+const endGame = () => { leave(); bdlt.setState({ ...first(), p: 1, bar: false, sheet: false, k: S().k + 1, best: S().best || 0 }); };
 document.getElementById('svg').addEventListener('pointerdown', e => {
   if (bdlt.role === 'projector' || (e.pointerType === 'mouse' && e.button !== 0)) return;
   e.preventDefault();
   const r = g.select('rect').node().getBoundingClientRect();
   const fx = (e.clientX - r.left) / r.width, fy = (e.clientY - r.top) / r.height;
-  if (fx < 0 || fx > 1 || fy < 0 || fy > 1) return;                       // the bezel
-  if (S().g) return press(padAt(fx, fy));
-  let thumb = 0;
-  if (S().sheet) thumbs.each(function (i) { const b = this.getBoundingClientRect(); if (e.clientX >= b.left && e.clientX <= b.right && e.clientY >= b.top && e.clientY <= b.bottom) thumb = i; });
-  const next = tapped(S(), fx, fy, thumb);
+  if (fx < 0 || fx > 1 || fy < 0 || fy > 1) return;
+  if (S().g) { const z = zoneAt(fx, fy); return z ? press(z) : endGame(); }      // in the game the zones are the lamps; the middle ends it
+  const next = tapped(S(), fx, fy);
   recent = recent.concat(next.hit || '-').slice(-SECRET.length);
   if (recent.join() === SECRET.join()) { recent = []; return startGame(); }
   bdlt.setState(next);
 });
-const leave = () => { run++; clearTimeout(answerTimer); recent = []; };
-document.getElementById('reset').onclick = () => { leave(); bdlt.setState({ ...first(), p: 1, bar: false, sheet: false, k: S().k + 1, best: S().best || 0 }); };
 bdlt.onState(s => {
   draw(s);
   // taps in the lower quarter that do not become three in time are forgotten (the clock runs in one copy only)
@@ -322,11 +285,11 @@ bdlt.onState(s => {
   if (bdlt.role !== 'projector' && !s.g && s.taps > 0)
     tripleTimer = setTimeout(() => { const c = S(); if (c.taps > 0 && !c.g) bdlt.setState({ ...c, taps: 0, hit: null, msg: 'slow' }); }, TRIPLE_MS);
 });
-// when the slide is left, a game ends: the small deck is back on return
+// when the slide is left, a game ends: the zones are back on return
 bdlt.onHide(() => { clearTimeout(tripleTimer); tripleTimer = null; tone(0); sounding = null;
   if (bdlt.role !== 'projector' && S() && S().g) { leave(); bdlt.setState({ ...first(), k: S().k + 1, best: S().best || 0 }); } });
 if ('ResizeObserver' in window) new ResizeObserver(() => S() && draw(S())).observe(document.getElementById('wrap'));
-BDLT.whenFonts(() => { BDLT.sizeChips(); if (S()) draw(S()); });
+BDLT.whenFonts(() => { if (S()) draw(S()); });
 
 bdlt.setState(bdlt.state || first());
 </script>
