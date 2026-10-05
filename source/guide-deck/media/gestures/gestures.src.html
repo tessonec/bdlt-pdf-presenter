@@ -26,12 +26,14 @@
   #main { flex: 1; min-height: 0; display: flex; gap: 18px; padding: 4px 10px 8px; }
   #screen { flex: 1.5; min-width: 0; position: relative; }
   #screen > svg { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: pointer; -webkit-user-select: none; user-select: none; }
-  #legend { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 12px; font-size: 19px; line-height: 1.25; }
-  #legend .row { display: flex; align-items: flex-start; gap: 10px; }
+  #legend, #rules { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 12px; font-size: 19px; line-height: 1.25; }
+  #legend .row, #rules .row { display: flex; align-items: flex-start; gap: 10px; }
   #legend .row i { flex: none; width: 18px; height: 18px; margin-top: 3px; border-radius: 3px; }
-  #legend b { display: block; }
-  #legend .quiet { color: var(--bdlt-ink-2); padding-left: 28px; }
+  #legend b, #rules b { display: block; }
+  #legend .quiet, #rules .quiet { color: var(--bdlt-ink-2); padding-left: 28px; }
+  #legend[hidden], #rules[hidden] { display: none; }
   .zone { transition: fill-opacity .55s ease-out; }
+  .game .zone { transition: fill-opacity .12s linear; }
   .zone.lit { transition: none; }
   .glow { transition: opacity .7s ease-out; opacity: 0; pointer-events: none; }
   .glow.lit { transition: none; opacity: 1; }
@@ -51,10 +53,16 @@
       <div class="row"><i style="background:var(--uzh-blue)"></i><span><b>Lower quarter</b>three quick taps: the slide overview</span></div>
       <div class="quiet">The middle does nothing, so a stray touch is harmless.</div>
     </div>
+    <div id="rules" hidden>
+      <div class="row"><span><b>A memory game</b>Watch the lamps, then tap them in the same order.</span></div>
+      <div class="row"><span>Each round adds one lamp. Eight in a row wins.</span></div>
+      <div class="row"><span>You have three seconds for each lamp.</span></div>
+      <div class="quiet" style="padding-left:0">The button at the left of the bar ends the game.</div>
+    </div>
   </div>
   <div class="bar">
     <button id="reset" data-icon="reset" aria-label="Back to the start"></button>
-    <span class="chip" id="cP" data-max="slide 5 / 5"></span>
+    <span class="chip" id="cP" data-max="round 8 / 8"></span>
     <span class="chip" id="cB" data-max="toolbar off"></span>
     <span class="chip" id="cO" data-max="overview closed"></span>
     <span class="note" id="msg"></span>
@@ -151,8 +159,77 @@ const WORDS = {
   middle: 'The middle does nothing.'
 };
 
-let shownK = null;
+// ---- hidden: a memory game on the four lamps, after the electronic game of 1978 that the lamps are a
+//      nod to. It starts with the taps of a zapateo: right, right, left, right, right. The lamps then play a
+//      growing sequence, each with its tone, and the player repeats it; eight in a row win.
+//      Tones (square waves), times and the signals for winning and losing are those measured on the
+//      original game (waitingforfriday.com, "Reverse engineering an MB Electronic Simon game"):
+//      green 415 Hz, red 310 Hz, yellow 252 Hz, blue 209 Hz; 0.42 s per lamp up to five lamps and
+//      0.32 s from six on, 0.05 s between them; three seconds to answer; losing: 42 Hz for 1.5 s;
+//      winning: six short beeps of the last lamp.
+const SECRET = ['next', 'next', 'prev', 'next', 'next'];
+const TONE = { prev: 415, next: 310, bar: 252, sheet: 209 };            // Hz
+const WIN_AT = 8, ANSWER_MS = 3000, LOSE_HZ = 42, LOSE_MS = 1500, GAP_MS = 50, PRESS_MS = 260;
+const lampMs = n => (n <= 5 ? 420 : 320);
+const SOUND = bdlt.params.sound !== '0';
+// in the game the zones become four pads around a small display (shares of the small slide)
+const PADS = { prev: [0.04, 0.2, 0.26, 0.6], next: [0.70, 0.2, 0.26, 0.6], bar: [0.34, 0.06, 0.32, 0.26], sheet: [0.34, 0.68, 0.32, 0.26] };
+const box = (d, game) => (game ? { x: PADS[d.id][0] * W, y: PADS[d.id][1] * H, w: PADS[d.id][2] * W, h: PADS[d.id][3] * H, r: 16 }
+                               : { x: d.x * W + 1.5, y: d.y * H + 1.5, w: d.w * W - 3, h: d.h * H - 3, r: 4 });
+const padAt = (fx, fy) => { for (const id in PADS) { const q = PADS[id]; if (fx >= q[0] && fx <= q[0] + q[2] && fy >= q[1] && fy <= q[1] + q[3]) return id; } return null; };
+const GAME_WORDS = {
+  show: 'Zapateo! Watch the lamps.', input: 'Your turn: repeat them.',
+  won: 'Eight in a row. Tap a lamp to play again.',
+  wrong: 'Wrong lamp. Tap a lamp to start again.', slow: 'Too slow. Tap a lamp to start again.'
+};
+
+// sound: one square wave at a time, only in the copy that is operated (never in the projector's)
+let actx = null, osc = null, sounding = null;
+function audio() {
+  if (!SOUND || bdlt.role === 'projector') return null;
+  if (!actx) { const A = window.AudioContext || window.webkitAudioContext; if (!A) return null; try { actx = new A(); } catch (e) { return null; } }
+  if (actx.state === 'suspended') actx.resume();
+  return actx;
+}
+function tone(hz) {
+  if (osc) { try { osc.stop(); } catch (e) {} osc.disconnect(); osc = null; }
+  const a = hz ? audio() : null; if (!a) return;
+  const gain = a.createGain(); gain.gain.value = 0.07;
+  osc = a.createOscillator(); osc.type = 'square'; osc.frequency.value = hz; osc.connect(gain); gain.connect(a.destination); osc.start();
+}
+// browsers let a page sound only after a touch has ended: the context is made then
+['pointerup', 'click', 'touchend'].forEach(t => addEventListener(t, () => { if (S() && S().g) audio(); }, true));
+
+let shownK = null, shownGame = null;
 function draw(s) {
+  const game = !!s.g;
+  if (game !== shownGame) {                        // the screen changes between the small deck and the game
+    const initial = shownGame === null, move = sel => (initial ? sel : sel.transition().duration(450));
+    svg.classed('game', game);
+    move(g.select('rect')).attr('fill', game ? '#17181C' : '#fff');
+    [zones.select('rect'), glows].forEach(sel => move(sel).attr('x', d => box(d, game).x).attr('y', d => box(d, game).y)
+      .attr('width', d => box(d, game).w).attr('height', d => box(d, game).h).attr('rx', d => box(d, game).r));
+    zones.selectAll('text').attr('display', game ? 'none' : null);
+    numeral.attr('font-size', game ? 72 : 110).attr('y', H * 0.5 + (game ? 14 : 34)).attr('fill', game ? '#fff' : '#000');
+    caption.attr('y', H * 0.5 + (game ? 40 : 62)).attr('fill', game ? '#EEF0F3' : BDLT.ink2);
+    document.getElementById('legend').hidden = game; document.getElementById('rules').hidden = !game;
+    shownGame = game;
+  }
+  if (game) {
+    const q = s.g, why = q.ph === 'lost' ? q.why : q.ph;
+    numeral.text(q.n); caption.text(q.ph === 'show' ? 'watch' : q.ph === 'input' ? 'your turn' : q.ph === 'won' ? 'well done' : 'try again');
+    tool.attr('display', 'none'); sheet.attr('display', 'none');
+    zones.select('rect').classed('lit', false).attr('fill-opacity', d => (d.id === q.on ? 1 : 0.3));
+    glows.classed('lit', d => d.id === q.on);
+    BDLT.chip('cP', 'round ' + q.n + ' / ' + WIN_AT);
+    BDLT.chip('cB', q.ph === 'show' ? 'watch' : q.ph === 'input' ? 'your turn' : q.ph === 'won' ? 'well done' : 'try again');
+    BDLT.chip('cO', 'best ' + (s.best || 0));
+    document.getElementById('msg').textContent = GAME_WORDS[why] || '';
+    const want = q.bz ? 'lose' : q.on;               // what should sound now
+    if (want !== sounding) { sounding = want; tone(want === 'lose' ? LOSE_HZ : TONE[want] || 0); }
+    shownK = s.k; return;
+  }
+  if (sounding) { sounding = null; tone(0); }
   numeral.text(s.p); caption.text('slide ' + s.p + ' of the small deck');
   tool.attr('display', s.bar ? null : 'none');
   sheet.attr('display', s.sheet ? null : 'none');
@@ -161,6 +238,7 @@ function draw(s) {
   BDLT.chip('cB', s.bar ? 'toolbar on' : 'toolbar off');
   BDLT.chip('cO', s.sheet ? 'overview open' : 'overview closed');
   document.getElementById('msg').textContent = WORDS[s.msg] || '';
+  zones.select('rect').filter(d => !(shownK !== null && s.k !== shownK && d.id === s.hit)).attr('fill-opacity', ALL_LIT ? LIT : IDLE);
   // the lamp: lights at once when k is new, then fades (the transition is in the style sheet)
   if (!ALL_LIT && shownK !== null && s.k !== shownK && s.hit) {
     const on = d => d.id === s.hit;
@@ -176,30 +254,81 @@ function draw(s) {
   shownK = s.k;
 }
 
-// ---- state: {p, bar, sheet, taps, hit, k, msg, pick}. Only the lecturer's (or the single) copy changes it.
+// ---- state: {p, bar, sheet, taps, hit, k, msg, pick}, and in the game g: {seq, n, ph, i, on, bz, why} and best.
+//      Only the lecturer's (or the single) copy changes it.
 const S = () => bdlt.state;
 const first = () => ({ p: Math.min(N, Math.max(1, parseInt(bdlt.params.p || '1', 10))), bar: bdlt.params.bar === '1', sheet: bdlt.params.sheet === '1',
                        taps: 0, hit: null, k: 0, msg: 'start', pick: 0 });
+// the game is run by the clock of the copy that is operated; a new "run" number stops the timers of an earlier game
+let run = 0, answerTimer = null, recent = [];
+const later = (ms, f) => { const r = run; setTimeout(() => { if (r === run && S() && S().g) f(); }, ms); };
+const setG = (q, more) => bdlt.setState({ ...S(), ...more, k: S().k + 1, g: q });
+function startGame() {
+  run++; clearTimeout(answerTimer);
+  const seq = Array.from({ length: WIN_AT }, () => ZONES[Math.floor(Math.random() * ZONES.length)].id);     // drawn once, kept in the state
+  setG({ seq, n: 1, ph: 'show', i: 0, on: null, bz: false, why: '' }, { hit: null, taps: 0, bar: false, sheet: false });
+  later(900, () => showLamp(0));
+}
+function showLamp(j) {
+  setG({ ...S().g, ph: 'show', i: j, on: S().g.seq[j] });
+  later(lampMs(S().g.n), () => {
+    setG({ ...S().g, on: null });
+    later(GAP_MS, () => { if (j + 1 < S().g.n) showLamp(j + 1); else { setG({ ...S().g, ph: 'input', i: 0 }); arm(); } });
+  });
+}
+function arm() { clearTimeout(answerTimer); const r = run; answerTimer = setTimeout(() => { if (r === run && S().g && S().g.ph === 'input') lose('slow'); }, ANSWER_MS); }
+function lose(why) {
+  clearTimeout(answerTimer); run++;
+  setG({ ...S().g, ph: 'lost', on: null, bz: true, why });
+  later(LOSE_MS, () => setG({ ...S().g, bz: false }));
+}
+function win() {                                    // six short beeps of the last lamp: 0.02 s, then five of 0.07 s, 0.02 s apart
+  const q = S().g, last = q.seq[q.n - 1]; let t = 300;
+  [20, 70, 70, 70, 70, 70].forEach(ms => { later(t, () => setG({ ...S().g, on: last })); later(t + ms, () => setG({ ...S().g, on: null })); t += ms + 20; });
+  later(t + 100, () => setG({ ...S().g, ph: 'won' }));
+}
+function press(id) {                                // a tap on a pad during the game
+  const q = S().g;
+  if (q.ph === 'won' || (q.ph === 'lost' && !q.bz)) return startGame();
+  if (q.ph !== 'input' || !id) return;
+  if (id !== q.seq[q.i]) return lose('wrong');
+  clearTimeout(answerTimer);
+  const i = q.i + 1, done = i === q.n;
+  setG({ ...q, i, on: id, ph: done ? 'show' : 'input' }, { best: Math.max(S().best || 0, done ? q.n : 0) });
+  later(PRESS_MS, () => {
+    setG({ ...S().g, on: null });
+    if (!done) return arm();
+    if (q.n === WIN_AT) return win();
+    later(800, () => { setG({ ...S().g, n: q.n + 1 }); showLamp(0); });
+  });
+}
 let tripleTimer = null;
 document.getElementById('svg').addEventListener('pointerdown', e => {
   if (bdlt.role === 'projector' || (e.pointerType === 'mouse' && e.button !== 0)) return;
   e.preventDefault();
-  const box = g.select('rect').node().getBoundingClientRect();
-  const fx = (e.clientX - box.left) / box.width, fy = (e.clientY - box.top) / box.height;
+  const r = g.select('rect').node().getBoundingClientRect();
+  const fx = (e.clientX - r.left) / r.width, fy = (e.clientY - r.top) / r.height;
   if (fx < 0 || fx > 1 || fy < 0 || fy > 1) return;                       // the bezel
+  if (S().g) return press(padAt(fx, fy));
   let thumb = 0;
   if (S().sheet) thumbs.each(function (i) { const b = this.getBoundingClientRect(); if (e.clientX >= b.left && e.clientX <= b.right && e.clientY >= b.top && e.clientY <= b.bottom) thumb = i; });
-  bdlt.setState(tapped(S(), fx, fy, thumb));
+  const next = tapped(S(), fx, fy, thumb);
+  recent = recent.concat(next.hit || '-').slice(-SECRET.length);
+  if (recent.join() === SECRET.join()) { recent = []; return startGame(); }
+  bdlt.setState(next);
 });
-document.getElementById('reset').onclick = () => bdlt.setState({ ...first(), p: 1, bar: false, sheet: false, k: S().k + 1 });
+const leave = () => { run++; clearTimeout(answerTimer); recent = []; };
+document.getElementById('reset').onclick = () => { leave(); bdlt.setState({ ...first(), p: 1, bar: false, sheet: false, k: S().k + 1, best: S().best || 0 }); };
 bdlt.onState(s => {
   draw(s);
   // taps in the lower quarter that do not become three in time are forgotten (the clock runs in one copy only)
   clearTimeout(tripleTimer); tripleTimer = null;
-  if (bdlt.role !== 'projector' && s.taps > 0)
-    tripleTimer = setTimeout(() => { const c = S(); if (c.taps > 0) bdlt.setState({ ...c, taps: 0, hit: null, msg: 'slow' }); }, TRIPLE_MS);
+  if (bdlt.role !== 'projector' && !s.g && s.taps > 0)
+    tripleTimer = setTimeout(() => { const c = S(); if (c.taps > 0 && !c.g) bdlt.setState({ ...c, taps: 0, hit: null, msg: 'slow' }); }, TRIPLE_MS);
 });
-bdlt.onHide(() => { clearTimeout(tripleTimer); tripleTimer = null; });
+// when the slide is left, a game ends: the small deck is back on return
+bdlt.onHide(() => { clearTimeout(tripleTimer); tripleTimer = null; tone(0); sounding = null;
+  if (bdlt.role !== 'projector' && S() && S().g) { leave(); bdlt.setState({ ...first(), k: S().k + 1, best: S().best || 0 }); } });
 if ('ResizeObserver' in window) new ResizeObserver(() => S() && draw(S())).observe(document.getElementById('wrap'));
 BDLT.whenFonts(() => { BDLT.sizeChips(); if (S()) draw(S()); });
 

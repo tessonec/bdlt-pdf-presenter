@@ -52,13 +52,18 @@ departures listed under "Decisions".
    poster.
 7. **One embedded file for both figures.** `figures/make-figures.py` puts the style, markup and
    script of both sources into `figures/guide-figures.html`; the key `x-figure` chooses which one
-   runs. The deck embeds it once and so carries Source Sans and D3 once: 63 kB for both figures,
-   in place of 122 kB for two files. Each figure keeps its own folder, source, poster and a built
+   runs. The deck embeds it once and so carries Source Sans and D3 once: 66 kB for both figures,
+   in place of 125 kB for two files. Each figure keeps its own folder, source, poster and a built
    file of its own (for the gallery deck, the live view and reuse elsewhere). The posters are
    named on the slide with `poster=`, since they no longer sit next to the embedded file.
 8. **The finished PDF is repacked** with qpdf where it is installed (about 3 kB). With all of
-   this the presenter's guide is 199 kB and the viewer's 197 kB, without a bitmap: 136 kB of
-   slides (posters 67 kB, the three logos of the footer 40 kB) and 63 kB for the figures.
+   this the presenter's guide is 202 kB and the viewer's 200 kB, without a bitmap: 136 kB of
+   slides (posters 67 kB, the three logos of the footer 40 kB) and 66 kB for the figures.
+9. **A hidden game** (Claudio, 5 October 2026): "if the user clicks a specific area in a given
+   sequence of clicks, an Easter egg is triggered that shows a Simon game of the 80s, more or
+   less resembling it, with the four colors ... you have the same sounds". It is in `gestures`,
+   started by the taps of a zapateo, "right, right, left, right, right"; `gestures/README.md`
+   has the rules and the source of the tones. The slide does not mention it.
 
 ## Build, check, look
 

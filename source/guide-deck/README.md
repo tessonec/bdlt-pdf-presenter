@@ -24,7 +24,7 @@ Playwright (`npm install playwright`); `media` needs `pip install fonttools brot
 | `media/` | the cover and the two live figures; start with `media/README.md` |
 | `check.mjs` | operates both figures in the presenter, lecturer view and projector window |
 
-Every picture is a vector drawing: the PDF has no bitmap. The presenter's deck is 199 kB (the
-PowerPoint guide was 678 kB): 136 kB of slides and 63 kB for the two live figures, which share
+Every picture is a vector drawing: the PDF has no bitmap. The presenter's deck is 202 kB (the
+PowerPoint guide was 678 kB): 136 kB of slides and 66 kB for the two live figures, which share
 one embedded file. `media/README.md`, decisions 3, 7 and 8, says how it was kept small.
 Ghostscript and qpdf are used where they are installed; without them the deck is about 20 kB larger.

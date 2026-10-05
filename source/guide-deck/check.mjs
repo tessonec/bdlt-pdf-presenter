@@ -104,6 +104,19 @@ if (L && A) {
   ok((await L.evaluate(() => [...document.querySelectorAll('.zone')].map(z => +z.getAttribute('fill-opacity')))).every(o => o < 0.3), 'and goes dark again');
   const r = await centre(L, '#reset'); await clickAt(L, r[0], r[1]);
   ok(await L.evaluate(() => bdlt.state.p === 1 && !bdlt.state.bar && !bdlt.state.sheet), 'back to the start'); await same(L, A, 'after back to the start');
+  // hidden: the taps of a zapateo (right, right, left, right, right) start a memory game on the four lamps
+  for (const fx of [0.85, 0.85, 0.15, 0.85, 0.85]) await zone(fx, 0.4);
+  ok(await L.evaluate(() => !!bdlt.state.g && bdlt.state.g.seq.length === 8), 'right, right, left, right, right starts the memory game');
+  const PADS = { prev: [0.17, 0.5], next: [0.83, 0.5], bar: [0.5, 0.19], sheet: [0.5, 0.81] };
+  const turn = async n => { for (let i = 0; i < 150; i++) { if (await L.evaluate(n => bdlt.state.g.ph === 'input' && bdlt.state.g.n === n && !bdlt.state.g.on, n)) return true; await page.waitForTimeout(50); } return false; };
+  ok(await turn(1), 'the game shows one lamp and waits for the answer'); await same(L, A, 'the game, round 1');
+  const seq = await L.evaluate(() => bdlt.state.g.seq);
+  await zone(...PADS[seq[0]]); ok(await turn(2), 'the right lamp leads to round 2');
+  ok(await L.evaluate(() => bdlt.state.best === 1), 'the best round is kept');
+  await zone(...PADS[seq[0]]); await zone(...PADS[Object.keys(PADS).find(k => k !== seq[1])]);
+  ok(await L.evaluate(() => bdlt.state.g.ph === 'lost' && bdlt.state.g.why === 'wrong'), 'a wrong lamp loses'); await page.waitForTimeout(1700); await same(L, A, 'after losing');
+  const r2 = await centre(L, '#reset'); await clickAt(L, r2[0], r2[1]); await page.waitForTimeout(600);
+  ok(await L.evaluate(() => !bdlt.state.g && bdlt.state.p === 1), 'back to the start ends the game'); await same(L, A, 'the small deck again');
   ok(await chipWidths(L) === w0, 'every chip kept its width', w0 + ' -> ' + await chipWidths(L));
   ok(await fits(L) && await fits(A), 'nothing overflows its box');
 }

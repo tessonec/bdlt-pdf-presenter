@@ -13,7 +13,7 @@
 
 ### Changed
 - The guide decks are written in LaTeX Beamer on the BDLT26 theme (`source/guide-deck/`), in
-  place of PowerPoint, and hold vector drawings only: 199 kB in place of 678 kB (viewer: 197 kB
+  place of PowerPoint, and hold vector drawings only: 202 kB in place of 678 kB (viewer: 200 kB
   in place of 662 kB). A first visit downloads about a third less.
 
 ### Removed

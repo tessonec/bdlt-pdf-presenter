@@ -22,11 +22,12 @@ UNICODES = "U+0020-007E,U+00A0-00FF,U+2009,U+2013,U+2014,U+2018,U+2019,U+201C,U+
 css = open(os.path.join(REPO, "bdltplots", "web", "bdlt-style.css"), encoding="utf-8").read()
 
 def cut(m):
-    font = TTFont(io.BytesIO(base64.b64decode(m.group(1))))
+    font = TTFont(io.BytesIO(base64.b64decode(m.group(1))), recalcTimestamp=False)   # the font keeps its own date: the same input gives the same file
     opts = subset.Options()
     opts.flavor = "woff2"
     opts.layout_features = ["kern", "liga", "tnum", "lnum", "pnum"]
     opts.name_IDs = [1, 2, 4, 6]
+    opts.recalc_timestamp = False
     s = subset.Subsetter(opts)
     s.populate(unicodes=subset.parse_unicodes(UNICODES))
     s.subset(font)
