@@ -115,6 +115,27 @@ A green dot on the Reload button means the open PDF is being watched and reloads
 Browsers do not let a web page watch files on disk; Chrome and Edge offer a way for a file
 the user picked, Safari and Firefox do not. For Safari, use the preview script.
 
+## One PDF and the viewer in a single page
+
+```bash
+tools/bdlt-pdf-pack.py lecture03.pdf            # writes lecture03.html
+```
+
+packs BDLT PDF Viewer and that PDF into one web page. The page opens directly on the PDF,
+with its live media, pen and highlighter, and needs no other file: send it as a hand-out, or
+put it on any web server. It loads PDF.js, pdf-lib and the interface typeface from the
+network, as the presenter does. The page is about 150 kB plus four thirds of the PDF.
+
+| Option | Effect |
+|---|---|
+| `-o page.html` | where to write the page |
+| `--title "Lecture 3"` | the name of the page (default: the file name of the PDF) |
+| `--presenter` | pack the presenter, with projector and lecturer views, in place of the viewer |
+| `--artifact` | write the page content only, for a page shown in a chat (at most 16 MB) |
+
+Inside another page (a chat, a learning platform) the packed page takes the keyboard when it
+opens and after every tap, so the arrow keys turn the slides; the page itself never scrolls.
+
 ## Media in slides (video, animations, interactive widgets)
 
 PDFs can carry live media that the presenter plays on top of the slide: MP4 video, audio,

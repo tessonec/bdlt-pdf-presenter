@@ -35,6 +35,7 @@
   --num:"IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 }
 html,body{height:100%}
+html{overflow:hidden;overscroll-behavior:none}
 body{background:var(--stage);color:var(--fg);font-family:var(--ui);overflow:hidden;overscroll-behavior:none;
   -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
 #stage{position:fixed;inset:0;touch-action:none;overflow:hidden;background:var(--stage)}
@@ -372,6 +373,7 @@ body.audience #stage{cursor:none}
 <div id="dropzone" hidden>Drop a PDF to open it</div>
 <input type="file" id="file" accept="application/pdf,.pdf" hidden>
 
+<!-- bdlt:deck (tools/bdlt-pdf-pack.py puts a PDF here, as <script type="application/pdf;base64" id="bdltDeck">) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
 <script>
@@ -381,10 +383,15 @@ const $ = s => document.querySelector(s);
 // It is served as viewer.html, a copy of this file made at deployment; index.html?viewer=1 shows
 // the same thing and is meant for trying it out locally. It keeps opening, navigating, zooming,
 // pen, highlighter, eraser and saving; it leaves out what only a lecturer needs.
-const LITE = /(^|\/)viewer\.html$/i.test(location.pathname) || new URLSearchParams(location.search).has('viewer');
+// A deck inside the page: tools/bdlt-pdf-pack.py packs this file and one PDF into a single page
+// (a hand-out, or a page shown in a chat). Such a page opens on its own PDF in place of the guide
+// deck and needs no other file. data-name is the file name, data-edition="viewer" selects the viewer.
+const EMBED = document.getElementById('bdltDeck');
+const HOME_NAME = EMBED ? (EMBED.dataset.name || 'slides.pdf') : 'sample.pdf';
+const LITE = /(^|\/)viewer\.html$/i.test(location.pathname) || new URLSearchParams(location.search).has('viewer') || !!(EMBED && EMBED.dataset.edition === 'viewer');
 const APP_NAME = LITE ? 'BDLT PDF Viewer' : 'BDLT PDF Presenter';
 if (LITE) {
-  document.documentElement.classList.add('lite'); document.title = APP_NAME;
+  document.documentElement.classList.add('lite'); if (!EMBED) document.title = APP_NAME;
   document.querySelector('#splash h1').textContent = APP_NAME;
   document.querySelector('#bar').setAttribute('aria-label', APP_NAME + ' controls');
   const m = document.querySelector('meta[name="apple-mobile-web-app-title"]'); if (m) m.content = 'BDLT Viewer';
@@ -1030,6 +1037,12 @@ window.addEventListener('drop', async e => {
 let rT = 0;
 window.addEventListener('resize', () => { clearTimeout(rT); rT = setTimeout(() => { cache.clear(); if (pdfDoc) showPage(pageNum); }, 150); });
 
+// Inside a frame (a page in a chat, a learning platform) the keys go to whichever frame has the
+// keyboard: take it when the page opens and after every tap, so that the arrow keys turn the page.
+if (inFrame) {
+  const grab = () => { try { if (!/^(INPUT|TEXTAREA|SELECT)$/.test((document.activeElement || {}).tagName || '')) window.focus(); } catch (e) {} };
+  grab(); window.addEventListener('load', grab); window.addEventListener('pointerdown', grab, true);
+}
 window.addEventListener('keydown', e => {
   if (e.target.closest && e.target.closest('input')) return;
   if (AUDIENCE) { if (e.key === 'f') toggleFs(); return; }
@@ -1182,7 +1195,7 @@ async function reloadDeck() {
       if (await loadBytes(bytes, f.name, keep)) { lastFile = f; lastStamp = stampOf(f); toast('Reloaded ' + clock(), 1500); }
       else toast('The PDF is not complete yet. Try again in a moment.', 3500);
     } else {
-      await loadBytes(await sampleDeck(), 'sample.pdf', keep); toast('Reloaded ' + clock(), 1500);
+      await loadBytes(await sampleDeck(), HOME_NAME, keep); toast('Reloaded ' + clock(), 1500);
     }
   } catch (e) {
     toast(deckSrc === 'file' ? 'This browser will not read a changed file a second time. Open it again with ⌘O or Ctrl+O.' : 'The PDF could not be reloaded.', 5000);
@@ -1192,6 +1205,11 @@ async function reloadDeck() {
 // ---------- sample deck: sample.pdf next to index.html (replace that file to change it) ----------
 //            the viewer edition opens sample-viewer.pdf, and sample.pdf if that is missing
 async function sampleDeck() {
+  if (EMBED) {   // the deck packed into this page
+    const t = atob(EMBED.textContent.replace(/\s+/g, '')), b = new Uint8Array(t.length);
+    for (let i = 0; i < t.length; i++) b[i] = t.charCodeAt(i);
+    return b;
+  }
   for (const f of LITE ? ['sample-viewer.pdf', 'sample.pdf'] : ['sample.pdf']) {
     const r = await fetch(f, { cache: 'no-cache' });
     if (r.ok) return new Uint8Array(await r.arrayBuffer());
@@ -1571,18 +1589,18 @@ const APP_RELEASE = '1.5.0';            // raise by hand for notable releases
 const APP_VERSION = '__BUILD__';      // replaced by GitLab with the commit id on every deployment
 const STAMPED = !APP_VERSION.startsWith('__');
 const BUILD4 = STAMPED ? APP_VERSION.slice(0, 4) : 'dev';
-const VERSION_TEXT = STAMPED ? `Version ${APP_RELEASE} · ${BUILD4}` : `Version ${APP_RELEASE} · development copy`;
+const VERSION_TEXT = STAMPED ? `Version ${APP_RELEASE} · ${BUILD4}` : EMBED ? `Version ${APP_RELEASE}` : `Version ${APP_RELEASE} · development copy`;
 // Splash: confirms at a glance which version is running
 (function splash() {
   const el = $('#splash');
   if (!LITE && location.hash === '#audience') { el.remove(); return; }
-  $('#splashVer').innerHTML = STAMPED ? `Version ${APP_RELEASE} · <b>${BUILD4}</b>` : `Version ${APP_RELEASE} · development copy`;
+  $('#splashVer').innerHTML = STAMPED ? `Version ${APP_RELEASE} · <b>${BUILD4}</b>` : VERSION_TEXT;
   const close = () => { el.classList.add('out'); setTimeout(() => el.remove(), 500); };
   el.addEventListener('pointerdown', close); setTimeout(close, 1800);
 })();
 let updDismissed = false;
 async function checkUpdate() {
-  if (!STAMPED || inFrame) return;
+  if (!STAMPED || inFrame || EMBED) return;
   try {
     const r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
     if (!r.ok) return;
@@ -1894,7 +1912,7 @@ if (AUDIENCE && chan) {
   if (LITE || presenterBlocker()) settings.presenter = false;
   updatePresenterUi();
   if (PDF_URL) openFromUrl();
-  else sampleDeck().then(b => loadBytes(new Uint8Array(b), 'sample.pdf')).catch(e => { console.error(e); toast('Open a PDF to begin'); });
+  else sampleDeck().then(b => loadBytes(new Uint8Array(b), HOME_NAME)).catch(e => { console.error(e); toast('Open a PDF to begin'); });
 }
 })();
 </script>

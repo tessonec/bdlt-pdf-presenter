@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+### Added
+- `tools/bdlt-pdf-pack.py` packs one PDF and the viewer (or, with `--presenter`, the presenter)
+  into a single web page that opens directly on that PDF and needs no other file: a hand-out, or
+  a page shown in a chat (`--artifact`).
+- Inside another page (a chat, a learning platform) the app takes the keyboard when it opens
+  and after every tap, so the arrow keys turn the slides without a click first.
+
+### Changed
+- The page itself can no longer scroll, whatever it is shown in.
+
 ## 1.5.0 (5 October 2026)
 
 ### Added
