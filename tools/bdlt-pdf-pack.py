@@ -51,12 +51,14 @@ def main():
     if n != 1:
         sys.exit('The presenter has no <title>: is %s the right file?' % app)
 
-    # the icon, inside the page
-    svg = os.path.join(os.path.dirname(app), 'icon.svg')
+    # the icon, inside the page once: a short script hands it to every place that shows it
+    svg, icon = os.path.join(os.path.dirname(app), 'icon.svg'), ''
     if os.path.isfile(svg):
         uri = 'data:image/svg+xml;base64,' + base64.b64encode(open(svg, 'rb').read()).decode()
-        page = page.replace('src="icon.png"', 'src="' + uri + '"')
-        page = re.sub(r'<link rel="icon" type="image/svg\+xml" href="icon\.svg">', lambda m: '<link rel="icon" type="image/svg+xml" href="' + uri + '">', page)
+        page = page.replace('<img src="icon.png"', '<img data-bdlt-icon')
+        page = page.replace('<link rel="icon" type="image/svg+xml" href="icon.svg">', '<link rel="icon" type="image/svg+xml" href="data:,">')
+        icon = ('\n<script>(function(u){document.querySelectorAll("img[data-bdlt-icon]").forEach(function(i){i.src=u});'
+                'var l=document.querySelector(\'link[rel="icon"]\');if(l)l.href=u})("%s")</script>' % uri)
     page = re.sub(r'<link rel="(?:apple-touch-icon|icon)"(?: type="image/png")? href="icon\.png">\n?', '', page)
 
     # the PDF, inside the page
@@ -64,7 +66,7 @@ def main():
     lines = '\n'.join(b64[i:i + 120] for i in range(0, len(b64), 120))
     tag = '<script type="application/pdf;base64" id="bdltDeck" data-name="%s"%s>\n%s\n</script>' % (
         html.escape(name, quote=True), '' if a.presenter else ' data-edition="viewer"', lines)
-    page = MARK.sub(lambda m: tag, page, count=1)
+    page = MARK.sub(lambda m: tag + icon, page, count=1)
 
     if a.artifact:
         i, j = page.find('<body>'), page.rfind('</body>')
