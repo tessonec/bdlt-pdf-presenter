@@ -100,4 +100,4 @@ Add the frame to `../deck.tex`, a row to `../outline.md` and to the table above,
 - `tools/bdlt-deck.py new` of v3.4.1 stops with "unsupported format character"; the deck files
   were written by hand.
 - The helper that hands the page-turning keys back from a figure to the presenter is part of
-  the presenter since the release after 1.4.0: with an earlier one, a click in a figure keeps the keyboard.
+  the presenter since 1.5.0: with an earlier release, a click in a figure keeps the keyboard.

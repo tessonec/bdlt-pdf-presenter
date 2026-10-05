@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.5.0 (5 October 2026)
 
 ### Added
 - About panel (Settings › About): icon, version and build, the group, the author, the credit
