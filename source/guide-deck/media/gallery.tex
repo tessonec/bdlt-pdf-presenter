@@ -5,6 +5,8 @@
 \usetheme[media]{BDLT26}
 \bdltmediasetup{mediapath={./}}
 \graphicspath{{./}}
+\usetikzlibrary{svg.path}
+\input{poster.tex}   % \guideposter: the posters of the live figures as TikZ drawings
 \title{Live figures of the guide deck}
 \subtitle{BDLT PDF Presenter}
 \author{Blockchain \& DLT Research Group, UZH}
@@ -18,7 +20,8 @@
 % @slide S02
 \begin{frame}
   \bdltfullimage{Try the gestures}
-    {\bdltwidget[id=gestures, title={A small screen with the four tap zones}]{gestures/gestures.html}}
+    {\guideposter{gestures/gestures-poster.tex}{1147}{445}%
+     \bdltwidget[id=gestures, poster=blank-poster.pdf, title={A small screen with the four tap zones}]{gestures/gestures.html}}
     {Tap the zones of the small screen, with a finger or the mouse: it answers like the presenter, and each zone lights up.
      In any other PDF viewer this is a picture.}
   \bdltsource{gestures: slide S14 of the guide deck.}
@@ -26,7 +29,8 @@
 % @slide S03
 \begin{frame}
   \bdltfullimage{A slide that runs}
-    {\bdltwidget[id=alive, title={A chain of blocks: a picture on the left, running on the right}]{alive/alive.html}}
+    {\guideposter{alive/alive-poster.tex}{1147}{445}%
+     \bdltwidget[id=alive, poster=blank-poster.pdf, title={A chain of blocks: a picture on the left, running on the right}]{alive/alive.html}}
     {Left: what every PDF viewer shows. Right: the same figure, run by BDLT PDF Presenter.
      If pressing play changes nothing, you are reading this PDF somewhere else.}
   \bdltsource{alive: slide S15 of the guide deck.}

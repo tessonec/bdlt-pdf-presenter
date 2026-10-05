@@ -17,6 +17,12 @@
 
 ### Changed
 - The page itself can no longer scroll, whatever it is shown in.
+- The guide decks are 147 kB (presenter) and 144 kB (viewer), in place of 202 kB and 200 kB,
+  and look the same. The pictures that other PDF readers show in place of the two live figures
+  are now TikZ drawings read off the figures themselves, with the text in the deck's own
+  typeface (12 kB in place of 45 kB), and the figures carry Source Sans only for the characters
+  of the keyboard (17 kB in place of 34 kB). `./build.sh check` in `source/guide-deck/` compares
+  each picture with its live figure.
 
 ## 1.5.0 (5 October 2026)
 

@@ -3,7 +3,8 @@
 #   ./build.sh          both editions: build/deck.pdf (presenter) and build/deck-viewer.pdf (students),
 #                       copied to ../../public/sample.pdf and ../../public/sample-viewer.pdf
 #   ./build.sh media    first makes the two live figures again (media/*/build.sh), then the decks
-#   ./build.sh check    the decks, then check.mjs: both live figures operated inside the presenter
+#   ./build.sh check    the decks, then media/check-posters.py (each poster against its figure) and
+#                       check.mjs (both live figures operated inside the presenter)
 # Needs the repository bdlt-beamer-media (BDLT_REPO=/path) with its TeX set-up, and Python 3.
 # "media" and "check" also need Node with Playwright (npm install playwright). Ghostscript and qpdf
 # are used where they are installed, to make the posters and the finished files a little smaller.
@@ -36,4 +37,8 @@ if [ -d "$PUBLIC" ]; then
   cp build/deck.pdf "$PUBLIC/sample.pdf"; cp build/deck-viewer.pdf "$PUBLIC/sample-viewer.pdf"
   ls -l "$PUBLIC/sample.pdf" "$PUBLIC/sample-viewer.pdf"
 fi
-if [ "${1:-}" = check ]; then PUBLIC="$PUBLIC" node check.mjs; fi
+if [ "${1:-}" = check ]; then
+  for b in media/*/build.sh; do bash "$b" fresh; done      # each poster made again, and a picture of each figure
+  python3 media/check-posters.py                            # the posters are up to date and look like the figures
+  PUBLIC="$PUBLIC" node check.mjs
+fi

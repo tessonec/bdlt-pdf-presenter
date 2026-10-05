@@ -16,6 +16,7 @@
 \bdltmediasetup{mediapath={media/}}
 \graphicspath{{media/}}
 \usetikzlibrary{svg.path}
+\input{media/poster.tex}   % \guideposter: the posters of the live figures as TikZ drawings
 
 \newif\ifguideviewer
 \ifdefined\guideviewer \guideviewertrue \fi
@@ -169,7 +170,8 @@
 % @slide S14
 \begin{frame}
   \bdltfullimage{Try the gestures}
-    {\bdltwidget[id=gestures, x-figure=gestures, poster=gestures/gestures-poster.pdf, title={A small screen with the four tap zones}]{figures/guide-figures.html}}
+    {\guideposter{media/gestures/gestures-poster.tex}{1147}{445}%
+     \bdltwidget[id=gestures, x-figure=gestures, poster=blank-poster.pdf, title={A small screen with the four tap zones}]{figures/guide-figures.html}}
     {Tap the zones of the small screen, with a finger or the mouse: it answers like the presenter, and each zone lights up.
      In any other PDF viewer this is a picture.}
 \end{frame}
@@ -247,7 +249,8 @@
 % @slide S15
 \begin{frame}
   \bdltfullimage{A slide that runs}
-    {\bdltwidget[id=alive, x-figure=alive, poster=alive/alive-poster.pdf, title={A chain of blocks: a picture on the left, running on the right}]{figures/guide-figures.html}}
+    {\guideposter{media/alive/alive-poster.tex}{1147}{445}%
+     \bdltwidget[id=alive, x-figure=alive, poster=blank-poster.pdf, title={A chain of blocks: a picture on the left, running on the right}]{figures/guide-figures.html}}
     {Left: what every PDF viewer shows. Right: the same figure, run by \ifguideviewer BDLT PDF Viewer\else BDLT PDF Presenter\fi.
      If pressing play changes nothing, you are reading this PDF somewhere else.}
 \end{frame}

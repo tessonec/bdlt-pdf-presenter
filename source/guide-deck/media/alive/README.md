@@ -8,7 +8,7 @@
 | Status bar | chips `block 5 / 12` and `orphaned 1`; a few words on what the last block did; at the right the key: a filled blue square "longest chain", a hollow grey square "orphaned" |
 | Model | An illustration of the longest-chain rule, not a model with real parameters: 12 blocks are found one after the other; with chance 0.22 a new block competes with the tip (a fork), otherwise it builds on a tip (on either of two, with equal chance). Blocks off the longest chain are orphaned. Standard textbook picture (Nakamoto 2008, section 5, for the rule); the numbers are free choices |
 | Data | none |
-| Kept here | `alive.src.html` (source), `alive.html` (built, the figure alone), `alive-poster.pdf`, `build.sh`, `built.txt`. The deck embeds `../figures/guide-figures.html`, which holds this figure and the other one (key `x-figure=alive`) |
+| Kept here | `alive.src.html` (source), `alive.html` (built, the figure alone), `alive-poster.tex` (the poster as a TikZ drawing, read off the figure by `../make-poster-tikz.mjs`), `build.sh`, `built.txt`. The deck embeds `../figures/guide-figures.html`, which holds this figure and the other one (key `x-figure=alive`) |
 | Derived | the whole run is computed once from the seed; step t of the picture is a look-up |
 | Added | the headings of the two halves |
 | Area, keys | Full Image, 1147 x 445 CSS px (32.36 x 12.57 cm on the slide). Slide: `start=0` (the default): one block on the right. Poster: `start=12`: the finished chain in both halves, which is the point for a reader elsewhere. Other keys: `seed` (default 59), `ms` (time per block while it plays, default 700) |
@@ -18,11 +18,13 @@
 | To know | The seed 59 was chosen by eye among 60: three forks, well apart, one won by the competing block and two by the first one, so at most 3 blocks are orphaned (the chip is sized for that). The caption of the slide tells a reader of another PDF viewer that nothing will move there |
 
 ```latex
-% In the guide deck the file is figures/guide-figures.html, with x-figure=alive and poster=alive/alive-poster.pdf.
+% In the guide deck the file is figures/guide-figures.html, with x-figure=alive; the poster is the same.
+% The preamble needs \usetikzlibrary{svg.path} and \input{media/poster.tex} (\guideposter).
 % This is the frame for the figure alone:
 \begin{frame}
   \bdltfullimage{A slide that runs}
-    {\bdltwidget[id=alive, title={A chain of blocks: a picture on the left, running on the right}]{alive/alive.html}}
+    {\guideposter{media/alive/alive-poster.tex}{1147}{445}%
+     \bdltwidget[id=alive, poster=blank-poster.pdf, title={A chain of blocks: a picture on the left, running on the right}]{alive/alive.html}}
     {Left: what every PDF viewer shows. Right: the same figure, run by BDLT PDF Presenter.
      If pressing play changes nothing, you are reading this PDF somewhere else.}
 \end{frame}
@@ -31,3 +33,4 @@
 ## Changes
 
 - 5 October 2026: made.
+- 5 October 2026: the poster is a TikZ drawing read off the figure, in place of a print from the browser; Source Sans in the figure is cut down to the keyboard's characters (Claudio: "shrink as you suggested ... as long as it is completely consistent"; decision 10 of `../README.md`).

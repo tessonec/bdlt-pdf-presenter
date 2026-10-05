@@ -1,0 +1,16 @@
+% poster.tex -- the poster of a live figure as a TikZ drawing, laid under the figure's place.
+%
+%   \guideposter{<name>-poster.tex}{W}{H}\bdltwidget[..., poster=blank-poster.pdf]{<figure>.html}
+%
+% <name>-poster.tex is written by make-poster-tikz.mjs from the figure itself (W x H CSS px, the
+% AREA of the figure's build.sh). It is drawn where the theme would put a poster image: fitted into
+% the picture area of the layout and centred. The theme still wants a poster file, so the figure
+% names blank-poster.pdf, an empty page. Why not a poster image: text in an image brings its own
+% letters with it (45 kB for the two posters of this deck); text set by TeX uses the deck's.
+% Use it inside a picture area of the theme (\bdltfullimage, \bdltarea, ...). Needs TikZ with svg.path.
+\newlength\posterlen
+\newcommand\guideposter[3]{%
+  \posterlen=\dimexpr\bdltareawidth/#2\relax
+  \ifdim #3\posterlen>\bdltareaheight \posterlen=\dimexpr\bdltareaheight/#3\relax\fi
+  \makebox[0pt][l]{\hskip\dimexpr(\bdltareawidth-#2\posterlen)/2\relax
+    \raisebox{\dimexpr(\bdltareaheight-#3\posterlen)/2\relax}{\input{#1}}}}

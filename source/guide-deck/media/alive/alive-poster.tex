@@ -1,0 +1,100 @@
+% alive-poster.tex -- written by make-poster-tikz.mjs from alive.html (start=12); do not edit.
+% The poster of the figure, read off the figure in the browser: 68 shapes and 9 lines of text. One unit is one CSS px
+% of the figure (1147 x 445); the length \posterlen says how long it is on the page. Needs \usetikzlibrary{svg.path}.
+\begingroup\makeatletter\edef\posterk{\strip@pt\posterlen}\makeatother%
+% \T{anchor}{colour}{x,y}{size in px}{weight and shape}{text}: one line of text; the weights are regular (m), semibold (s) and bold (b)
+\def\T#1#2#3#4#5#6{\node[anchor=#1,inner sep=0pt,outer sep=0pt,text=#2] at (#3) {\fontsize{#4\posterlen}{#4\posterlen}\csname posterface@#5\endcsname\frenchspacing #6};}%
+\expandafter\def\csname posterface@mn\endcsname{\fontseries{m}\fontshape{n}\selectfont}%
+\expandafter\def\csname posterface@mi\endcsname{\fontseries{m}\fontshape{it}\selectfont}%
+\expandafter\def\csname posterface@sn\endcsname{\fontseries{sb}\fontshape{n}\selectfont}%
+\expandafter\def\csname posterface@si\endcsname{\fontseries{sb}\fontshape{it}\selectfont}%
+\expandafter\def\csname posterface@bn\endcsname{\fontseries{b}\fontshape{n}\selectfont}%
+\expandafter\def\csname posterface@bi\endcsname{\fontseries{b}\fontshape{it}\selectfont}%
+\definecolor{pcaa}{RGB}{0,0,0}%
+\definecolor{pcab}{RGB}{102,102,102}%
+\definecolor{pcac}{RGB}{163,163,163}%
+\definecolor{pcad}{RGB}{0,40,165}%
+\definecolor{pcae}{RGB}{255,255,255}%
+\definecolor{pcaf}{RGB}{215,215,215}%
+\definecolor{pcag}{RGB}{243,245,251}%
+\definecolor{pcah}{RGB}{199,207,232}%
+\begin{tikzpicture}[x=\posterlen,y=-\posterlen]
+\useasboundingbox (0,0) rectangle (1147,445);%
+\T{base west}{pcaa}{10,21}{19}{sn}{Any other PDF viewer}
+\T{base west}{pcab}{187.5,21}{19}{mn}{a picture}
+\path[draw=pcac,line width=1*\posterk] (10.5,34.5) rectangle (566,389.5);
+\path[draw=pcaa,line width=1.8*\posterk] (475.93,250.67) -- (529.55,250.67);
+\path[draw=pcaa,line width=1.8*\posterk] (422.31,250.67) -- (475.93,250.67);
+\path[draw=pcaa,line width=1.8*\posterk] (368.68,250.67) -- (422.31,250.67);
+\path[draw=pcac,line width=1.8*\posterk] (315.06,250.67) -- (368.68,183.68);
+\path[draw=pcaa,line width=1.8*\posterk] (315.06,250.67) -- (368.68,250.67);
+\path[draw=pcaa,line width=1.8*\posterk] (261.44,250.67) -- (315.06,250.67);
+\path[draw=pcac,line width=1.8*\posterk] (207.82,250.67) -- (261.44,183.68);
+\path[draw=pcaa,line width=1.8*\posterk] (207.82,250.67) -- (261.44,250.67);
+\path[draw=pcaa,line width=1.8*\posterk] (154.19,250.67) -- (207.82,250.67);
+\path[draw=pcaa,line width=1.8*\posterk] (100.57,183.68) -- (154.19,250.67);
+\path[draw=pcac,line width=1.8*\posterk] (100.57,183.68) -- (154.19,183.68);
+\path[draw=pcaa,line width=1.8*\posterk] (46.95,183.68) -- (100.57,183.68);
+\path[fill=pcad,draw=pcad,line width=2*\posterk,rounded corners=3*\posterk] (31,167.73) rectangle (62.9,199.63);
+\path[fill=pcad,draw=pcad,line width=2*\posterk,rounded corners=3*\posterk] (84.62,167.73) rectangle (116.52,199.63);
+\path[fill=pcae,draw=pcac,line width=2*\posterk,rounded corners=3*\posterk] (138.24,167.73) rectangle (170.14,199.63);
+\path[fill=pcad,draw=pcad,line width=2*\posterk,rounded corners=3*\posterk] (138.24,234.72) rectangle (170.14,266.62);
+\path[fill=pcad,draw=pcad,line width=2*\posterk,rounded corners=3*\posterk] (191.87,234.72) rectangle (223.77,266.62);
+\path[fill=pcad,draw=pcad,line width=2*\posterk,rounded corners=3*\posterk] (245.49,234.72) rectangle (277.39,266.62);
+\path[fill=pcae,draw=pcac,line width=2*\posterk,rounded corners=3*\posterk] (245.49,167.73) rectangle (277.39,199.63);
+\path[fill=pcad,draw=pcad,line width=2*\posterk,rounded corners=3*\posterk] (299.11,234.72) rectangle (331.01,266.62);
+\path[fill=pcad,draw=pcad,line width=2*\posterk,rounded corners=3*\posterk] (352.73,234.72) rectangle (384.63,266.62);
+\path[fill=pcae,draw=pcac,line width=2*\posterk,rounded corners=3*\posterk] (352.73,167.73) rectangle (384.63,199.63);
+\path[fill=pcad,draw=pcad,line width=2*\posterk,rounded corners=3*\posterk] (406.36,234.72) rectangle (438.26,266.62);
+\path[fill=pcad,draw=pcad,line width=2*\posterk,rounded corners=3*\posterk] (459.98,234.72) rectangle (491.88,266.62);
+\path[fill=pcad,draw=pcad,line width=2*\posterk,rounded corners=3*\posterk] (513.6,234.72) rectangle (545.5,266.62);
+\T{base west}{pcaa}{580.5,21}{19}{sn}{BDLT PDF Presenter and Viewer}
+\T{base west}{pcab}{839.08,21}{19}{mn}{the figure runs}
+\path[draw=pcaa,line width=1*\posterk] (581,34.5) rectangle (1136.5,389.5);
+\path[draw=pcaa,line width=1.8*\posterk] (1046.43,250.67) -- (1100.05,250.67);
+\path[draw=pcaa,line width=1.8*\posterk] (992.81,250.67) -- (1046.43,250.67);
+\path[draw=pcaa,line width=1.8*\posterk] (939.18,250.67) -- (992.81,250.67);
+\path[draw=pcac,line width=1.8*\posterk] (885.56,250.67) -- (939.18,183.68);
+\path[draw=pcaa,line width=1.8*\posterk] (885.56,250.67) -- (939.18,250.67);
+\path[draw=pcaa,line width=1.8*\posterk] (831.94,250.67) -- (885.56,250.67);
+\path[draw=pcac,line width=1.8*\posterk] (778.32,250.67) -- (831.94,183.68);
+\path[draw=pcaa,line width=1.8*\posterk] (778.32,250.67) -- (831.94,250.67);
+\path[draw=pcaa,line width=1.8*\posterk] (724.69,250.67) -- (778.32,250.67);
+\path[draw=pcaa,line width=1.8*\posterk] (671.07,183.68) -- (724.69,250.67);
+\path[draw=pcac,line width=1.8*\posterk] (671.07,183.68) -- (724.69,183.68);
+\path[draw=pcaa,line width=1.8*\posterk] (617.45,183.68) -- (671.07,183.68);
+\path[fill=pcad,draw=pcad,line width=2*\posterk,rounded corners=3*\posterk] (601.5,167.73) rectangle (633.4,199.63);
+\path[fill=pcad,draw=pcad,line width=2*\posterk,rounded corners=3*\posterk] (655.12,167.73) rectangle (687.02,199.63);
+\path[fill=pcae,draw=pcac,line width=2*\posterk,rounded corners=3*\posterk] (708.74,167.73) rectangle (740.64,199.63);
+\path[fill=pcad,draw=pcad,line width=2*\posterk,rounded corners=3*\posterk] (708.74,234.72) rectangle (740.64,266.62);
+\path[fill=pcad,draw=pcad,line width=2*\posterk,rounded corners=3*\posterk] (762.37,234.72) rectangle (794.27,266.62);
+\path[fill=pcad,draw=pcad,line width=2*\posterk,rounded corners=3*\posterk] (815.99,234.72) rectangle (847.89,266.62);
+\path[fill=pcae,draw=pcac,line width=2*\posterk,rounded corners=3*\posterk] (815.99,167.73) rectangle (847.89,199.63);
+\path[fill=pcad,draw=pcad,line width=2*\posterk,rounded corners=3*\posterk] (869.61,234.72) rectangle (901.51,266.62);
+\path[fill=pcad,draw=pcad,line width=2*\posterk,rounded corners=3*\posterk] (923.23,234.72) rectangle (955.13,266.62);
+\path[fill=pcae,draw=pcac,line width=2*\posterk,rounded corners=3*\posterk] (923.23,167.73) rectangle (955.13,199.63);
+\path[fill=pcad,draw=pcad,line width=2*\posterk,rounded corners=3*\posterk] (976.86,234.72) rectangle (1008.76,266.62);
+\path[fill=pcad,draw=pcad,line width=2*\posterk,rounded corners=3*\posterk] (1030.48,234.72) rectangle (1062.38,266.62);
+\path[fill=pcad,draw=pcad,line width=2*\posterk,rounded corners=3*\posterk] (1084.1,234.72) rectangle (1116,266.62);
+\path[draw=pcaf,line width=1*\posterk] (0,398.5) -- (1147,398.5);
+\path[fill=pcag,rounded corners=6*\posterk] (10,405) rectangle (52,439);
+\path[draw=pcah,line width=1*\posterk,rounded corners=5.5*\posterk] (10.5,405.5) rectangle (51.5,438.5);
+\path[draw=pcaa,line width=1.65*\posterk,line cap=round,line join=round,shift={(20,411)},scale=0.91667*\posterk,yscale=-1] svg {M 6 5 v 14};
+\path[draw=pcaa,line width=1.65*\posterk,line cap=round,line join=round,shift={(20,411)},scale=0.91667*\posterk,yscale=-1] svg {M 19 5 l -10 7 10 7 z};
+\path[fill=pcag,rounded corners=6*\posterk] (62,405) rectangle (104,439);
+\path[draw=pcah,line width=1*\posterk,rounded corners=5.5*\posterk] (62.5,405.5) rectangle (103.5,438.5);
+\path[draw=pcaa,line width=1.65*\posterk,line cap=round,line join=round,shift={(72,411)},scale=0.91667*\posterk,yscale=-1] svg {M 8 5 v 14 l 11 -7 z};
+\path[fill=pcag,rounded corners=6*\posterk] (114,405) rectangle (156,439);
+\path[draw=pcah,line width=1*\posterk,rounded corners=5.5*\posterk] (114.5,405.5) rectangle (155.5,438.5);
+\path[draw=pcaa,line width=1.65*\posterk,line cap=round,line join=round,shift={(124,411)},scale=0.91667*\posterk,yscale=-1] svg {M 9 6 l 6 6 -6 6};
+\path[fill=pcad,rounded corners=6*\posterk] (166,407) rectangle (284,437);
+\T{base}{pcae}{224.99,428}{18}{sn}{block 12 / 12}
+\path[fill=pcad,rounded corners=6*\posterk] (294,407) rectangle (404,437);
+\T{base}{pcae}{349,428}{18}{sn}{orphaned 3}
+\T{base west}{pcaa}{414,428}{18}{mn}{A new block extends the chain.}
+\path[fill=pcad] (922.88,415) rectangle (936.88,429);
+\T{base west}{pcaa}{942.88,427.5}{17}{mn}{longest chain}
+\path[fill=pcae] (1047.47,415) rectangle (1061.47,429);
+\path[draw=pcac,line width=2*\posterk] (1048.47,416) rectangle (1060.47,428);
+\T{base west}{pcaa}{1067.47,427.5}{17}{mn}{orphaned}
+\end{tikzpicture}\endgroup%

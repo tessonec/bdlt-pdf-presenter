@@ -17,11 +17,14 @@ departures listed under "Decisions".
 ## What they share
 
 - `style/`: `make-latin-style.py` writes `bdlt-style-latin.css`, the house style of widgets
-  (`bdltplots/web/bdlt-style.css`) with Source Sans 3 cut down to Latin: 47 kB in place of 415 kB.
+  (`bdltplots/web/bdlt-style.css`) with Source Sans 3 cut down to the keyboard's characters and
+  whatever else the sources of the figures contain: 28 kB in place of 415 kB (decision 10).
 - `bar/`: `bdlt-bar.css` and `bdlt-bar.js`, the row under the picture with chips of fixed width.
   A minimal copy written here, because the release v3.4.1 has no `bar/`.
-- `make-poster-pdf.mjs`: the poster of a widget as a vector PDF, exactly the size of its area
-  (passed through Ghostscript where it is installed, which makes it about a quarter smaller).
+- `make-poster-tikz.mjs`: the poster of a figure as a TikZ drawing, read off the figure in the
+  browser (`<name>/<name>-poster.tex`); `poster.tex`: `\guideposter`, which lays such a poster
+  under the figure's place on the slide; `blank-poster.pdf`: the empty page the theme is given
+  as poster file; `check-posters.py`: each poster against its figure (decision 10).
 - No `math/`: neither figure shows a formula.
 - D3, only the modules the figures use (d3-selection 3.0.0, d3-transition 3.0.1 and what they
   need: d3-color, d3-dispatch, d3-ease, d3-interpolate, d3-timer), pinned in the sources and
@@ -42,8 +45,9 @@ departures listed under "Decisions".
    D3's selections and transitions 16 kB). A character outside Latin would fall back to the
    device's font; a D3 function outside those modules (scales, axes, forces) is not there.
 4. **Vector pictures throughout** (Claudio, 5 October 2026): "use vector images all the time".
-   Posters are made by Chrome's PDF printing, not by `tools/make-poster.sh` (a screenshot). A
-   poster state must not use blurs or shadows, which a PDF holds as bitmaps.
+   Posters are not made by `tools/make-poster.sh` (a screenshot): they are TikZ drawings read
+   off the figures (decision 10). A poster state must not use blurs, shadows or gradients:
+   `make-poster-tikz.mjs` stops when it meets one.
 5. **Checked inside the presenter.** The release has no `check-widget.mjs`; `../check.mjs` opens
    the built deck in `public/index.html` with a projector window and compares both copies after
    every step. That is a stronger check for this deck, and it needs the presenter next to it.
@@ -54,23 +58,42 @@ departures listed under "Decisions".
    script of both sources into `figures/guide-figures.html`; the key `x-figure` chooses which one
    runs. The deck embeds it once and so carries Source Sans and D3 once: 66 kB for both figures,
    in place of 125 kB for two files. Each figure keeps its own folder, source, poster and a built
-   file of its own (for the gallery deck, the live view and reuse elsewhere). The posters are
-   named on the slide with `poster=`, since they no longer sit next to the embedded file.
+   file of its own (for the gallery deck, the live view and reuse elsewhere). (52 kB since
+   decision 10.)
 8. **The finished PDF is repacked** with qpdf where it is installed (about 3 kB). With all of
    this the presenter's guide is 202 kB and the viewer's 200 kB, without a bitmap: 136 kB of
    slides (posters 67 kB, the three logos of the footer 40 kB) and 66 kB for the figures.
+   Superseded by decision 10: 147 kB and 144 kB.
 9. **A hidden game** (Claudio, 5 October 2026): "if the user clicks a specific area in a given
    sequence of clicks, an Easter egg is triggered that shows a Simon game of the 80s, more or
    less resembling it, with the four colors ... you have the same sounds". It is in `gestures`,
    started by the taps of a zapateo, "right, right, left, right, right"; `gestures/README.md`
    has the rules and the source of the tones. The slide does not mention it.
+10. **Posters drawn by TeX, and a narrower typeface in the figures** (Claudio, 5 October 2026):
+   "Ok, shrink as you suggested", the UZH logo kept as it is, and for the posters: "trying to
+   reproduce the actual visuals with text, to me is fine as long as it is completely
+   consistent". Until then a poster was a print of the figure from the browser, which holds
+   every letter as a shape of its own: 45 kB for two posters. Now `make-poster-tikz.mjs` opens
+   the figure in its poster state and writes every box, line, shape and line of text as TikZ,
+   at the place, size, weight and colour the browser gave it; TeX sets the text in the deck's
+   own Source Sans (regular and semibold, as in the figures). Two posters cost 8 kB of drawing
+   and 4 kB for the semibold weight. Nothing is drawn by hand, so a poster cannot drift from
+   its figure: `check-posters.py` (in `../build.sh check`) makes each poster again and expects
+   the one kept here, and compares the poster on its slide with a picture of the figure, after
+   blurring both by 1.5 CSS px; at most 0.05 % of the picture may differ clearly (measured:
+   0.008 % and 0.000 %). The browser is started with exact letter widths
+   (`--font-render-hinting=none`), as a Mac or an iPad lays text out; on Linux it would round
+   every letter to a whole pixel. In the figures, Source Sans keeps both weights and its hints
+   (the figures render as before, pixel for pixel) but only the keyboard's characters: 17 kB
+   in place of 34 kB. A character beyond them that a source uses is taken in by the next build.
+   The guide decks are 147 kB (presenter) and 144 kB (viewer).
 
 ## Build, check, look
 
 ```bash
-./gestures/build.sh            # or ./alive/build.sh: the built file and its poster
+./gestures/build.sh            # or ./alive/build.sh: the built file and its poster (a .tex file)
 ../build.sh media              # everything of this folder (also figures/guide-figures.html), then both decks
-../build.sh check              # the decks, then ../check.mjs
+../build.sh check              # the decks, then check-posters.py and ../check.mjs
 ```
 
 Needs `BDLT_REPO` (default `~/Projects/bdlt-beamer-media`), Python 3 with `fonttools` and
@@ -78,13 +101,13 @@ Needs `BDLT_REPO` (default `~/Projects/bdlt-beamer-media`), Python 3 with `fontt
 address: `gestures/gestures.html?lit=1&p=2`, `alive/alive.html?start=6`. The gallery deck is
 `gallery.tex` (`python3 $BDLT_REPO/tools/bdlt-deck.py build gallery.tex --no-handout`).
 
-Building a component again gives the same `.html`, byte for byte. The poster PDF carries the
-time it was made, so its bytes differ while its picture is the same.
+Building a component again gives the same `.html` and the same poster, byte for byte.
 
 ## Use a figure in another deck
 
-Copy its folder with `style/`, `bar/` and `make-poster-pdf.mjs` into the `media/` of that deck
-and take the frame from its README. Both figures are about BDLT PDF Presenter, so they fit decks
+Copy its folder with `style/`, `bar/`, `make-poster-tikz.mjs`, `poster.tex` and
+`blank-poster.pdf` into the `media/` of that deck, put `\usetikzlibrary{svg.path}` and
+`\input{media/poster.tex}` into its preamble, and take the frame from the figure's README. Both figures are about BDLT PDF Presenter, so they fit decks
 that introduce it (a first lecture of a course, a workshop on the tools).
 
 ## Make a new one here
@@ -92,7 +115,7 @@ that introduce it (a first lecture of a course, a workshop on the tools).
 Start from `gestures/gestures.src.html` (taps at places) or `alive/alive.src.html` (play, step,
 back). Keep the head lines, the stub markers and the state block at the end; rewrite the rest.
 Add the frame to `../deck.tex`, a row to `../outline.md` and to the table above, and a part to
-`../check.mjs`.
+`../check.mjs` and to `FIGURES` in `check-posters.py`.
 
 ## Not done, and to know
 
