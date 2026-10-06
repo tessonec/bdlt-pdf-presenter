@@ -50,6 +50,18 @@ body{background:var(--stage);color:var(--fg);font-family:var(--ui);overflow:hidd
 #inkc,#livec{pointer-events:none;transform:translateZ(0)}
 /* media layer (docs/media-spec.md): between the page image and the ink */
 #media{position:absolute;inset:0;pointer-events:none;z-index:1}
+/* Select tool: the words of the slide as real, invisible text exactly over the picture (the text layer
+   of PDF.js, its style sheet cut down to what is used), so that the browser can select and copy them.
+   Only the words take the pointer: a press next to them reaches the slide and draws the rectangle. */
+.textLayer{position:absolute;text-align:initial;inset:0;overflow:hidden;opacity:.3;line-height:1;-webkit-text-size-adjust:none;text-size-adjust:none;
+  forced-color-adjust:none;transform-origin:0 0;z-index:4;pointer-events:none;-webkit-user-select:text;user-select:text}
+.textLayer :is(span,br){color:transparent;position:absolute;white-space:pre;cursor:text;transform-origin:0 0;pointer-events:auto;-webkit-user-select:text;user-select:text}
+.textLayer span.markedContent{top:0;height:0}
+.textLayer ::selection{background:#0028a5}
+.textLayer br::selection{background:transparent}
+.textLayer .endOfContent{display:none}
+#marq{position:absolute;z-index:5;pointer-events:none;border:1.5px solid var(--accent);background:rgba(255,200,69,.16);box-shadow:0 0 0 1px rgba(0,0,0,.35)}
+#marq.done{transition:opacity .5s .25s;opacity:0}
 .media{position:absolute;pointer-events:auto;overflow:hidden;touch-action:none}
 .media video,.media img,.media canvas,.media iframe{touch-action:none}
 .media[hidden]{display:block!important;visibility:hidden;pointer-events:none}
@@ -90,7 +102,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;touch-
 .no-open #bOpen,.no-reload #bReload,.no-nav #bFirst,.no-nav #bPrev,.no-nav #bNext,.no-nav #bLast,.no-counter #counter,
 .no-overview #bGrid,.no-overview .hint,.no-ink [data-tool="pen"],.no-ink [data-tool="highlighter"],.no-ink [data-tool="eraser"],
 .no-ink #bUndo,.no-ink #bClear,.no-ink #pencilSet,.no-ink #penSet,.no-ink #hlSet,.no-laser [data-tool="laser"],.no-laser #laserSet,
-.no-ink.no-laser [data-tool="hand"],.no-save #bSave,.no-fullscreen #bFs,.no-projector #bPresent,.no-projector #presSet,
+.no-select [data-tool="select"],.no-ink.no-laser.no-select [data-tool="hand"],.no-save #bSave,.no-fullscreen #bFs,.no-projector #bPresent,.no-projector #presSet,
 .no-projector #lect,.no-projector #stripSet,.no-settings #bSettings,.no-hide #bHide,.no-toolbar #bar,.bar .grp.empty{display:none!important}
 .bar .grp.first{border-left:0}
 .tb.live{position:relative}
@@ -247,7 +259,7 @@ body.audience #stage{cursor:none}
 <div id="splash" role="status"><div><img src="icon.png" alt=""><h1>BDLT PDF Presenter</h1><p id="splashVer"></p></div></div>
 
 <div id="stage" aria-label="Slide">
-  <div id="page"><canvas id="pdfc"></canvas><div id="media"></div><canvas id="inkc"></canvas><canvas id="livec"></canvas></div>
+  <div id="page"><canvas id="pdfc"></canvas><div id="media"></div><canvas id="inkc"></canvas><canvas id="livec"></canvas><div id="textc" class="textLayer" hidden></div><div id="marq" hidden></div></div>
 </div>
 
 <header id="bar" class="bar" role="toolbar" aria-label="BDLT PDF Presenter controls">
@@ -265,6 +277,7 @@ body.audience #stage{cursor:none}
   </div>
   <div class="grp" id="tools">
     <button class="tb" data-tool="hand" aria-pressed="false" aria-label="Navigate" title="Navigate: click or tap to turn pages (V or Esc)"><svg viewBox="0 0 24 24"><path d="M7.904 17.563a1.2 1.2 0 0 0 2.228 .308l2.09 -3.093l4.907 4.907a1.067 1.067 0 0 0 1.509 0l1.047 -1.047a1.067 1.067 0 0 0 0 -1.509l-4.907 -4.907l3.113 -2.09a1.2 1.2 0 0 0 -.309 -2.228l-13.582 -3.904l3.904 13.563"/></svg></button>
+    <button class="tb" data-tool="select" aria-pressed="false" aria-label="Select" title="Select and copy (S): drag over words to select them, or next to them (or with Alt) to copy an area as a picture"><svg viewBox="0 0 24 24"><path d="M4 8v-2a2 2 0 0 1 2 -2h2"/><path d="M4 16v2a2 2 0 0 0 2 2h2"/><path d="M16 4h2a2 2 0 0 1 2 2v2"/><path d="M16 20h2a2 2 0 0 0 2 -2v-2"/><path d="M12 16v-7"/><path d="M9 9h6"/></svg></button>
     <button class="tb" data-tool="pen" data-ink aria-pressed="false" aria-haspopup="true" aria-expanded="false" aria-label="Pen" title="Pen (P). Tap again to choose the colour"><svg viewBox="0 0 24 24"><path d="M4 20l1.2-4.4L15.6 5.2a2 2 0 0 1 2.8 0l.4.4a2 2 0 0 1 0 2.8L8.4 18.8z"/><path d="M13.5 7.3l3.2 3.2"/></svg></button>
     <button class="tb" data-tool="highlighter" data-ink aria-pressed="false" aria-haspopup="true" aria-expanded="false" aria-label="Highlighter" title="Highlighter (H). Tap again to choose the colour"><svg viewBox="0 0 24 24"><path d="M9 14l-4 4v2h5l2-2"/><path d="M9 14l7-9 4 3-7 9z"/><path d="M4 21h16"/></svg></button>
     <button class="tb" data-tool="laser" data-ink aria-pressed="false" aria-haspopup="true" aria-expanded="false" aria-label="Laser pointer" title="Laser pointer, leaves no marks (L). Tap again to choose the colour"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/></svg></button>
@@ -423,7 +436,7 @@ if (LITE) {
 // A control that is off is not drawn and its shortcut does nothing. "show" leaves the toolbar
 // itself alone: only "hide": ["toolbar"] removes it. The address can switch off more than the page
 // does; it cannot bring back what the page has switched off.
-const CONTROLS = ['open', 'reload', 'nav', 'counter', 'overview', 'ink', 'laser', 'save', 'fullscreen', 'projector', 'settings', 'hide', 'toolbar', 'splash'];
+const CONTROLS = ['open', 'reload', 'nav', 'counter', 'overview', 'select', 'ink', 'laser', 'save', 'fullscreen', 'projector', 'settings', 'hide', 'toolbar', 'splash'];
 const OFF = (() => {
   const off = new Set();
   const list = v => (Array.isArray(v) ? v : String(v == null ? '' : v).split(/[\s,]+/)).map(x => String(x).trim().toLowerCase()).filter(Boolean);
@@ -449,7 +462,7 @@ const OFF = (() => {
 })();
 const shown = name => !OFF.has(name);
 const SOLO = LITE || !shown('projector');   // no separate views (projector and lecturer)
-const stage = $('#stage'), pageEl = $('#page'), pdfc = $('#pdfc'), inkc = $('#inkc'), livec = $('#livec');
+const stage = $('#stage'), pageEl = $('#page'), pdfc = $('#pdfc'), inkc = $('#inkc'), livec = $('#livec'), textc = $('#textc'), marq = $('#marq');
 const bar = $('#bar'), sheet = $('#sheet'), strip = $('#strip'), counter = $('#counter'), fileIn = $('#file');
 const inFrame = (() => { try { return window.self !== window.top; } catch (e) { return true; } })();
 
@@ -519,6 +532,7 @@ function layout() {
   base.fit = fitFor(curVp); base.w = curVp.width * base.fit; base.h = curVp.height * base.fit;
   base.left = (W - base.w) / 2; base.top = (H - base.h) / 2;
   Object.assign(pageEl.style, { width: base.w + 'px', height: base.h + 'px', left: base.left + 'px', top: base.top + 'px' });
+  textc.style.setProperty('--scale-factor', base.fit);
 }
 function applyView() { pageEl.style.transform = `translate(${view.tx}px,${view.ty}px) scale(${view.s})`; sendView(); }
 function clampView() {
@@ -555,7 +569,7 @@ async function showPage(n) {
   if (!c || c.ps < ps * 0.99) { c = { canvas: await renderToCanvas(n, ps), ps }; cache.set(n, c); }
   if (my !== renderToken) return;
   curVp = vp; view = { s: 1, tx: 0, ty: 0 }; layout(); applyView(); blit(c.canvas, ps);
-  mediaShow(n);
+  mediaShow(n); syncText();
   if (AUDIENCE) applyRemoteView();
   prefetch(n);
 }
@@ -677,16 +691,88 @@ async function keepAwake() { try { if (!wake && navigator.wakeLock) { wake = awa
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') keepAwake(); });
 
 stage.addEventListener('pointerdown', e => onDown(e));
+// ---------- Select tool: copy words as text, or any area of the slide as a picture ----------
+// Words: PDF.js lays the text of the page out as invisible text over the picture; the browser
+// selects and copies it (Cmd/Ctrl+C, or the menu of the right mouse button).
+// Pictures: a rectangle drawn from a place without words, or from anywhere with Alt held, is copied
+// to the clipboard as a PNG, drawn afresh at up to three times the size on screen, with the ink.
+let textFor = 0, textTask = null, marqStart = null;
+async function syncText() {
+  const want = tool === 'select' && !!pdfDoc && !!curVp;
+  textc.hidden = !want;
+  if (!want) {
+    if (textTask) { try { textTask.cancel(); } catch (e) {} textTask = null; }
+    if (textFor) { textc.replaceChildren(); textFor = 0; const sel = window.getSelection && getSelection(); if (sel) sel.removeAllRanges(); }
+    marq.hidden = true; return;
+  }
+  if (textFor === pageNum) return;
+  const n = pageNum; textFor = n;
+  if (textTask) { try { textTask.cancel(); } catch (e) {} textTask = null; }
+  textc.replaceChildren(); marq.hidden = true;
+  try {
+    const page = await pdfDoc.getPage(n), content = await page.getTextContent();
+    if (n !== pageNum || tool !== 'select') return;
+    textTask = pdfjsLib.renderTextLayer({ textContentSource: content, container: textc, viewport: page.getViewport({ scale: base.fit }), textDivs: [] });
+    await textTask.promise;
+  } catch (e) { if (!e || e.name !== 'AbortException') console.warn('text layer:', e); }
+}
+function selectDown(e) {
+  if (e.button !== 0 || inMedia(e)) return;
+  if (!e.altKey && e.target.closest && e.target.closest('#textc span')) return;      // on a word: the browser selects text
+  e.preventDefault(); const sel = window.getSelection && getSelection(); if (sel) sel.removeAllRanges();
+  const r = pageEl.getBoundingClientRect(), f = ev => [clamp((ev.clientX - r.left) / r.width, 0, 1), clamp((ev.clientY - r.top) / r.height, 0, 1)];
+  marqStart = f(e); marq.classList.remove('done'); marq.hidden = true;
+  const box = ev => { const b = f(ev); return [Math.min(marqStart[0], b[0]), Math.min(marqStart[1], b[1]), Math.abs(b[0] - marqStart[0]), Math.abs(b[1] - marqStart[1])]; };
+  const move = ev => { const b = box(ev); Object.assign(marq.style, { left: b[0] * 100 + '%', top: b[1] * 100 + '%', width: b[2] * 100 + '%', height: b[3] * 100 + '%' }); marq.hidden = false; };
+  const up = ev => {
+    window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); window.removeEventListener('pointercancel', up);
+    const b = box(ev); marqStart = null;
+    if (ev.type === 'pointercancel' || b[2] * r.width < 6 || b[3] * r.height < 6) { marq.hidden = true; return; }       // a click, not a rectangle
+    copyArea(b);
+  };
+  window.addEventListener('pointermove', move); window.addEventListener('pointerup', up); window.addEventListener('pointercancel', up);
+}
+// the area b = [x, y, w, h] in shares of the page, as a PNG: the page drawn afresh, then the ink of this slide
+async function areaCanvas(b) {
+  const n = pageNum, ps = psFor(curVp, 3);
+  const full = await renderToCanvas(n, ps);
+  const x = Math.round(b[0] * full.width), y = Math.round(b[1] * full.height), w = Math.max(1, Math.round(b[2] * full.width)), h = Math.max(1, Math.round(b[3] * full.height));
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  const ctx = c.getContext('2d'); ctx.drawImage(full, x, y, w, h, 0, 0, w, h);
+  ctx.setTransform(ps, 0, 0, ps, -x, -y); for (const st of (ink.get(n) || [])) drawStroke(ctx, st);
+  return c;
+}
+function copyArea(b) {
+  let size = '';
+  const blob = areaCanvas(b).then(c => { size = c.width + ' × ' + c.height + ' px'; return new Promise((ok, no) => c.toBlob(x => (x ? ok(x) : no(new Error('no picture'))), 'image/png')); });
+  const done = () => { marq.classList.add('done'); setTimeout(() => { marq.hidden = true; marq.classList.remove('done'); }, 800); };
+  const asFile = () => blob.then(x => {          // where the browser does not let a page copy pictures: a file instead
+    const a = document.createElement('a'); a.href = URL.createObjectURL(x); a.download = fileName.replace(/\.pdf$/i, '') + '-slide' + pageNum + '-area.png';
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    toast(inFrame ? 'This view cannot copy pictures.' : 'This browser cannot copy pictures: the area was saved as a file instead.', 4200); done();
+  }).catch(() => { toast('The area could not be copied.'); done(); });
+  try {
+    if (!navigator.clipboard || !window.ClipboardItem) return asFile();
+    // the item is made at once, inside the click; the picture arrives a moment later (Safari asks for this order)
+    navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
+      .then(() => { toast('Copied as a picture (' + size + '). Paste it where you need it.', 2800); done(); }, asFile);
+  } catch (e) { asFile(); }
+}
+document.addEventListener('copy', () => {       // words copied from the slide: say so
+  if (tool !== 'select') return;
+  const t = String(window.getSelection ? getSelection() : '').trim(); if (t) toast('Copied ' + t.split(/\s+/).length + (t.split(/\s+/).length === 1 ? ' word' : ' words'), 1600);
+});
 function onDown(e) {
   keepAwake();
   if (AUDIENCE) { flashAudBtn(); return; }
+  if (tool === 'select' && e.pointerType === 'mouse') return selectDown(e);   // with a finger or the Pencil the tool navigates, as Navigate does
   // Fingers and the mouse operate media (video controls, sliders); the Pencil always writes
   if (e.pointerType !== 'pen' && inMedia(e)) return;
   if (e.pointerType === 'mouse' && e.button !== 0) return;
   // The first Pencil contact switches Pencil mode on: from then on only the Pencil draws
   if (e.pointerType === 'pen' && !settings.pencil && shown('ink')) { settings.pencil = true; saveSettings(); if (tool === 'hand') setTool('pen'); syncTab(); toast('Pencil mode: the Pencil draws, fingers navigate', 2500); }
   // Who draws? The Pencil with any drawing tool; a finger or the mouse only when Pencil mode is off
-  const draws = tool !== 'hand' && (e.pointerType === 'pen' || !settings.pencil);
+  const draws = tool !== 'hand' && tool !== 'select' && (e.pointerType === 'pen' || !settings.pencil);
   if (!draws) return touchDown(e);        // navigate: tap zones, swipe, pan, pinch
   if (e.pointerType === 'touch' && penId !== null && e.pointerId !== penId) {
     // a second finger while drawing with a finger: drop the stroke and pinch instead
@@ -872,12 +958,12 @@ function syncTab() { document.documentElement.classList.toggle('tabon', bar.clas
 $('#barTab').onclick = () => toggleBar(true);
 function updateCounter() { counter.textContent = numPages ? `${pageNum} / ${numPages}` : '– / –'; }
 function setTool(t) {
-  if ((['pen', 'highlighter', 'eraser'].includes(t) && !shown('ink')) || (t === 'laser' && !shown('laser'))) t = 'hand';
+  if ((['pen', 'highlighter', 'eraser'].includes(t) && !shown('ink')) || (t === 'laser' && !shown('laser')) || (t === 'select' && !shown('select'))) t = 'hand';
   tool = t;
   stage.style.cursor = t === 'hand' ? '' : 'crosshair';
   if (t !== 'laser') { laser = laser.filter(p => p.id !== 'hover'); }
   document.querySelectorAll('[data-tool]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.tool === t)));
-  closePop(); syncColours(); syncTab();
+  closePop(); syncColours(); syncTab(); syncText();
 }
 // Colours. The toolbar itself never changes: each drawing tool shows its colour as a dot on its
 // button, and a tap on the tool that is already selected opens its colours in a popover below.
@@ -1121,6 +1207,7 @@ window.addEventListener('keydown', e => {
   else if (k === 'Home') showPage(1);
   else if (k === 'End') showPage(numPages);
   else if (k === 'v') setTool('hand');
+  else if (k === 's') setTool('select');
   else if (k === 'p') setTool('pen');
   else if (k === 'h') setTool('highlighter');
   else if (k === 'l') { if (!LITE) setTool('laser'); }

@@ -14,6 +14,9 @@ It runs in Safari; use Share › Add to Home Screen to install it as a full-scre
 - First and last slide: the « and » buttons in the toolbar and at the two ends of the slide
   overview.
 - Reload (toolbar, next to Open) reads the PDF again and keeps the slide and the ink.
+- Select (toolbar, next to Navigate; with the mouse): drag over the words of a slide to select
+  them and copy them as text, or draw a rectangle next to them (or anywhere with Alt held) to
+  copy that area to the clipboard as a picture, with the ink on it. Esc goes back to Navigate.
 - Pen, highlighter, laser pointer and eraser in UZH colours, for Apple Pencil, mouse or finger.
   The toolbar buttons never move: each tool shows its colour as a dot, and a tap on the tool
   that is already selected opens its colours below it.
@@ -73,6 +76,7 @@ tablet with a finger.
 | → ↓ Space Enter PageDown / ← ↑ Backspace PageUp | Next / previous slide |
 | Home / End | First / last slide |
 | V or Esc | Navigate tool |
+| S | Select tool: copy words as text, or an area as a picture |
 | P / H / L / E | Pen / highlighter / laser / eraser |
 | ⌘O or Ctrl+O | Open a PDF |
 | ⌘R or Ctrl+R | Reload the PDF, keeping the slide and the ink (⇧⌘R reloads the whole app) |
@@ -152,6 +156,7 @@ shortcut does nothing; turning pages with the keys and by tapping always works.
 | `nav` | the four buttons first, previous, next, last |
 | `counter` | the slide counter |
 | `overview` | slide overview: its button, G, and the gestures that open it |
+| `select` | Select tool: its button and S |
 | `ink` | pen, highlighter, eraser, undo, clear, and their settings |
 | `laser` | laser pointer |
 | `save` | Save button, ⌘S |
