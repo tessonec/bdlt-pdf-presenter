@@ -9,7 +9,9 @@
 - Guide decks: "Save keeps your notes" follows the tools slide. "Same view" and "Separate
   views" are one slide with two columns. The wording no longer names a make of device where it
   is not needed: "With a pencil", "With a mouse", "With a finger"; shortcuts read "Ctrl/⌘".
-  11 slides in each guide (presenter 142 kB, viewer 139 kB).
+  On the slide about presenting, both blue blocks have their title at the top and numbered
+  steps below. The toolbar slide, now "The other buttons of the toolbar", lists only the buttons
+  that no other slide explains. 11 slides in each guide (presenter 140 kB, viewer 138 kB).
 
 ## 1.6.0 (6 October 2026)
 

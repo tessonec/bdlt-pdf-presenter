@@ -89,7 +89,7 @@
   \global\advance\guiderowno by 1 }
 % the items of the toolbar slide, in two columns: \baritem{icon}{second icon or empty}{Name}{words}
 \newcount\guideitemno
-\ifguideviewer \def\BarRH{\GH/5}\def\BarTS{1.67}\def\BarPER{5}\else \def\BarRH{\GH/6}\def\BarTS{1.44}\def\BarPER{6}\fi
+\ifguideviewer \def\BarRH{\GH/3}\def\BarTS{1.78}\def\BarPER{3}\else \def\BarRH{\GH/4}\def\BarTS{1.78}\def\BarPER{4}\fi
 \newcommand\baritem[4]{%
   \pgfmathsetmacro\cx{\GX+int(\the\guideitemno/\BarPER)*\GW/2}
   \pgfmathsetmacro\ry{\GY+mod(\the\guideitemno,\BarPER)*\BarRH+\BarRH/2}
@@ -98,13 +98,17 @@
   \guidewords{\cx+2*\BarTS+1.03}{\ry-0.03}{11.6}{#3}{#4}
   \global\advance\guideitemno by 1 }
 
-% the slide on presenting: two blue columns, \ViewW wide with \ViewG between them;
-% \guideviewstep{row}{icon}{Name}{words}: one step of the right column, icon left of the words
+% the slide on presenting: two blue columns, \ViewW wide with \ViewG between them, each with its
+% title at the top and numbered steps below.
+% \guideviewcol{column}{Title}: the block and its title; \guideviewstep{column}{row}{icon}{Name}{words}: one step
 \def\ViewW{15.88}\def\ViewG{0.6}
-\newcommand\guideviewstep[4]{%
-  \guideglyph[white]{#2}{\GX+\ViewW+\ViewG+1.2}{\GY+3.05+#1*3.75}{2.2}{1.6}
-  \node[anchor=north west, text=white, align=left, inner sep=0pt] at (\GX+\ViewW+\ViewG+4.1,\GY+3.0+#1*3.75)
-    {\parbox{11.0cm}{\raggedright{\bdltfont{20}{100}\bfseries #3\par}\vspace{0.12cm}{\bdltfont{17}{115}#4\par}}};}
+\newcommand\guideviewcol[2]{%
+  \fill[uzh@blue] (\GX+#1*\ViewW+#1*\ViewG,\GY) rectangle ++(\ViewW,\GH);
+  \node[anchor=north west, text=white, inner sep=0pt] at (\GX+#1*\ViewW+#1*\ViewG+1.2,\GY+1.0) {\bdltfont{28}{100}\bfseries #2};}
+\newcommand\guideviewstep[5]{%
+  \guideglyph[white]{#3}{\GX+#1*\ViewW+#1*\ViewG+1.2}{\GY+3.05+#2*3.75}{2.2}{1.6}
+  \node[anchor=north west, text=white, align=left, inner sep=0pt] at (\GX+#1*\ViewW+#1*\ViewG+4.1,\GY+3.0+#2*3.75)
+    {\parbox{11.0cm}{\raggedright{\bdltfont{20}{100}\bfseries #4\par}\vspace{0.12cm}{\bdltfont{17}{115}#5\par}}};}
 
 \begin{document}
 
@@ -213,7 +217,9 @@
 
 % ---------------------------------------------------------------- the toolbar
 % @slide S09
-\begin{frame}{The toolbar, button by button}
+% only the buttons that no other slide explains: the tools, Save, the views, the page turns, the
+% overview and hiding the toolbar have their own slides
+\begin{frame}{The other buttons of the toolbar}
   \begin{bdltdiagram}
     \guideitemno=0
     \baritem{open}{}{Open}{Load a PDF from this device (Ctrl/\guidecmd\,O).}
@@ -221,17 +227,10 @@
     \baritem{reload}{}{Reload}{Reads the PDF again; the ink stays (Ctrl/\guidecmd\,R).}
     \fi
     \baritem{first}{last}{First / last slide}{Also at both ends of the slide overview.}
-    \baritem{prev}{next}{Previous / next}{Same as tapping the left or right third.}
-    \baritem{grid}{}{Slide overview}{Same as the lower-quarter triple-tap.}
     \baritem{undo}{}{Undo}{Takes back the last change (Ctrl/\guidecmd\,Z).}
     \baritem{clear}{}{Clear}{Removes all ink on this slide.}
-    \baritem{save}{}{Save}{Writes your ink into a new PDF (Ctrl/\guidecmd\,S).}
     \baritem{fs}{}{Full screen}{Hides the browser bars where allowed.}
-    \ifguideviewer\else
-    \baritem{split}{}{Same or separate views}{One mirrored screen, or projector and lecturer.}
-    \fi
     \baritem{settings}{}{Settings}{\ifguideviewer Colours, Pencil mode, About.\else Colours, slide strip speed and glide, About.\fi}
-    \baritem{hide}{}{Hide toolbar}{Tap the top centre of the slide to bring it back.}
   \end{bdltdiagram}
 \end{frame}
 
@@ -240,19 +239,14 @@
 % @slide S10
 \begin{frame}{Present with the same view, or with separate views}
   \begin{bdltdiagram}
-    % left: same view (one screen, mirrored)
-    \fill[uzh@blue] (\GX,\GY) rectangle ++(\ViewW,\GH);
-    \guideglyph[white]{screen}{\GX+2.04}{\GY+1.5}{5.2}{1.5}
-    \guideglyph[white]{screen}{\GX+8.64}{\GY+1.5}{5.2}{1.5}
-    \node[anchor=north west, text=white, align=left, inner sep=0pt] at (\GX+1.2,\GY+7.5)
-      {\parbox{13.4cm}{\raggedright{\bdltfont{28}{100}\bfseries Same view}\\[0.35cm]
-        {\bdltfont{20}{130}Mirror your screen to the projector: everyone sees what you see. Tap the top centre to hide the toolbar.}}};
-    % right: separate views (projector and lecturer), in three steps
-    \fill[uzh@blue] (\GX+\ViewW+\ViewG,\GY) rectangle ++(\ViewW,\GH);
-    \node[anchor=north west, text=white, inner sep=0pt] at (\GX+\ViewW+\ViewG+1.2,\GY+1.0) {\bdltfont{28}{100}\bfseries Separate views};
-    \guideviewstep{0}{split}{1. Two-screens button}{Tap it in the toolbar. It says so if your device cannot open a second window.}
-    \guideviewstep{1}{screen}{2. Projector window}{Open it as a window of its own and move it to the projector\textquotesingle s display.}
-    \guideviewstep{2}{fs}{3. Fill the screen}{Tap the projector window. Your own screen then shows the clock and the slide strip.}
+    % left: same view (one screen, mirrored); right: separate views (projector and lecturer)
+    \guideviewcol{0}{Same view}
+    \guideviewstep{0}{0}{mirror}{1. Mirror your screen}{Show it on the projector: everyone sees what you see.}
+    \guideviewstep{0}{1}{hide}{2. Hide the toolbar}{Tap the top centre of the slide; tap there again to bring it back.}
+    \guideviewcol{1}{Separate views}
+    \guideviewstep{1}{0}{split}{1. Two-screens button}{Tap it in the toolbar. It says so if your device cannot open a second window.}
+    \guideviewstep{1}{1}{screen}{2. Projector window}{Open it as a window of its own and move it to the projector\textquotesingle s display.}
+    \guideviewstep{1}{2}{fs}{3. Fill the screen}{Tap the projector window. Your own screen then shows the clock and the slide strip.}
   \end{bdltdiagram}
 \end{frame}
 \fi

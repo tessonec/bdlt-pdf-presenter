@@ -15,8 +15,8 @@ The content is that of the earlier PowerPoint guide (13 slides), plus the two li
 | S08 | Blank (diagram) | Tools: navigate, select, write, point, erase | What each tool does and how to choose its colour; Select copies words and areas. | toolbar tiles, colour dots | both (viewer: no laser) | checked |
 | S12 | Blank (diagram) | Save keeps your notes | Save writes the ink into a new PDF. | save drawing | both | checked |
 | S17 | Title + Content, icon tiles | Select: copy words or an area, and paste them anywhere | Copy and paste from a slide: words as text, any area as a picture. | icons select, text cursor, marquee | both | checked |
-| S09 | Blank (diagram) | The toolbar, button by button | What each button does. | toolbar tiles | both (viewer: no Reload, no views) | checked |
-| S10 | Blank (diagram), two columns | Present with the same view, or with separate views | One screen mirrored, or projector and lecturer in three steps. | icons screen (twice), split, screen, full screen | presenter | checked |
+| S09 | Blank (diagram) | The other buttons of the toolbar | What the buttons do that no other slide explains: Open, Reload, First / last, Undo, Clear, Full screen, Settings. | toolbar tiles | both (viewer: no Reload) | checked |
+| S10 | Blank (diagram), two columns | Present with the same view, or with separate views | One screen mirrored, or projector and lecturer in three steps. | icons mirror, hide, split, screen, full screen; both columns with their title at the top and numbered steps | presenter | checked |
 | S13 | Keypoint (info) | Open your own PDF from the toolbar to begin | What to do next. | none | both | checked |
 
 S14 (Try the gestures, a small screen in a frame) was merged into S06 on 6 October 2026 and its ID is retired.
