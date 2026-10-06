@@ -22,7 +22,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 DECK = os.path.dirname(HERE)
 # name, title of its slide, size of the figure in CSS px (AREA in its build.sh), its picture area on the slide in cm (x, y, width, height)
 FIGURES = [("gestures", "The four tap zones of a slide", 1147, 507, (0.75, 2.42, 32.36, 14.31)),      # the page of a diagram slide (\bdltarea)
-           ("alive", "A slide that runs", 1147, 445, (0.75, 2.42, 32.36, 12.57))]                # the picture area of \bdltfullimage
+           ("alive", "Slides that run", 1147, 445, (0.75, 2.42, 32.36, 12.57))]                # the picture area of \bdltfullimage
 BLUR, CLEAR, LIMIT = 3, 48, 0.05              # blur in px of the picture (2 per CSS px); a clear difference (of 255); % allowed
 CM = 72 / 2.54
 bad = 0

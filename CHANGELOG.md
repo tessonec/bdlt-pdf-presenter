@@ -1,11 +1,11 @@
 # Changelog
 
-## Unreleased
+## 1.6.1 (6 October 2026)
 
 ### Changed
 - Guide decks: the two static slides of the right and left third are gone; the live slide is
   the only one on the gestures, titled "The four tap zones of a slide: try them here". "A slide
-  that runs" is now the third slide.
+  that runs" is now the third slide, titled "Slides that run".
 - Guide decks: "Save keeps your notes" follows the tools slide. "Same view" and "Separate
   views" are one slide with two columns. The wording no longer names a make of device where it
   is not needed: "With a pencil", "With a mouse", "With a finger"; shortcuts read "Ctrl/⌘".

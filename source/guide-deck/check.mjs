@@ -120,7 +120,7 @@ if (L && A) {
   ok(await fits(L) && await fits(A), 'nothing overflows its box');
 }
 
-// ---- A slide that runs
+// ---- Slides that run
 at = await goTo('chain of blocks');
 ok(at > 0, 'the slide with the chain figure is found');
 L = await figure(page, '#stepb'); A = await figure(aud, '#stepb');

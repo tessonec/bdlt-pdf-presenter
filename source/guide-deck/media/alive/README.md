@@ -22,7 +22,7 @@
 % The preamble needs \usetikzlibrary{svg.path} and \input{media/poster.tex} (\guideposter).
 % This is the frame for the figure alone:
 \begin{frame}
-  \bdltfullimage{A slide that runs}
+  \bdltfullimage{Slides that run}
     {\guideposter{media/alive/alive-poster.tex}{1147}{445}%
      \bdltwidget[id=alive, poster=blank-poster.pdf, title={A chain of blocks: a picture on the left, running on the right}]{alive/alive.html}}
     {Left: what every PDF viewer shows. Right: the same figure, run by BDLT PDF Presenter.
@@ -34,3 +34,4 @@
 
 - 5 October 2026: made.
 - 5 October 2026: the poster is a TikZ drawing read off the figure, in place of a print from the browser; Source Sans in the figure is cut down to the keyboard's characters (Claudio: "shrink as you suggested ... as long as it is completely consistent"; decision 10 of `../README.md`).
+- 6 October 2026: its slide is titled "Slides that run" (was "A slide that runs") and is the third of the deck.

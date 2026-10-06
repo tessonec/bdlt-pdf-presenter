@@ -8,7 +8,7 @@ The content is that of the earlier PowerPoint guide (13 slides), plus the two li
 |---|---|---|---|---|---|---|
 | S01 | Title | BDLT PDF Presenter (Viewer) | What this deck is. | `cover.pdf` (vector) | both | checked |
 | S02 | Title + Content, icon tiles | Three ways to use it | Pencil, mouse and finger each have their way of working (named by what is in the hand, not by the device). | icons pen, mouse, tap | both | checked |
-| S15 | Full Image + Caption | A slide that runs | Why the presenter exists: the same figure is a picture elsewhere and runs here. | widget `alive` | both | checked |
+| S15 | Full Image + Caption | Slides that run | Why the presenter exists: the same figure is a picture elsewhere and runs here. | widget `alive` | both | checked |
 | S16 | Title + Content, icon tiles | Slides can be alive | Videos, animations and figures play in the slide. | icons play, frames, sliders | viewer | checked |
 | S06 | Title + picture area (`\bdltarea`) | The four tap zones of a slide: try them here | The four tap zones on one page, and each answers a tap: the only slide on the gestures. | widget `gestures` | both | checked |
 | S07 | Blank (diagram) | Pinch to zoom | Two fingers zoom, one finger pans. | pinch drawing | both | checked |
