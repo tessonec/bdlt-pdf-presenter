@@ -1,6 +1,6 @@
 # Guide deck of BDLT PDF Presenter: outline
 
-One source, two editions: `deck.tex` (presenter, 13 slides) and `deck-viewer.tex` (students, 12
+One source, two editions: `deck.tex` (presenter, 14 slides) and `deck-viewer.tex` (students, 13
 slides; written by `build.sh`). Slide IDs are stable; the order below is the order in the deck.
 The content is that of the earlier PowerPoint guide (13 slides), plus the two live figures.
 
@@ -13,6 +13,7 @@ The content is that of the earlier PowerPoint guide (13 slides), plus the two li
 | S06 | Title + picture area (`\bdltarea`) | Toolbar at the top, overview below: try all four zones | All four zones on one page, and each answers a tap; the toolbar zone and the triple tap are shown only here. | widget `gestures` | both | checked |
 | S07 | Blank (diagram) | Pinch to zoom | Two fingers zoom, one finger pans. | pinch drawing | both | checked |
 | S08 | Blank (diagram) | Tools: navigate, select, write, point, erase | What each tool does and how to choose its colour; Select copies words and areas. | toolbar tiles, colour dots | both (viewer: no laser) | checked |
+| S17 | Title + Content, icon tiles | Select: copy words or an area, and paste them anywhere | Copy and paste from a slide: words as text, any area as a picture. | icons select, text cursor, marquee | both | checked |
 | S09 | Blank (diagram) | The toolbar, button by button | What each button does. | toolbar tiles | both (viewer: no Reload, no views) | checked |
 | S16 | Title + Content, icon tiles | Slides can be alive | Videos, animations and figures play in the slide. | icons play, frames, sliders | viewer | checked |
 | S15 | Full Image + Caption | A slide that runs | Why the presenter exists: the same figure is a picture elsewhere and runs here. | widget `alive` | both | checked |

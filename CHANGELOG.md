@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.6.0 (6 October 2026)
 
 ### Added
 - `tools/bdlt-pdf-pack.py` packs one PDF and the viewer (or, with `--presenter`, the presenter)
@@ -28,9 +28,12 @@
   device frame, no bar below and no text at the side; the separate "Try the gestures" slide is
   gone (14 slides in the presenter's guide, 13 in the viewer's).
   The static slide of the toolbar zone went too: the live slide shows it, under the title
-  "Toolbar at the top, overview below: try all four zones". The tools slide lists Select.
-  13 slides in the presenter's guide, 12 in the viewer's.
-- The guide decks are 142 kB (presenter) and 140 kB (viewer), in place of 202 kB and 200 kB. The pictures that other PDF readers show in place of the two live figures
+  "Toolbar at the top, overview below: try all four zones". The tools slide lists Select, and
+  a new slide explains copy and paste with it. The title slide and the footers name the release
+  the guide describes (read from the presenter by `build.sh`). The Save slide no longer speaks
+  of the iPad only: Save works on every device. 14 slides in the presenter's guide, 13 in the
+  viewer's.
+- The guide decks are 144 kB (presenter) and 142 kB (viewer), in place of 202 kB and 200 kB. The pictures that other PDF readers show in place of the two live figures
   are now TikZ drawings read off the figures themselves, with the text in the deck's own
   typeface (12 kB in place of 45 kB), and the figures carry Source Sans only for the characters
   of the keyboard (17 kB in place of 34 kB). `./build.sh check` in `source/guide-deck/` compares

@@ -21,6 +21,9 @@ fi
 python3 media/figures/make-figures.py
 python3 "$R/tools/inline-widget.py" media/figures/guide-figures.src.html -o media/figures/guide-figures.html
 python3 make-icons.py
+# the release this guide describes, for the title slide: the one written in the presenter itself
+V="$(sed -n "s/.*const APP_RELEASE = '\([0-9.]*\)'.*/\1/p" "$PUBLIC/index.html" 2>/dev/null | head -1)"
+printf '%%%% guide-version.tex -- written by build.sh from public/index.html; do not edit.\n\\def\\guideversion{%s}\n' "$V" > guide-version.tex
 # the viewer edition is the same source with \guideviewer set; a file of its own, so that its slides keep their IDs
 { echo '% deck-viewer.tex -- written by build.sh from deck.tex: the viewer edition (students). Do not edit; edit deck.tex.'
   echo '\def\guideviewer{}'; tail -n +2 deck.tex; } > deck-viewer.tex

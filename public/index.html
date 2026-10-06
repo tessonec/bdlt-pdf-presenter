@@ -1731,7 +1731,7 @@ function mediaRemote(msg) {
 }
 
 // ---------- update check: GitLab stamps the build into APP_VERSION and version.json ----------
-const APP_RELEASE = '1.5.0';            // raise by hand for notable releases
+const APP_RELEASE = '1.6.0';            // raise by hand for notable releases
 const APP_VERSION = '__BUILD__';      // replaced by GitLab with the commit id on every deployment
 const STAMPED = !APP_VERSION.startsWith('__');
 const BUILD4 = STAMPED ? APP_VERSION.slice(0, 4) : 'dev';
