@@ -62,26 +62,6 @@
     \path[use as bounding box] (0,0) rectangle (#3,#3);
     \guideglyph[#1]{#2}{0}{0}{#3}{1.5}
   \end{tikzpicture}}
-% the slide of the gesture pictures: a grey panel with thin lines at the thirds and quarters
-\newcommand\guideslidepanel{%
-  \fill[guidepanel] (\GX,\GY) rectangle ++(\GW,\GH);
-  \draw[guiderule, line width=1pt] (\GX+\GW/3,\GY) -- ++(0,\GH*0.75) (\GX+2*\GW/3,\GY) -- ++(0,\GH*0.75)
-    (\GX,\GY+\GH*0.75) -- ++(\GW,0) (\GX+\GW/3,\GY+\GH*0.25) -- ++(\GW/3,0);}
-% \guidezonetall{x}{Head}{Sub}: a zone over a third of the slide (upper three quarters), hand above the words
-\newcommand\guidezonetall[3]{%
-  \fill[uzh@blue] (#1,\GY) rectangle ++(\GW/3,\GH*0.75);
-  \guideglyph[white]{tap}{#1+\GW/6-2.48}{\GY+1.6}{4.96}{1.5}
-  \node[anchor=north, text=white, align=center, text width=9.6cm, inner sep=0pt] at (#1+\GW/6,\GY+7.35)
-    {{\bdltfont{28}{100}\fontseries{sb}\selectfont #2}\\[0.2cm]{\bdltfont{20}{100}#3}};}
-% \guidezonewide{x}{y}{w}{icon x}{Head}{Sub}{badge}: a zone a quarter of the slide high, hand left of the words
-% (no slide uses it since S05 and the static S06 went; the live figure of S06 takes its places from here)
-\newcommand\guidezonewide[7]{%
-  \fill[uzh@blue] (#1,#2) rectangle ++(#3,\GH*0.25);
-  \guideglyph[white]{tap}{#4}{#2+0.5}{2.58}{1.5}
-  \def\guidetmp{#7}%
-  \ifx\guidetmp\empty\else \node[anchor=north west, text=white, inner sep=0pt] at (#4+2.6,#2+0.55) {\bdltfont{30}{100}\bfseries #7};\fi
-  \node[anchor=west, text=white, align=left, inner sep=0pt] at (#4+\ifx\guidetmp\empty 3.4\else 5.3\fi,#2+\GH*0.125)
-    {\parbox{16cm}{\raggedright{\bdltfont{28}{100}\fontseries{sb}\selectfont #5}\\[0.15cm]{\bdltfont{20}{100}#6}}};}
 % \guiderow{y}{row height}{tile size}{x}{text width}{Name}{What it does}: the words next to a tile
 \newcommand\guidewords[5]{%
   \node[anchor=west, align=left, inner sep=0pt] at (#1,#2)
@@ -136,26 +116,32 @@
   }
 \end{frame}
 
+% ---------------------------------------------------------------- live: still here, alive there (the third slide: why the presenter exists, before how to use it)
+% @slide S15
+\begin{frame}
+  \bdltfullimage{A slide that runs}
+    {\guideposter{media/alive/alive-poster.tex}{1147}{445}%
+     \bdltwidget[id=alive, x-figure=alive, poster=blank-poster.pdf, title={A chain of blocks: a picture on the left, running on the right}]{figures/guide-figures.html}}
+    {Left: what every PDF viewer shows. Right: the same figure, run by \ifguideviewer BDLT PDF Viewer\else BDLT PDF Presenter\fi.
+     If pressing play changes nothing, you are reading this PDF somewhere else.}
+\end{frame}
+
+% ---------------------------------------------------------------- live media (the viewer's guide names the kinds)
+\ifguideviewer
+% @slide S16
+\begin{frame}{Slides can be alive}
+  \bdlticontiles[height=7.8, icon=0.6, text=22]{
+    \bdlttile{\guideicon{play}{4.4}}{Videos and sound}{Tap the picture to play or pause, and drag the bar to move in time.}
+    \bdlttile{\guideicon{frames}{4.4}}{Animations}{Let them run, or step through the frames one by one.}
+    \bdlttile{\guideicon{sliders}{4.4}}{Interactive figures}{Move the sliders and drag the points with a finger or the mouse.}
+  }
+\end{frame}
+\fi
+
 % ---------------------------------------------------------------- the four tap zones
-% @slide S03
-\begin{frame}{Tap the right third: next slide}
-  \begin{bdltdiagram}
-    \guideslidepanel
-    \guidezonetall{\GX+2*\GW/3}{Tap here}{Next slide}
-  \end{bdltdiagram}
-\end{frame}
-
-% @slide S04
-\begin{frame}{Tap the left third: previous slide}
-  \begin{bdltdiagram}
-    \guideslidepanel
-    \guidezonetall{\GX}{Tap here}{Previous slide}
-  \end{bdltdiagram}
-\end{frame}
-
 % @slide S06
-% live: the page of the two slides before, with all four zones. Each answers a tap; the toolbar zone and the triple tap are shown only here.
-\begin{frame}{Toolbar at the top, overview below: try all four zones}
+% live: the page of a slide with its four tap zones. Each answers a tap; this is the only slide on the gestures.
+\begin{frame}{The four tap zones of a slide: try them here}
   \bdltarea{0.75}{2.42}{32.36}{14.31}
     {\guideposter{media/gestures/gestures-poster.tex}{1147}{507}%
      \bdltwidget[id=gestures, x-figure=gestures, poster=blank-poster.pdf, title={This page with its four tap zones}]{figures/guide-figures.html}}
@@ -227,28 +213,6 @@
     \baritem{settings}{}{Settings}{\ifguideviewer Colours, Pencil mode, About.\else Colours, slide strip speed and glide, About.\fi}
     \baritem{hide}{}{Hide toolbar}{Tap the top centre of the slide to bring it back.}
   \end{bdltdiagram}
-\end{frame}
-
-% ---------------------------------------------------------------- live media (the viewer's guide names the kinds)
-\ifguideviewer
-% @slide S16
-\begin{frame}{Slides can be alive}
-  \bdlticontiles[height=7.8, icon=0.6, text=22]{
-    \bdlttile{\guideicon{play}{4.4}}{Videos and sound}{Tap the picture to play or pause, and drag the bar to move in time.}
-    \bdlttile{\guideicon{frames}{4.4}}{Animations}{Let them run, or step through the frames one by one.}
-    \bdlttile{\guideicon{sliders}{4.4}}{Interactive figures}{Move the sliders and drag the points with a finger or the mouse.}
-  }
-\end{frame}
-\fi
-
-% ---------------------------------------------------------------- live: still here, alive there
-% @slide S15
-\begin{frame}
-  \bdltfullimage{A slide that runs}
-    {\guideposter{media/alive/alive-poster.tex}{1147}{445}%
-     \bdltwidget[id=alive, x-figure=alive, poster=blank-poster.pdf, title={A chain of blocks: a picture on the left, running on the right}]{figures/guide-figures.html}}
-    {Left: what every PDF viewer shows. Right: the same figure, run by \ifguideviewer BDLT PDF Viewer\else BDLT PDF Presenter\fi.
-     If pressing play changes nothing, you are reading this PDF somewhere else.}
 \end{frame}
 
 \ifguideviewer\else

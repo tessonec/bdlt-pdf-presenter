@@ -9,7 +9,7 @@ departures listed under "Decisions".
 
 | Folder | Command | Slide | What it is | A pattern for |
 |---|---|---|---|---|
-| `gestures/` | in words (an interactive figure) | S06 | The page with its four tap zones, as on the slides before it; a tapped zone lights up like a lamp of the Simon game | a figure that answers taps at places; state-driven flashes that also show on the projector; a triple tap with a time limit; a figure drawn to continue the static slides around it |
+| `gestures/` | in words (an interactive figure) | S06 | The page with its four tap zones; a tapped zone lights up like a lamp of the Simon game | a figure that answers taps at places; state-driven flashes that also show on the projector; a triple tap with a time limit |
 | `alive/` | in words (a small simulation) | S15 | One figure twice: a still picture on the left, running on the right | a run computed once from a seed and looked up per step; a slide that tells readers of other viewers what they miss |
 | `figures/` | | S06, S15 | `guide-figures.html`: both figures in one file, which is what the deck embeds (decision 7) | several figures of a deck sharing their fonts and library |
 | `cover.svg`, `cover.pdf`, `make-cover.mjs` | | S01 | the picture of the title slide, as a vector drawing | |
@@ -100,7 +100,10 @@ departures listed under "Decisions".
    set in semibold, the weight the figure has. The guide decks are 143 kB and 141 kB.
    Later the same day S05, the static slide of the toolbar zone, went as well ("Slide 5 is not
    needed at all it is already in slide 6 (which would need a new title)"): S06 is titled
-   "Toolbar at the top, overview below: try all four zones". S03 and S04 stay.
+   "Toolbar at the top, overview below: try all four zones". Then S03 and S04 went too
+   ("they are not needed with the clickable one"): S06 is the only slide on the gestures,
+   titled "The four tap zones of a slide: try them here", and the macros that drew the static
+   gesture slides are gone from `../deck.tex`.
 
 ## Build, check, look
 

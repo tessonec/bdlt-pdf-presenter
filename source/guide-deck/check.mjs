@@ -35,7 +35,7 @@ page.on('pageerror', e => errors.push(e.message));
 ctx.on('request', q => { let fr = null; try { fr = q.frame(); } catch (e) {} if (fr && fr.parentFrame() && !/^(data|blob|about):/.test(q.url())) fromFrames.push(q.url()); });
 await page.goto(base + '/index.html?pdf=deck.pdf'); await page.waitForTimeout(4000);
 const pages = parseInt((await page.textContent('#counter')).split('/')[1], 10);
-ok(pages >= 12, 'the deck opens in the presenter', 'counter: ' + await page.textContent('#counter'));
+ok(pages >= 11, 'the deck opens in the presenter', 'counter: ' + await page.textContent('#counter'));
 const [aud] = await Promise.all([ctx.waitForEvent('page'), page.click('#bPresent')]);
 aud.on('pageerror', e => errors.push('projector: ' + e.message));
 await aud.setViewportSize({ width: 1280, height: 720 }); await page.waitForTimeout(3000);
