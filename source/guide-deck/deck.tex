@@ -53,7 +53,7 @@
   \edef\guidefillc{\ifx\guidetmp\empty guidetile\else guidegold\fi}\edef\guideinkc{\ifx\guidetmp\empty guideink\else black\fi}%
   \fill[fill=\guidefillc, rounded corners=#5*0.25cm] (#3,#4) rectangle ++(#5,#5);
   \guideglyph[\guideinkc]{#2}{#3+#5*14/64}{#4+#5*14/64}{#5*36/64}{1.8}}
-% \guidecmd: the Command key sign of a Mac keyboard, drawn (Source Sans has no such character)
+% \guidecmd: the Command key sign, drawn (Source Sans has no such character); the slides write "Ctrl/<sign>"
 \newcommand\guidecmd{\tikz[baseline=-11.4pt, scale=0.6, yscale=-1, line cap=round, line join=round, line width=1.15pt]{%
   \draw svg {M 7 9 a 2 2 0 1 1 2 -2 v 10 a 2 2 0 1 1 -2 -2 h 10 a 2 2 0 1 1 -2 2 v -10 a 2 2 0 1 1 2 2 h -10};}}
 % \guideicon[colour]{name}{size}: the icon as a picture of its own (for the tiles of a layout)
@@ -98,6 +98,14 @@
   \guidewords{\cx+2*\BarTS+1.03}{\ry-0.03}{11.6}{#3}{#4}
   \global\advance\guideitemno by 1 }
 
+% the slide on presenting: two blue columns, \ViewW wide with \ViewG between them;
+% \guideviewstep{row}{icon}{Name}{words}: one step of the right column, icon left of the words
+\def\ViewW{15.88}\def\ViewG{0.6}
+\newcommand\guideviewstep[4]{%
+  \guideglyph[white]{#2}{\GX+\ViewW+\ViewG+1.2}{\GY+3.05+#1*3.75}{2.2}{1.6}
+  \node[anchor=north west, text=white, align=left, inner sep=0pt] at (\GX+\ViewW+\ViewG+4.1,\GY+3.0+#1*3.75)
+    {\parbox{11.0cm}{\raggedright{\bdltfont{20}{100}\bfseries #3\par}\vspace{0.12cm}{\bdltfont{17}{115}#4\par}}};}
+
 \begin{document}
 
 % ---------------------------------------------------------------- cover
@@ -110,9 +118,9 @@
 % @slide S02
 \begin{frame}{Three ways to use it}
   \bdlticontiles[height=7.8, icon=0.6, text=22]{
-    \bdlttile{\guideicon{pen}{4.4}}{iPad with Apple Pencil}{The Pencil draws and fingers navigate. Pencil mode starts at the first touch of the Pencil.}
-    \bdlttile{\guideicon{mouse}{4.4}}{Computer with a mouse}{Click to turn pages, pick a tool to draw, and press Esc to go back to Navigate.}
-    \bdlttile{\guideicon{tap}{4.4}}{Phone or tablet}{A finger works like the mouse, and two fingers always zoom.}
+    \bdlttile{\guideicon{pen}{4.4}}{With a pencil}{The pencil draws and fingers navigate. Pencil mode starts at the first touch of the pencil.}
+    \bdlttile{\guideicon{mouse}{4.4}}{With a mouse}{Click to turn pages, pick a tool to draw, and press Esc to go back to Navigate.}
+    \bdlttile{\guideicon{tap}{4.4}}{With a finger}{A finger works like the mouse, and two fingers always zoom.}
   }
 \end{frame}
 
@@ -181,6 +189,18 @@
   \end{bdltdiagram}
 \end{frame}
 
+% ---------------------------------------------------------------- save (after the tools: this is where the notes are kept)
+% @slide S12
+\begin{frame}{Save keeps your notes}
+  \begin{bdltdiagram}
+    \fill[uzh@blue] (\GX,\GY) rectangle ++(\GW,\GH);
+    \guideglyph[white]{save}{\GX+3.05}{\GY+3.43}{7.44}{1.6}
+    \node[anchor=west, text=white, align=left, inner sep=0pt] at (\GX+13.0,\GY+\GH/2)
+      {\parbox{18cm}{\raggedright{\bdltfont{28}{100}\bfseries Save writes your ink into a new PDF}\\[0.35cm]
+        {\bdltfont{20}{130}It works on every device: the new PDF is downloaded, or your device asks where to keep it.\\ Try it: circle something on this slide, then press Save.}}};
+  \end{bdltdiagram}
+\end{frame}
+
 % ---------------------------------------------------------------- copy and paste
 % @slide S17
 \begin{frame}{Select: copy words or an area, and paste them anywhere}
@@ -196,16 +216,16 @@
 \begin{frame}{The toolbar, button by button}
   \begin{bdltdiagram}
     \guideitemno=0
-    \baritem{open}{}{Open}{Load a PDF from Files or iCloud Drive (\guidecmd\,O).}
+    \baritem{open}{}{Open}{Load a PDF from this device (Ctrl/\guidecmd\,O).}
     \ifguideviewer\else
-    \baritem{reload}{}{Reload}{Reads the PDF again; slide and ink stay (\guidecmd\,R).}
+    \baritem{reload}{}{Reload}{Reads the PDF again; the ink stays (Ctrl/\guidecmd\,R).}
     \fi
     \baritem{first}{last}{First / last slide}{Also at both ends of the slide overview.}
     \baritem{prev}{next}{Previous / next}{Same as tapping the left or right third.}
     \baritem{grid}{}{Slide overview}{Same as the lower-quarter triple-tap.}
-    \baritem{undo}{}{Undo}{Takes back the last change on this slide (\guidecmd\,Z).}
+    \baritem{undo}{}{Undo}{Takes back the last change (Ctrl/\guidecmd\,Z).}
     \baritem{clear}{}{Clear}{Removes all ink on this slide.}
-    \baritem{save}{}{Save}{Writes your ink into a new PDF (\guidecmd\,S).}
+    \baritem{save}{}{Save}{Writes your ink into a new PDF (Ctrl/\guidecmd\,S).}
     \baritem{fs}{}{Full screen}{Hides the browser bars where allowed.}
     \ifguideviewer\else
     \baritem{split}{}{Same or separate views}{One mirrored screen, or projector and lecturer.}
@@ -218,29 +238,24 @@
 \ifguideviewer\else
 % ---------------------------------------------------------------- presenting: one screen or two
 % @slide S10
-\infoframe{Same view: mirror the iPad, then tap the top centre to hide the toolbar}
-
-% @slide S11
-\begin{frame}{Separate views: projector and lecturer}
-  \bdlticontiles[height=7.8, icon=0.6, text=22]{
-    \bdlttile{\guideicon{split}{4.4}}{1. Two-screens button}{Tap it in the toolbar, in Safari. An iPad needs an M1 chip or later.}
-    \bdlttile{\guideicon{screen}{4.4}}{2. Projector window}{Touch and hold Projector window, choose Open in New Window, and drag it to the display.}
-    \bdlttile{\guideicon{fs}{4.4}}{3. Fill the screen}{Tap the projector window. This iPad then shows the clock and the slide strip.}
-  }
-\end{frame}
-\fi
-
-% ---------------------------------------------------------------- save
-% @slide S12
-\begin{frame}{Save keeps your notes}
+\begin{frame}{Present with the same view, or with separate views}
   \begin{bdltdiagram}
-    \fill[uzh@blue] (\GX,\GY) rectangle ++(\GW,\GH);
-    \guideglyph[white]{save}{\GX+3.05}{\GY+3.43}{7.44}{1.6}
-    \node[anchor=west, text=white, align=left, inner sep=0pt] at (\GX+13.0,\GY+\GH/2)
-      {\parbox{18cm}{\raggedright{\bdltfont{28}{100}\bfseries Save writes your ink into a new PDF}\\[0.35cm]
-        {\bdltfont{20}{130}It works on every device. A computer downloads the new PDF; on an iPad or a phone, choose Save to Files.\\ Try it: circle something on this slide, then press Save.}}};
+    % left: same view (one screen, mirrored)
+    \fill[uzh@blue] (\GX,\GY) rectangle ++(\ViewW,\GH);
+    \guideglyph[white]{screen}{\GX+2.04}{\GY+1.5}{5.2}{1.5}
+    \guideglyph[white]{screen}{\GX+8.64}{\GY+1.5}{5.2}{1.5}
+    \node[anchor=north west, text=white, align=left, inner sep=0pt] at (\GX+1.2,\GY+7.5)
+      {\parbox{13.4cm}{\raggedright{\bdltfont{28}{100}\bfseries Same view}\\[0.35cm]
+        {\bdltfont{20}{130}Mirror your screen to the projector: everyone sees what you see. Tap the top centre to hide the toolbar.}}};
+    % right: separate views (projector and lecturer), in three steps
+    \fill[uzh@blue] (\GX+\ViewW+\ViewG,\GY) rectangle ++(\ViewW,\GH);
+    \node[anchor=north west, text=white, inner sep=0pt] at (\GX+\ViewW+\ViewG+1.2,\GY+1.0) {\bdltfont{28}{100}\bfseries Separate views};
+    \guideviewstep{0}{split}{1. Two-screens button}{Tap it in the toolbar. It says so if your device cannot open a second window.}
+    \guideviewstep{1}{screen}{2. Projector window}{Open it as a window of its own and move it to the projector\textquotesingle s display.}
+    \guideviewstep{2}{fs}{3. Fill the screen}{Tap the projector window. Your own screen then shows the clock and the slide strip.}
   \end{bdltdiagram}
 \end{frame}
+\fi
 
 % @slide S13
 \infoframe{Open your own PDF from the toolbar to begin}
