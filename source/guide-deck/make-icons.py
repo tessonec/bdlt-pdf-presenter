@@ -16,6 +16,7 @@ UI = {
  'first': '<path d="M11 6l-6 6 6 6M19 6l-6 6 6 6"/>', 'last': '<path d="M13 6l6 6-6 6M5 6l6 6-6 6"/>',
  'prev': '<path d="M15 5l-7 7 7 7"/>', 'next': '<path d="M9 5l7 7-7 7"/>',
  'grid': '<rect x="3" y="5" width="8" height="6" rx="1"/><rect x="13" y="5" width="8" height="6" rx="1"/><rect x="3" y="13" width="8" height="6" rx="1"/><rect x="13" y="13" width="8" height="6" rx="1"/>',
+ 'select': '<path d="M4 8v-2a2 2 0 0 1 2 -2h2"/><path d="M4 16v2a2 2 0 0 0 2 2h2"/><path d="M16 4h2a2 2 0 0 1 2 2v2"/><path d="M16 20h2a2 2 0 0 0 2 -2v-2"/><path d="M12 16v-7"/><path d="M9 9h6"/>',
  'pen': '<path d="M4 20l1.2-4.4L15.6 5.2a2 2 0 0 1 2.8 0l.4.4a2 2 0 0 1 0 2.8L8.4 18.8z"/><path d="M13.5 7.3l3.2 3.2"/>',
  'highlighter': '<path d="M9 14l-4 4v2h5l2-2"/><path d="M9 14l7-9 4 3-7 9z"/><path d="M4 21h16"/>',
  'laser': '<circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/>',

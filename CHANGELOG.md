@@ -9,8 +9,14 @@
 - Inside another page (a chat, a learning platform) the app takes the keyboard when it opens
   and after every tap, so the arrow keys turn the slides without a click first.
 
+- Select tool (toolbar, next to Navigate; the S key), in the presenter and the viewer, for the
+  mouse. A drag over the words of a slide selects them, and they are copied as text in the usual
+  way. A rectangle drawn next to the words, or anywhere with Alt held, is copied to the clipboard
+  as a picture: that part of the slide drawn afresh at up to three times its size on screen, with
+  the ink on it. Where the browser does not let a page copy pictures, the picture is saved as a
+  file. The words come from the text layer of PDF.js, which is only built while the tool is on.
 - Which controls are shown can be chosen, with one list of names (`open`, `reload`, `nav`,
-  `counter`, `overview`, `ink`, `laser`, `save`, `fullscreen`, `projector`, `settings`, `hide`,
+  `counter`, `overview`, `select`, `ink`, `laser`, `save`, `fullscreen`, `projector`, `settings`, `hide`,
   `toolbar`, `splash`): in the address (`?hide=open,save` or `?show=nav,counter,fullscreen`), in
   the page (a `bdltConfig` block), or in a packed page (`--hide`, `--show`). A control that is
   off is not drawn and its shortcut does nothing.
@@ -21,7 +27,10 @@
   the three gesture slides before it, with a hand and its words in each of the four zones, no
   device frame, no bar below and no text at the side; the separate "Try the gestures" slide is
   gone (14 slides in the presenter's guide, 13 in the viewer's).
-- The guide decks are 143 kB (presenter) and 141 kB (viewer), in place of 202 kB and 200 kB. The pictures that other PDF readers show in place of the two live figures
+  The static slide of the toolbar zone went too: the live slide shows it, under the title
+  "Toolbar at the top, overview below: try all four zones". The tools slide lists Select.
+  13 slides in the presenter's guide, 12 in the viewer's.
+- The guide decks are 142 kB (presenter) and 140 kB (viewer), in place of 202 kB and 200 kB. The pictures that other PDF readers show in place of the two live figures
   are now TikZ drawings read off the figures themselves, with the text in the deck's own
   typeface (12 kB in place of 45 kB), and the figures carry Source Sans only for the characters
   of the keyboard (17 kB in place of 34 kB). `./build.sh check` in `source/guide-deck/` compares

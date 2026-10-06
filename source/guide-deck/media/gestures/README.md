@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Command | `INTERACTIVE>` in spirit; asked for in words by Claudio (5 October 2026): "a visualisation that is embedded in the logic of the documentation of the presenter", and "I would make the area glow as a Simon '80 game.. when you click on a zone" |
-| Shows | The page of a slide with the four tap zones of BDLT PDF Presenter, drawn as on the three slides before it in the guide deck: each zone with a hand and its words at the same places, each in a colour of its own. No device frame, no bar below, no text at the side |
+| Shows | The page of a slide with the four tap zones of BDLT PDF Presenter, drawn as on the two slides before it in the guide deck: each zone with a hand and its words at the same places, each in a colour of its own. No device frame, no bar below, no text at the side |
 | Operated | A tap (finger or mouse) on a zone is counted as what it does in the presenter: left third previous, right third next, top centre toolbar on or off, three quick taps in the lower quarter open the overview, and the next tap closes it. The tapped zone lights up and fades, like a lamp of the Simon game. No button |
 | Status bar | none below the picture (Claudio: "no need for the controls below"). Three chips of fixed width stand in the middle of the page, the part that does nothing: `slide 2 / 5`, `toolbar on / off`, `overview open / closed`; under them a few words that name the gesture just made. In the hidden game: `round 3 / 8`, `watch / your turn / well done / try again`, `best 5` |
 | Hidden | **A memory game on the four lamps**, not mentioned on the slide. Tapping right, right, left, right, right (a zapateo) starts it: the hands and words go and the zones are four lamps, the lamps play a growing sequence with a tone each, the player repeats it, eight in a row win. A wrong lamp, or three seconds without an answer, loses with a low buzz; a tap on a lamp then starts again. A tap in the middle of the page ends it, and so does leaving the slide. |
@@ -22,7 +22,7 @@
 % In the guide deck the file is figures/guide-figures.html, with x-figure=gestures; the poster is the same.
 % The preamble needs \usetikzlibrary{svg.path} and \input{media/poster.tex} (\guideposter).
 % This is the frame for the figure alone:
-\begin{frame}{The four zones together: try them here}
+\begin{frame}{Toolbar at the top, overview below: try all four zones}
   \bdltarea{0.75}{2.42}{32.36}{14.31}
     {\guideposter{media/gestures/gestures-poster.tex}{1147}{507}%
      \bdltwidget[id=gestures, poster=blank-poster.pdf, title={This page with its four tap zones}]{gestures/gestures.html}}
@@ -35,3 +35,4 @@
 - 5 October 2026: the hidden memory game (Claudio: "an Easter egg ... a Simon game of the 80s ... you play and you have the same sounds"; the taps that start it: "right, right, left, right, right").
 - 5 October 2026: the poster is a TikZ drawing read off the figure, in place of a print from the browser; Source Sans in the figure is cut down to the keyboard's characters (Claudio: "shrink as you suggested ... as long as it is completely consistent"; decision 10 of `../README.md`).
 - 6 October 2026: redrawn flat, as the page of the gesture slides, and moved to slide S06, which it replaces together with the old S14 (Claudio: "slide 6 in the guide serves no purpose, it can be merged in slide 7 ... no need for the controls below ... we do not need even the right part explanation, all can go into the slide", and of the two forms he named: "without a round cover to the device. This would be more transparent as there is no interface nested artificially"). The small deck with its numeral, toolbar and overview strip is gone; the overview no longer jumps; the game is ended by a tap in the middle.
+- 6 October 2026: the static slide of the toolbar zone (S05) is gone too; this slide is now the only one that shows the toolbar zone and the triple tap, and its title says so.

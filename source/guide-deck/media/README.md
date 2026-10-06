@@ -98,6 +98,9 @@ departures listed under "Decisions".
    `bdlt-media`, both asked for: no bar under the picture, and the chips stand inside it, in
    the middle of the page, where a tap does nothing. The words in the zones of S03 to S05 are
    set in semibold, the weight the figure has. The guide decks are 143 kB and 141 kB.
+   Later the same day S05, the static slide of the toolbar zone, went as well ("Slide 5 is not
+   needed at all it is already in slide 6 (which would need a new title)"): S06 is titled
+   "Toolbar at the top, overview below: try all four zones". S03 and S04 stay.
 
 ## Build, check, look
 

@@ -72,6 +72,7 @@
   \node[anchor=north, text=white, align=center, text width=9.6cm, inner sep=0pt] at (#1+\GW/6,\GY+7.35)
     {{\bdltfont{28}{100}\fontseries{sb}\selectfont #2}\\[0.2cm]{\bdltfont{20}{100}#3}};}
 % \guidezonewide{x}{y}{w}{icon x}{Head}{Sub}{badge}: a zone a quarter of the slide high, hand left of the words
+% (no slide uses it since S05 and the static S06 went; the live figure of S06 takes its places from here)
 \newcommand\guidezonewide[7]{%
   \fill[uzh@blue] (#1,#2) rectangle ++(#3,\GH*0.25);
   \guideglyph[white]{tap}{#4}{#2+0.5}{2.58}{1.5}
@@ -93,7 +94,7 @@
 
 % the rows of the tools slide: \toolrow{tile}{active}{Name}{words}{the colours of the tool}
 \newcount\guiderowno
-\ifguideviewer \def\ToolRH{\GH/4}\else \def\ToolRH{\GH/5}\fi
+\ifguideviewer \def\ToolRH{\GH/5}\else \def\ToolRH{\GH/6}\fi
 \newcommand\toolrow[5]{%
   \pgfmathsetmacro\ry{\GY+\the\guiderowno*\ToolRH+\ToolRH/2}
   \guidetile[#2]{#1}{\GX}{\ry-0.89}{1.78}
@@ -150,17 +151,9 @@
   \end{bdltdiagram}
 \end{frame}
 
-% @slide S05
-\begin{frame}{Tap the top centre: show or hide the toolbar}
-  \begin{bdltdiagram}
-    \guideslidepanel
-    \guidezonewide{\GX+\GW/3}{\GY}{\GW/3}{\GX+\GW/3+0.83}{Tap here}{Toolbar on or off}{}
-  \end{bdltdiagram}
-\end{frame}
-
 % @slide S06
-% live: the page of the three slides before, with all four zones. Each answers a tap; the triple tap is here.
-\begin{frame}{The four zones together: try them here}
+% live: the page of the two slides before, with all four zones. Each answers a tap; the toolbar zone and the triple tap are shown only here.
+\begin{frame}{Toolbar at the top, overview below: try all four zones}
   \bdltarea{0.75}{2.42}{32.36}{14.31}
     {\guideposter{media/gestures/gestures-poster.tex}{1147}{507}%
      \bdltwidget[id=gestures, x-figure=gestures, poster=blank-poster.pdf, title={This page with its four tap zones}]{figures/guide-figures.html}}
@@ -186,10 +179,11 @@
 
 % ---------------------------------------------------------------- the tools
 % @slide S08
-\begin{frame}{\ifguideviewer Tools: navigate, write, erase\else Tools: navigate, write, point, erase\fi}
+\begin{frame}{\ifguideviewer Tools: navigate, select, write, erase\else Tools: navigate, select, write, point, erase\fi}
   \begin{bdltdiagram}
     \guiderowno=0
     \toolrow{hand}{a}{Navigate}{Tap or click to turn pages (Esc returns here).}{}
+    \toolrow{select}{}{Select}{Drag to copy words, or an area as a picture.}{}
     \toolrow{pen}{}{Pen}{Pressure-sensitive ink. Tap again for the colours.}{blue,orange,gold,apple,black,white}
     \toolrow{highlighter}{}{Highlighter}{Transparent marks. Tap again for the colours.}{gold,apple,cyan,orange,berry}
     \ifguideviewer\else
