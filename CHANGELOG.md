@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.6.2 (9 October 2026)
+
+### Fixed
+- The slide overview closed by itself while the strip of slides was dragged to the left or the
+  right, as soon as the finger or the mouse drifted a little downwards. It now closes only on a
+  swipe that goes mainly down; a drag along the strip never closes it. Opening it still brings
+  the slide shown into the middle of the strip, and a tap on a slide still jumps to it.
+
 ## 1.6.1 (6 October 2026)
 
 ### Changed

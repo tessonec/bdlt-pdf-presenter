@@ -1092,10 +1092,18 @@ function centreThumb(smooth) {
   const el = strip.querySelector(`[data-n="${pageNum}"]`);
   if (el) strip.scrollTo({ left: el.offsetLeft - strip.clientWidth / 2 + el.offsetWidth / 2, behavior: smooth ? 'smooth' : 'auto' });
 }
-let sheetY = null;
-sheet.addEventListener('pointerdown', e => { sheetY = e.clientY; });
-sheet.addEventListener('pointermove', e => { if (sheetY !== null && !LECTURER() && e.clientY - sheetY > 40) { closeSheet(); sheetY = null; } });
-sheet.addEventListener('pointerup', () => sheetY = null);
+// A swipe down on the overview closes it. A drag along the strip never does, even when the finger
+// drifts downwards on the way: the direction of a gesture is decided once, after its first 10 px.
+let sheetG = null;
+sheet.addEventListener('pointerdown', e => { sheetG = { x: e.clientX, y: e.clientY, dir: null }; });
+sheet.addEventListener('pointermove', e => {
+  if (!sheetG || LECTURER()) return;
+  const dx = e.clientX - sheetG.x, dy = e.clientY - sheetG.y;
+  if (!sheetG.dir && (stripDragged || Math.hypot(dx, dy) > 10)) sheetG.dir = !stripDragged && dy > 0 && dy > 1.5 * Math.abs(dx) ? 'down' : 'other';
+  if (sheetG.dir === 'down' && dy > 50) { closeSheet(); sheetG = null; }
+});
+sheet.addEventListener('pointerup', () => { sheetG = null; });
+sheet.addEventListener('pointercancel', () => { sheetG = null; });
 
 // ---------- loading ----------
 async function loadBytes(bytes, name, opts = {}) {
@@ -1731,7 +1739,7 @@ function mediaRemote(msg) {
 }
 
 // ---------- update check: GitLab stamps the build into APP_VERSION and version.json ----------
-const APP_RELEASE = '1.6.1';            // raise by hand for notable releases
+const APP_RELEASE = '1.6.2';            // raise by hand for notable releases
 const APP_VERSION = '__BUILD__';      // replaced by GitLab with the commit id on every deployment
 const STAMPED = !APP_VERSION.startsWith('__');
 const BUILD4 = STAMPED ? APP_VERSION.slice(0, 4) : 'dev';
