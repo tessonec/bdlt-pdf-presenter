@@ -79,6 +79,7 @@ tablet with a finger.
 | S | Select tool: copy words as text, or an area as a picture |
 | P / H / L / E | Pen / highlighter / laser / eraser |
 | ⌘O or Ctrl+O | Open a PDF |
+| ⌘W or Ctrl+W | Close the PDF and go back to the guide; with ink not yet saved, press it twice. In a browser tab the browser closes the tab instead, and asks first when there is ink not yet saved; in full screen, Chrome and Edge leave the keys to the app |
 | ⌘R or Ctrl+R | Reload the PDF, keeping the slide and the ink (⇧⌘R reloads the whole app) |
 | ⌘S or Ctrl+S | Save a PDF with the ink |
 | ⌘Z or Ctrl+Z | Undo on this slide |

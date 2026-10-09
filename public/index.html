@@ -1112,9 +1112,9 @@ async function loadBytes(bytes, name, opts = {}) {
     const doc = await pdfjsLib.getDocument({ data: bytes.slice(), verbosity: opts.quiet ? 0 : 1 }).promise;
     if (pdfDoc) pdfDoc.destroy();
     pdfDoc = doc; pdfBytes = bytes; fileName = name; numPages = doc.numPages;
-    ink = new Map(); hist = new Map(); redoStack.clear(); cache.clear(); vps.clear(); thumbQueue.length = 0;
+    const keepSig = savedSig; ink = new Map(); hist = new Map(); redoStack.clear(); savedSig = 0; cache.clear(); vps.clear(); thumbQueue.length = 0;
     mediaReset();
-    if (opts.ink) ink = new Map(opts.ink);
+    if (opts.ink) { ink = new Map(opts.ink); savedSig = keepSig; }
     buildStrip(); await showPage(opts.page || 1);
     sendDoc();
     return true;
@@ -1142,6 +1142,32 @@ async function openPicker() {
   }
   fileIn.click();
 }
+// Closing the open PDF goes back to the deck the app starts with. Ink not yet saved is kept
+// until the second Cmd/Ctrl+W, so that one press never loses a drawing.
+const inkSig = () => [...ink.values()].reduce((a, l) => a + l.length, 0);
+let savedSig = 0, closeArmed = 0;
+const unsaved = () => { const n = inkSig(); return n > 0 && n !== savedSig; };
+async function closeDeck() {
+  if (deckSrc === 'sample') { toast(EMBED ? 'This page has one PDF only.' : 'No PDF of yours is open. ' + (shown('open') ? 'Open one with ⌘O or Ctrl+O.' : ''), 2600); return; }
+  if (unsaved() && Date.now() - closeArmed > 4000) {
+    closeArmed = Date.now();
+    toast('Your ink is not saved. Press ⌘W or Ctrl+W again to close without it' + (shown('save') ? ', or ⌘S or Ctrl+S to save it.' : '.'), 4000); return;
+  }
+  closeArmed = 0;
+  const was = fileName;
+  deckSrc = 'sample'; lastFile = null; lastHandle = null; lastStamp = '';
+  try { await loadBytes(await sampleDeck(), HOME_NAME, { quiet: true }); } catch (e) { console.error(e); }
+  savedSig = 0; updateReloadUi(); toast('Closed ' + was, 1800);
+}
+// A browser closes its tab with Cmd/Ctrl+W before the page hears the keys. In full screen,
+// Chrome and Edge hand them to the page (Keyboard Lock); elsewhere the page asks before the tab
+// closes when there is ink not yet saved.
+function lockKeys() {
+  const kb = navigator.keyboard; if (!kb || !kb.lock) return;
+  if (document.fullscreenElement) kb.lock(['KeyW']).catch(() => {}); else try { kb.unlock(); } catch (e) {}
+}
+document.addEventListener('fullscreenchange', lockKeys);
+window.addEventListener('beforeunload', e => { if (!AUDIENCE && unsaved()) { e.preventDefault(); e.returnValue = ''; } });
 fileIn.onchange = async () => {
   const f = fileIn.files[0]; if (!f) return;
   await openLocal(f, null); fileIn.value = '';
@@ -1207,6 +1233,7 @@ window.addEventListener('keydown', e => {
     else if (key === 'y' || c === 'KeyY') { e.preventDefault(); redo(); }
     else if ((key === 'o' || c === 'KeyO') && !e.shiftKey && shown('open')) { e.preventDefault(); openPicker(); }
     else if ((key === 's' || c === 'KeyS') && !e.shiftKey && shown('save')) { e.preventDefault(); savePdf(); }
+    else if ((key === 'w' || c === 'KeyW') && !e.shiftKey) { e.preventDefault(); closeDeck(); }
     else if ((key === 'r' || c === 'KeyR') && !e.shiftKey && shown('reload')) { e.preventDefault(); reloadDeck(); }   // Shift+Cmd+R still reloads the whole app
     return;
   }
@@ -1258,6 +1285,7 @@ async function savePdf() {
       }
     }
     const out = await doc.save();
+    savedSig = inkSig();
     const name = fileName.replace(/\.pdf$/i, '') + '-annotated.pdf';
     if (dlCap) {
       try { await dlCap.save({ filename: name, data: new Blob([out], { type: 'application/pdf' }) }); toast('Saved ' + name); }
@@ -1739,7 +1767,7 @@ function mediaRemote(msg) {
 }
 
 // ---------- update check: GitLab stamps the build into APP_VERSION and version.json ----------
-const APP_RELEASE = '1.6.2';            // raise by hand for notable releases
+const APP_RELEASE = '1.6.3';            // raise by hand for notable releases
 const APP_VERSION = '__BUILD__';      // replaced by GitLab with the commit id on every deployment
 const STAMPED = !APP_VERSION.startsWith('__');
 const BUILD4 = STAMPED ? APP_VERSION.slice(0, 4) : 'dev';

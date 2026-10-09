@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.6.3 (9 October 2026)
+
+### Added
+- ⌘W or Ctrl+W closes the PDF that was opened and goes back to the guide deck. When there is
+  ink not yet saved, the first press only warns; a second press within four seconds closes
+  without it (⌘S or Ctrl+S saves it). A page with one packed PDF says it has nothing to close.
+- Browsers keep ⌘W and Ctrl+W to close the tab, so the app hears them only where the browser
+  lets it: in full screen, Chrome and Edge now hand these keys to the app (Keyboard Lock). In a
+  tab, the browser closes it, and now asks first when there is ink not yet saved.
+- ⌘O or Ctrl+O opens a PDF, as before; checked again in both editions.
+- Guide decks: the toolbar slide gives both shortcuts ("Ctrl/⌘ O opens a PDF, Ctrl/⌘ W closes it").
+
 ## 1.6.2 (9 October 2026)
 
 ### Fixed
